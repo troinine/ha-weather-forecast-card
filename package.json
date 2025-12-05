@@ -1,0 +1,46 @@
+{
+  "name": "weather-forecast-card",
+  "version": "0.2.0-devel",
+  "description": "A TypeScript weather forecast card built with Parcel",
+  "type": "module",
+  "module": "dist/weather-forecast-card.js",
+  "targets": {
+    "module": {
+      "distDir": "./dist",
+      "source": [
+        "src/index.ts"
+      ],
+      "publicUrl": "/hacsfiles/weather-forecast-card/",
+      "includeNodeModules": true
+    }
+  },
+  "scripts": {
+    "dev": "parcel serve test/app/index.html test/app/resources/img/*.svg --open",
+    "build": "parcel build --no-source-maps --target module",
+    "clean": "rm -rf ./dist/ ./.parcel-cache",
+    "preview": "parcel serve test/app/index.html --no-hmr"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "chartjs-plugin-datalabels": "^2.2.0",
+    "consola": "^3.4.2",
+    "custom-card-helpers": "^1.9.0",
+    "home-assistant-js-websocket": "^9.5.0",
+    "lit": "^3.1.0",
+    "lodash-es": "^4.17.21",
+    "memoize-one": "^6.0.0",
+    "suncalc": "^1.9.0"
+  },
+  "devDependencies": {
+    "@parcel/transformer-inline-string": "2.16.1",
+    "@types/lodash-es": "^4.17.12",
+    "@types/lodash.merge": "^4.6.9",
+    "@types/node": "^20.10.0",
+    "@types/suncalc": "^1.9.2",
+    "parcel": "^2.16.1",
+    "typescript": "^5.9.3"
+  }
+}

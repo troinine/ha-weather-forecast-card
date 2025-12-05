@@ -1,0 +1,103 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare release version
+        id: version_check
+        run: |
+          node -e '
+            const fs = require("fs");
+            const pkg = require("./package.json");
+
+            if (!pkg.version.endsWith("-devel")) {
+              console.error(`Error: Version ${pkg.version} does not have -devel suffix.`);
+              process.exit(1);
+            }
+
+            const newVersion = pkg.version.replace(/-devel$/, "");
+            pkg.version = newVersion;
+            fs.writeFileSync("./package.json", JSON.stringify(pkg, null, 2) + "\n");
+
+            console.log(`RELEASE_VERSION=v${newVersion}`);
+
+            if (!process.env.GITHUB_OUTPUT) {
+              console.error("GITHUB_OUTPUT is not defined");
+              process.exit(1);
+            }
+
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `VERSION=v${newVersion}\n`);
+          '
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Tag release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git commit -am "chore: release ${{ steps.version_check.outputs.VERSION }}"
+          git tag ${{ steps.version_check.outputs.VERSION }}
+          git push origin HEAD --follow-tags
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version_check.outputs.VERSION }}
+          files: dist/weather-forecast-card.js
+          generate_release_notes: false
+
+      - name: Bump to next development version
+        run: |
+          node -e '
+            const fs = require("fs");
+            const pkg = require("./package.json");
+
+            const parts = pkg.version.split(".").map(Number);
+            parts[1] += 1;
+            parts[2] = 0;
+
+            const nextVersion = parts.join(".") + "-devel";
+            pkg.version = nextVersion;
+
+            fs.writeFileSync("./package.json", JSON.stringify(pkg, null, 2) + "\n");
+            console.log("Next version will be:", nextVersion);
+          '
+
+      - name: Commit next development version
+        run: |
+          git commit -am "chore: prepare for next development iteration"
+          git push origin HEAD

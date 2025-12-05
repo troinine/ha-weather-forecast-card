@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Forecast Card - Development Test</title>
+    <style>
+      .view {
+        margin: auto;
+        width: 40vw;
+        max-width: 600px;
+      }
+      weather-forecast-card {
+        --ha-font-size-scale: 1;
+        --ha-font-size-4xl: calc(32px * var(--ha-font-size-scale));
+
+        border: 1px solid #000;
+        display: block;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="view">
+      <h2>Weather Forecast Card test</h2>
+      <h3>With current weather</h3>
+      <weather-forecast-card id="test-card-1"></weather-forecast-card>
+      <h3>Without current weather</h3>
+      <weather-forecast-card id="test-card-2"></weather-forecast-card>
+      <h3>Custom icons</h3>
+      <weather-forecast-card id="test-card-3"></weather-forecast-card>
+      <h3>Custom temperature entity</h3>
+      <weather-forecast-card id="test-card-4"></weather-forecast-card>
+      <h3>Chart mode</h3>
+      <weather-forecast-card id="test-card-5"></weather-forecast-card>
+      <div id="error">
+        <p id="error-message"></p>
+      </div>
+    </div>
+    <script type="module" src="../../src/index.ts"></script>
+    <script type="module">
+      import { MockHass } from "../mocks/hass.ts";
+
+      const initializeCard = (cardId, config, hass) => {
+        const card = document.getElementById(cardId);
+        if (card) {
+          card.setConfig(config);
+          card.hass = hass;
+        } else {
+          console.error(`Card element with id ${cardId} not found`);
+          const errorMessage = document.getElementById("error-message");
+          if (errorMessage) {
+            errorMessage.textContent += `Card element with id ${cardId} not found\n`;
+          }
+        }
+      };
+
+      customElements.whenDefined("weather-forecast-card").then(() => {
+        const mockHass = new MockHass();
+        const hass = mockHass.getHass();
+
+        initializeCard("test-card-1", { entity: "weather.demo" }, hass);
+
+        initializeCard(
+          "test-card-2",
+          { entity: "weather.demo", show_current: false },
+          hass
+        );
+
+        initializeCard(
+          "test-card-3",
+          {
+            entity: "weather.demo",
+            icons_path: "./resources/img",
+            forecast: {
+              extra_attribute: "precipitation_probability",
+            },
+          },
+          hass
+        );
+
+        initializeCard(
+          "test-card-4",
+          {
+            entity: "weather.demo",
+            temperature_entity: "sensor.temperature_outdoor",
+            forecast: {
+              extra_attribute: "wind_direction",
+            },
+          },
+          hass
+        );
+
+        initializeCard(
+          "test-card-5",
+          {
+            entity: "weather.demo",
+            default_forecast: "hourly",
+            forecast: {
+              mode: "chart",
+              extra_attribute: "wind_direction",
+            },
+          },
+          hass
+        );
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,407 @@
+import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
+import { customElement, property, query } from "lit/decorators.js";
+import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../types";
+import { formatNumber } from "custom-card-helpers";
+import { formatDay } from "../helpers";
+import { styleMap } from "lit/directives/style-map.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
+import {
+  ForecastAttribute,
+  ForecastType,
+  formatPrecipitation,
+  getMaxPrecipitationForUnit,
+  getWeatherUnit,
+  WeatherEntity,
+} from "../data/weather";
+import {
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Chart,
+  BarController,
+  BarElement,
+  ChartConfiguration,
+} from "chart.js";
+
+import "./wfc-forecast-header-items";
+
+Chart.register(
+  BarController,
+  BarElement,
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  ChartDataLabels
+);
+
+@customElement("wfc-forecast-chart")
+export class WfcForecastChart extends LitElement {
+  @property({ attribute: false }) hass!: ExtendedHomeAssistant;
+  @property({ attribute: false }) weatherEntity!: WeatherEntity;
+  @property({ attribute: false }) forecast: ForecastAttribute[] = [];
+  @property({ attribute: false }) config!: WeatherForecastCardConfig;
+  @property({ attribute: false }) forecastType!: ForecastType;
+  @property({ attribute: false }) itemWidth: number = 0;
+  @query("canvas") private _canvas?: HTMLCanvasElement;
+
+  private _chart: Chart | null = null;
+
+  protected createRenderRoot() {
+    return this;
+  }
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._chart?.destroy();
+    this._chart = null;
+  }
+
+  protected firstUpdated(): void {
+    this.initChart();
+  }
+
+  protected updated(changedProps: PropertyValues): void {
+    super.updated(changedProps);
+
+    const hasChanged =
+      changedProps.has("forecast") ||
+      changedProps.has("weatherEntity") ||
+      changedProps.has("hass") ||
+      changedProps.has("forecastType") ||
+      changedProps.has("itemWidth");
+
+    if (hasChanged && this.itemWidth > 0 && this.forecast?.length) {
+      if (!this._chart) {
+        this.initChart();
+      } else {
+        const structuralChange =
+          changedProps.has("forecastType") || changedProps.has("itemWidth");
+        this.updateChartData(structuralChange);
+      }
+    }
+  }
+
+  render(): TemplateResult | typeof nothing {
+    if (!this.forecast?.length || this.itemWidth <= 0) {
+      return nothing;
+    }
+
+    const count = this.forecast.length;
+    const gaps = Math.max(count - 1, 0);
+
+    const totalWidthCalc = `calc(${count} * var(--forecast-item-width) + ${gaps} * var(--forecast-item-gap))`;
+
+    const scrollContainerStyle = {
+      "--wfc-forecast-chart-width": totalWidthCalc,
+    };
+
+    const clipperStyle = {
+      width: "var(--wfc-forecast-chart-width)",
+      overflow: "hidden",
+    };
+
+    const canvasStyle = {
+      width: "calc(var(--wfc-forecast-chart-width) + var(--forecast-item-gap))",
+      marginLeft: "calc(var(--forecast-item-gap) / -2)",
+      display: "block",
+    };
+
+    return html`
+      <div class="wfc-scroll-container" style=${styleMap(scrollContainerStyle)}>
+        <div class="wfc-forecast-chart-header">${this.renderHeaderItems()}</div>
+
+        <div class="wfc-chart-clipper" style=${styleMap(clipperStyle)}>
+          <div
+            class="wfc-forecast-chart"
+            id="chart-container"
+            style=${styleMap(canvasStyle)}
+          >
+            <canvas id="forecast-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="wfc-forecast-chart-footer">
+          ${this.forecast.map(
+            (item) => html`
+              <div class="wfc-forecast-slot">
+                <wfc-forecast-info
+                  .hass=${this.hass}
+                  .forecast=${item}
+                  .config=${this.config}
+                  .hidePrecipitation=${true}
+                ></wfc-forecast-info>
+              </div>
+            `
+          )}
+        </div>
+      </div>
+    `;
+  }
+
+  private initChart(): void {
+    if (!this._canvas || !this.forecast?.length) return;
+
+    const config = this.getChartConfig();
+    if (config) {
+      this._chart = new Chart(this._canvas, config);
+    }
+  }
+
+  /**
+   * Update the chart's data and configuration.
+   *
+   * This method updates the chart's data and configuration based on the current forecast data.
+   * It also handles resizing the chart if there has been a structural change, such as switching
+   * between daily and hourly forecasts or changing the item width.
+   *
+   * @param structuralChange Whether the chart's layout or structure has changed, requiring a forced resize.
+   */
+  private updateChartData(structuralChange: boolean = false): void {
+    if (!this._chart || !this.forecast?.length) return;
+
+    const newConfig = this.getChartConfig();
+
+    this._chart.data = newConfig.data;
+
+    if (this._chart.options.scales && newConfig.options?.scales) {
+      this._chart.options.scales = newConfig.options.scales;
+    }
+
+    if (structuralChange) {
+      this._chart.resize();
+    }
+
+    // No animation on data update.
+    this._chart.update("none");
+  }
+
+  private getChartConfig(): ChartConfiguration {
+    const style = getComputedStyle(this);
+    const gridColor = style.getPropertyValue("--wfc-chart-grid-color");
+    const datalabelColor = style.getPropertyValue("--wfc-chart-label-color");
+    const highColor = style.getPropertyValue("--wfc-temp-high-color");
+    const lowColor = style.getPropertyValue("--wfc-temp-low-color");
+    const precipColor = style.getPropertyValue("--wfc-precipitation-bar-color");
+
+    const { minTemp, maxTemp } = this.computeScaleLimits();
+
+    const maxPrecip = getMaxPrecipitationForUnit(
+      getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
+      this.forecastType
+    );
+
+    return {
+      type: "line",
+      data: {
+        labels: this.forecast.map((f) => f.datetime),
+        datasets: [
+          {
+            data: this.forecast.map((f) => f.temperature),
+            borderColor: highColor,
+            fill: false,
+            yAxisID: "yTemp",
+            datalabels: {
+              anchor: "end",
+              align: "top",
+              color: datalabelColor,
+              formatter: (value) =>
+                value != null
+                  ? `${formatNumber(value, this.hass.locale)}°`
+                  : null,
+            },
+          },
+          {
+            data: this.forecast.map((f) => f.templow ?? null),
+            borderColor: lowColor,
+            fill: false,
+            yAxisID: "yTemp",
+            datalabels: {
+              anchor: "start",
+              align: "bottom",
+              color: datalabelColor,
+              formatter: (value) =>
+                value != null
+                  ? `${formatNumber(value, this.hass.locale)}°`
+                  : null,
+            },
+          },
+          {
+            data: this.forecast.map((f) =>
+              f.precipitation && f.precipitation !== 0 ? f.precipitation : null
+            ),
+            backgroundColor: precipColor,
+            type: "bar",
+            yAxisID: "yPrecip",
+            borderWidth: 0,
+            categoryPercentage: 0.6,
+            barPercentage: 0.8,
+            order: 0,
+            datalabels: {
+              anchor: "start",
+              align: "end",
+              offset: -22,
+              color: datalabelColor,
+              formatter: (value: number) =>
+                formatPrecipitation(
+                  value,
+                  getWeatherUnit(this.hass, this.weatherEntity, "precipitation")
+                ),
+            },
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          autoPadding: false,
+          padding: {
+            top: 10,
+            bottom: 10,
+            left: 0,
+            right: 0,
+          },
+        },
+        elements: {
+          line: {
+            tension: 0.3,
+          },
+        },
+        scales: {
+          x: {
+            offset: true,
+            border: {
+              color: gridColor,
+              dash: [4, 4],
+            },
+            grid: {
+              offset: true,
+              display: true,
+              color: gridColor,
+              drawTicks: true,
+            },
+            ticks: {
+              display: false,
+            },
+          },
+          yTemp: {
+            type: "linear",
+            display: false,
+            min: minTemp,
+            max: maxTemp,
+            position: "left",
+            grid: {
+              display: false,
+            },
+            ticks: {
+              display: false,
+            },
+          },
+          yPrecip: {
+            type: "linear",
+            display: false,
+            position: "right",
+            beginAtZero: true,
+            suggestedMin: 0,
+            suggestedMax: maxPrecip,
+            grid: {
+              display: false,
+              drawOnChartArea: false,
+            },
+            ticks: {
+              display: false,
+            },
+          },
+        },
+      },
+    };
+  }
+
+  /**
+   * Compute dynamic scale limits for the temperature axis.
+   *
+   * Ensures adequate padding above and below the temperature data, with special handling to guarantee sufficient space below when
+   * low temperatures are present. The alogithm works as follows:
+   *
+   * 1. Calculate the spread of temperature data, enforcing a minimum spread of 8 degrees.
+   * 2. Determine dynamic padding as 20% of the spread.
+   * 3. Ensure a minimum bottom buffer of 3 degrees if low temperature data exists.
+   * 4. Set final min and max limits using Math.floor and Math.ceil for cleaner axis values.
+   *
+   * @returns An object containing the computed minTemp and maxTemp for the temperature scale.
+   */
+  private computeScaleLimits() {
+    const temps = this.forecast.map((f) => f.temperature);
+    const lows = this.forecast.map((f) => f.templow ?? f.temperature);
+
+    const dataMin = Math.min(...lows);
+    const dataMax = Math.max(...temps);
+
+    const hasLowTempData = this.forecast.some(
+      (f) => f.templow !== undefined && f.templow !== null
+    );
+
+    const spread = Math.max(dataMax - dataMin, 8);
+    const dynamicPadding = spread * 0.2;
+    const MIN_BOTTOM_BUFFER = 3;
+
+    let bottomPadding;
+    if (hasLowTempData) {
+      bottomPadding = Math.max(dynamicPadding, MIN_BOTTOM_BUFFER);
+    } else {
+      bottomPadding = Math.max(dynamicPadding, 2);
+    }
+
+    const topPadding = Math.max(dynamicPadding, 2);
+    const minTemp = Math.floor(dataMin - bottomPadding);
+    const maxTemp = Math.ceil(dataMax + topPadding);
+
+    return { minTemp, maxTemp };
+  }
+
+  private renderHeaderItems(): TemplateResult[] {
+    const parts: TemplateResult[] = [];
+    let currentDay: string | undefined;
+
+    this.forecast.forEach((item) => {
+      if (!item.datetime) {
+        return;
+      }
+
+      if (this.forecastType === "hourly") {
+        const forecastDay = formatDay(this.hass, item.datetime);
+        if (currentDay !== forecastDay) {
+          currentDay = forecastDay;
+          parts.push(
+            html`<div class="wfc-day-indicator-container">
+              <div class="wfc-day-indicator">${forecastDay}</div>
+            </div>`
+          );
+        }
+      }
+
+      parts.push(html`
+        <div class="wfc-forecast-slot">
+          <wfc-forecast-header-items
+            .hass=${this.hass}
+            .forecast=${item}
+            .forecastType=${this.forecastType}
+            .config=${this.config}
+          ></wfc-forecast-header-items>
+        </div>
+      `);
+    });
+
+    return parts;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "wfc-forecast-chart": WfcForecastChart;
+  }
+}
