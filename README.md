@@ -27,6 +27,7 @@ This card takes inspiration from [Weather Forecast Extended Card](https://github
 - **Visualize precipitation** – See precipitation amounts for each forecast entry
 - **Chart mode** – Visualize temperature and precipitation trends
 - **Extra attributes** – Display extra attributes, like wind direction, wind bearing, or precipitation probability
+- **Group hourly data** - Aggregate multiple hours of forecast data for easier viewing
 - **Custom icons** – Use your own weather icons
 - **Customizable actions** – Configure tap, hold, and double-tap behaviors
 - **Sun times** - Visualize sunrise and sunset
