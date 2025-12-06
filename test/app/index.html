@@ -33,6 +33,8 @@
       <weather-forecast-card id="test-card-4"></weather-forecast-card>
       <h3>Chart mode</h3>
       <weather-forecast-card id="test-card-5"></weather-forecast-card>
+      <h3>Aggregated hourly data</h3>
+      <weather-forecast-card id="test-card-6"></weather-forecast-card>
       <div id="error">
         <p id="error-message"></p>
       </div>
@@ -99,6 +101,19 @@
             forecast: {
               mode: "chart",
               extra_attribute: "wind_direction",
+            },
+          },
+          hass
+        );
+        initializeCard(
+          "test-card-6",
+          {
+            entity: "weather.demo",
+            default_forecast: "hourly",
+            forecast: {
+              mode: "chart",
+              extra_attribute: "wind_direction",
+              hourly_group_size: 3,
             },
           },
           hass

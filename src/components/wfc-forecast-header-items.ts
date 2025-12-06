@@ -6,7 +6,13 @@ import {
   WeatherForecastCardConfig,
 } from "../types";
 import { ForecastAttribute, ForecastType } from "../data/weather";
-import { formatDay, formatHour, formatTime, getSuntimesInfo } from "../helpers";
+import {
+  endOfHour,
+  formatDay,
+  formatHour,
+  formatTime,
+  getSuntimesInfo,
+} from "../helpers";
 
 @customElement("wfc-forecast-header-items")
 export class WfcForecastHeaderItems extends LitElement {
@@ -68,20 +74,37 @@ export class WfcForecastHeaderItems extends LitElement {
       };
     }
 
-    const forecastDate = new Date(this.forecast.datetime);
+    const startDate = new Date(this.forecast.datetime);
 
-    let displayDate = forecastDate;
+    const endDate = this.forecast.groupEndtime
+      ? new Date(this.forecast.groupEndtime)
+      : endOfHour(startDate);
+
+    let displayDate = startDate;
     let className: string | undefined;
 
     if (this.config.forecast?.show_sun_times && this.suntimesInfo) {
-      const hour = forecastDate.getHours();
+      const { sunrise, sunset } = this.suntimesInfo;
 
-      if (hour === this.suntimesInfo.sunrise.getHours()) {
+      const isEventInWindow = (eventDate: Date) => {
+        const eventOnForecastDay = new Date(startDate);
+        eventOnForecastDay.setHours(
+          eventDate.getHours(),
+          eventDate.getMinutes()
+        );
+
+        return (
+          eventOnForecastDay.getTime() >= startDate.getTime() &&
+          eventOnForecastDay.getTime() <= endDate.getTime()
+        );
+      };
+
+      if (isEventInWindow(sunrise)) {
         className = "wfc-sunrise";
-        displayDate = this.suntimesInfo.sunrise;
-      } else if (hour === this.suntimesInfo.sunset.getHours()) {
+        displayDate = sunrise;
+      } else if (isEventInWindow(sunset)) {
         className = "wfc-sunset";
-        displayDate = this.suntimesInfo.sunset;
+        displayDate = sunset;
       }
     }
 
@@ -92,7 +115,6 @@ export class WfcForecastHeaderItems extends LitElement {
     return { label, className };
   }
 }
-
 declare global {
   interface HTMLElementTagNameMap {
     "wfc-forecast-header-items": WfcForecastHeaderItems;

@@ -5,6 +5,7 @@ import type {
 } from "home-assistant-js-websocket";
 import { ExtendedHomeAssistant } from "../types";
 import memoizeOne from "memoize-one";
+import { average } from "../helpers";
 
 export enum WeatherEntityFeature {
   FORECAST_DAILY = 1,
@@ -27,6 +28,7 @@ export type ForecastType = ModernForecastType | "legacy";
 export interface ForecastAttribute {
   temperature: number;
   datetime: string;
+  groupEndtime?: string;
   templow?: number;
   precipitation?: number;
   precipitation_probability?: number;
@@ -34,7 +36,7 @@ export interface ForecastAttribute {
   condition?: string;
   is_daytime?: boolean;
   pressure?: number;
-  wind_speed?: string;
+  wind_speed?: number;
   wind_bearing?: number;
 }
 
@@ -273,3 +275,147 @@ export const getMaxPrecipitationForUnit = memoizeOne(
     return maxPrecipitationMm;
   }
 );
+
+export const aggregateHourlyForecastData = (
+  forecast: ForecastAttribute[],
+  groupSize: number
+): ForecastAttribute[] => {
+  const groupedForecast: ForecastAttribute[] = [];
+
+  let i = 0;
+
+  while (i < forecast.length) {
+    const currentHour = new Date(forecast[i]!.datetime).getHours();
+    const remainder = currentHour % groupSize;
+    const steps = remainder === 0 ? groupSize : groupSize - remainder;
+
+    const group = forecast.slice(i, i + steps);
+    i += group.length;
+
+    if (group.length === 0) continue;
+    const temperatures = group.map((e) => e.temperature);
+    const validHumidity = group
+      .map((e) => e.humidity)
+      .filter((e): e is number => e !== undefined);
+    const validPressure = group
+      .map((e) => e.pressure)
+      .filter((e): e is number => e !== undefined);
+    const validWindSpeed = group
+      .map((e) => e.wind_speed)
+      .filter((e): e is number => e !== undefined);
+    const validBearing = group
+      .map((e) => e.wind_bearing)
+      .filter((e): e is number => e !== undefined);
+    const validPrecipChance = group
+      .map((e) => e.precipitation_probability)
+      .filter((e): e is number => e !== undefined);
+
+    const lastEntryDate = new Date(group[group.length - 1]!.datetime);
+    lastEntryDate.setMinutes(59);
+    lastEntryDate.setSeconds(59);
+
+    const aggregatedEntry: ForecastAttribute = {
+      datetime: group[0]!.datetime,
+      groupEndtime: lastEntryDate.toISOString(),
+      condition: getWorstCondition(group),
+      temperature: parseFloat(average(temperatures).toFixed(1)),
+    };
+
+    if (validHumidity.length > 0) {
+      aggregatedEntry.humidity = Math.round(average(validHumidity));
+    }
+
+    if (validPrecipChance.length > 0) {
+      aggregatedEntry.precipitation_probability = Math.max(
+        ...validPrecipChance
+      );
+    }
+    if (group.some((e) => e.precipitation !== undefined)) {
+      aggregatedEntry.precipitation = group.reduce(
+        (sum, entry) => sum + (entry.precipitation || 0),
+        0
+      );
+    }
+
+    const validLows = group
+      .map((e) => e.templow)
+      .filter((e): e is number => e !== undefined);
+    if (validLows.length > 0) {
+      aggregatedEntry.templow = Math.min(...validLows);
+    }
+
+    if (validPressure.length > 0) {
+      aggregatedEntry.pressure = Math.round(average(validPressure));
+    }
+
+    if (validWindSpeed.length > 0) {
+      aggregatedEntry.wind_speed = average(validWindSpeed);
+    }
+
+    if (validBearing.length > 0) {
+      aggregatedEntry.wind_bearing = computeAverageBearing(validBearing);
+    }
+
+    groupedForecast.push(aggregatedEntry);
+  }
+
+  return groupedForecast;
+};
+
+const computeAverageBearing = (bearings: number[]): number => {
+  if (bearings.length === 0) return 0;
+
+  let sumSin = 0;
+  let sumCos = 0;
+
+  bearings.forEach((deg) => {
+    const rad = (deg * Math.PI) / 180;
+    sumSin += Math.sin(rad);
+    sumCos += Math.cos(rad);
+  });
+
+  const avgSin = sumSin / bearings.length;
+  const avgCos = sumCos / bearings.length;
+
+  let avgRad = Math.atan2(avgSin, avgCos);
+  let avgDeg = (avgRad * 180) / Math.PI;
+
+  // Normalize to 0-360
+  if (avgDeg < 0) {
+    avgDeg += 360;
+  }
+
+  return Math.round(avgDeg);
+};
+
+const getWorstCondition = (forecast: ForecastAttribute[]): string => {
+  const severityOrder = [
+    "exceptional", // Default / Unknown / Most Severe
+    "hail",
+    "lightning-rainy",
+    "lightning",
+    "snowy-rainy",
+    "pouring",
+    "snowy",
+    "rainy",
+    "windy-variant",
+    "windy",
+    "fog",
+    "cloudy",
+    "partlycloudy",
+    "clear-night",
+    "sunny",
+  ];
+
+  forecast.sort((a, b) => {
+    let indexA = severityOrder.indexOf(a.condition || "exceptional");
+    let indexB = severityOrder.indexOf(b.condition || "exceptional");
+
+    if (indexA === -1) indexA = 0;
+    if (indexB === -1) indexB = 0;
+
+    return indexA - indexB;
+  });
+
+  return forecast[0]?.condition || "exceptional";
+};

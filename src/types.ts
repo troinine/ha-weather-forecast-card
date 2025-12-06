@@ -28,6 +28,7 @@ export interface WeatherForecastCardConfig {
     extra_attribute?: string;
     mode?: ForecastMode;
     show_sun_times?: boolean;
+    hourly_group_size?: number;
   };
   forecast_action?: {
     tap_action?: ForecastActionConfig;

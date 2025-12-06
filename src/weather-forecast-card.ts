@@ -28,6 +28,8 @@ import {
   WeatherEntity,
   ForecastType,
   WeatherUnits,
+  ForecastAttribute,
+  aggregateHourlyForecastData,
 } from "./data/weather";
 import {
   ExtendedHomeAssistant,
@@ -48,6 +50,9 @@ export class WeatherForecastCard extends LitElement {
   @state() private _hourlyForecastEvent?: ForecastEvent | undefined;
   @state() private _currentItemWidth!: number;
   @state() private _currentForecastType: ForecastType = "daily";
+
+  private _hourlyForecastData?: ForecastAttribute[];
+  private _dailyForecastData?: ForecastAttribute[];
 
   private _minForecastItemWidth?: number;
   private _forecastContainer?: HTMLElement | null = null;
@@ -142,29 +147,15 @@ export class WeatherForecastCard extends LitElement {
         ${createWarningText(this.hass, entity)}
       </hui-warning>`;
     }
-
-    const { attributes } = stateObject;
-
-    const hourlyForecastData = getForecast(
-      attributes,
-      this._hourlyForecastEvent,
-      "hourly"
-    );
-    const dailyForecastData = getForecast(
-      attributes,
-      this._dailyForecastEvent,
-      "daily"
-    );
-
-    if (!hourlyForecastData && !dailyForecastData) {
+    if (!this._hourlyForecastData && !this._dailyForecastData) {
       return nothing;
     }
 
     const isChartMode = this.config.forecast?.mode === ForecastMode.Chart;
-    const currentForecastData =
+    const currentForecast =
       this._currentForecastType === "hourly"
-        ? hourlyForecastData
-        : dailyForecastData;
+        ? this._hourlyForecastData
+        : this._dailyForecastData;
 
     return html`
       <ha-card>
@@ -184,7 +175,7 @@ export class WeatherForecastCard extends LitElement {
                   .hass=${this.hass}
                   .weatherEntity=${stateObject}
                   .config=${this.config}
-                  .dailyForecast=${dailyForecastData?.forecast}
+                  .dailyForecast=${this._dailyForecastData}
                 ></wfc-current-weather>
               </div>`
             : nothing}
@@ -206,7 +197,7 @@ export class WeatherForecastCard extends LitElement {
                     .hass=${this.hass}
                     .config=${this.config}
                     .weatherEntity=${stateObject}
-                    .forecast=${currentForecastData?.forecast}
+                    .forecast=${currentForecast}
                     .forecastType=${this._currentForecastType}
                     .itemWidth=${this._currentItemWidth}
                   ></wfc-forecast-chart>
@@ -216,7 +207,7 @@ export class WeatherForecastCard extends LitElement {
                     .hass=${this.hass}
                     .config=${this.config}
                     .weatherEntity=${stateObject}
-                    .forecast=${currentForecastData?.forecast}
+                    .forecast=${currentForecast}
                     .forecastType=${this._currentForecastType}
                   ></wfc-forecast-simple>
                 `}
@@ -272,6 +263,47 @@ export class WeatherForecastCard extends LitElement {
     return parseInt(itemWidth || "60", 10);
   }
 
+  private processForecastData() {
+    if (!this._dailyForecastEvent && !this._hourlyForecastEvent) {
+      return;
+    }
+
+    const { attributes } = this.hass!.states[
+      this.config!.entity
+    ] as WeatherEntity;
+
+    if (!attributes) {
+      return;
+    }
+
+    const hourlyForecastData = getForecast(
+      attributes,
+      this._hourlyForecastEvent,
+      "hourly"
+    );
+    const dailyForecastData = getForecast(
+      attributes,
+      this._dailyForecastEvent,
+      "daily"
+    );
+
+    if (!hourlyForecastData && !dailyForecastData) {
+      return;
+    }
+
+    this._dailyForecastData = dailyForecastData?.forecast;
+    const hourlyGroupSize = this.config?.forecast?.hourly_group_size || 0;
+
+    if (hourlyGroupSize > 1 && hourlyForecastData?.forecast) {
+      this._hourlyForecastData = aggregateHourlyForecastData(
+        hourlyForecastData.forecast,
+        hourlyGroupSize
+      );
+    } else {
+      this._hourlyForecastData = hourlyForecastData?.forecast;
+    }
+  }
+
   private _toggleForecastView() {
     this._currentForecastType =
       this._currentForecastType === "daily" ? "hourly" : "daily";
@@ -308,12 +340,10 @@ export class WeatherForecastCard extends LitElement {
 
     try {
       this._dailySubscription = Promise.resolve(
-        subscribeForecast(
-          this.hass!,
-          this.config!.entity,
-          "daily",
-          (event) => (this._dailyForecastEvent = event)
-        )
+        subscribeForecast(this.hass!, this.config!.entity, "daily", (event) => {
+          this._dailyForecastEvent = event;
+          this.processForecastData();
+        })
       );
     } catch (error: any) {
       if (error.code === "invalid_entity_id") {
@@ -330,7 +360,10 @@ export class WeatherForecastCard extends LitElement {
           this.hass!,
           this.config!.entity,
           "hourly",
-          (event) => (this._hourlyForecastEvent = event)
+          (event) => {
+            this._hourlyForecastEvent = event;
+            this.processForecastData();
+          }
         )
       );
     } catch (error: any) {

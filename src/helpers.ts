@@ -96,3 +96,16 @@ export const getSuntimesInfo = (
     isNightTime: date < times.sunrise || date > times.sunset,
   };
 };
+
+export const average = (data: number[]): number => {
+  if (data.length === 0) return 0;
+  return data.reduce((a, b) => a + b, 0) / data.length;
+};
+
+export const endOfHour = (input: Date | string): Date => {
+  const d = typeof input === "string" ? new Date(input) : new Date(input);
+
+  d.setMinutes(59, 59, 999);
+
+  return d;
+};
