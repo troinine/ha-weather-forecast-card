@@ -354,7 +354,7 @@ export class WeatherForecastCardEditor
           this.hass!.localize("ui.panel.lovelace.editor.card.generic.entity") ||
           "entity"
         ).toLocaleLowerCase()}`;
-      case "forecast":
+      case "forecast_mode":
         return this.hass!.localize(
           "ui.panel.lovelace.editor.card.weather-forecast.weather_to_show"
         );

@@ -102,6 +102,12 @@ export class WeatherForecastCard extends LitElement {
       throw new Error("entity is required");
     }
 
+    if (config.show_current === false && config.show_forecast === false) {
+      throw new Error(
+        "At least one of show_current or show_forecast must be true"
+      );
+    }
+
     this.config = merge({}, DEFAULT_CONFIG, config);
     this._currentForecastType = this.config.default_forecast || "daily";
   }
