@@ -94,7 +94,7 @@ resources:
 | `icons_path`         | string  | optional     | Path to custom icons. For example, `/local/img/my-custom-weather-icons`. See [Custom Weather Icons](#custom-weather-icons) for more details.                                  |
 | `forecast`           | object  | optional     | Forecast configuration options. See [Forecast Object](#forecast-object).                                                                                                      |
 | `forecast_action`    | object  | optional     | Actions for the forecast area. See [Forecast Actions](#forecast-actions).                                                                                                     |
-| `tap_action`         | object  | optional     | Defines the type action to perform on tap for the main card. Action defaults to `more-info`. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
+| `tap_action`         | object  | optional     | Defines the type of action to perform on tap for the main card. Action defaults to `more-info`. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
 | `hold_action`        | object  | optional     | Defines the type of action to perform on hold for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                             |
 | `double_tap_action`  | object  | optional     | Defines the type of action to perform on double click for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                     |
 
