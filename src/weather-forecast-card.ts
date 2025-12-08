@@ -41,6 +41,21 @@ import "./components/wfc-forecast-chart";
 import "./components/wfc-forecast-simple";
 import "./components/wfc-current-weather";
 
+const DEFAULT_CONFIG: Partial<WeatherForecastCardConfig> = {
+  type: "custom:weather-forecast-card",
+  show_current: true,
+  show_forecast: true,
+  default_forecast: "daily",
+  forecast: {
+    mode: ForecastMode.Simple,
+    show_sun_times: true,
+  },
+  forecast_action: {
+    tap_action: { action: "toggle-forecast" },
+  },
+  tap_action: { action: "more-info" },
+};
+
 export class WeatherForecastCard extends LitElement {
   @property({ attribute: false }) public hass?: ExtendedHomeAssistant;
   @state() private config?: WeatherForecastCardConfig;
@@ -60,24 +75,40 @@ export class WeatherForecastCard extends LitElement {
 
   static styles = styles as CSSResultGroup;
 
+  public static async getConfigElement() {
+    return document.createElement("weather-forecast-card-editor");
+  }
+
+  public static getStubConfig(
+    hass: ExtendedHomeAssistant
+  ): Partial<WeatherForecastCardConfig> {
+    const weatherEntities = Object.keys(hass?.states ?? {}).filter((entityId) =>
+      entityId.startsWith("weather.")
+    );
+
+    const defaultEntity =
+      weatherEntities.find((entityId) => entityId === "weather.home") ||
+      weatherEntities[0] ||
+      "";
+
+    return {
+      ...DEFAULT_CONFIG,
+      entity: defaultEntity,
+    };
+  }
+
   public setConfig(config: WeatherForecastCardConfig): void {
     if (!config || !config.entity) {
       throw new Error("entity is required");
     }
 
-    const defaults: Omit<WeatherForecastCardConfig, "entity" | "type"> = {
-      show_current: true,
-      default_forecast: "daily",
-      forecast: {
-        show_sun_times: true,
-      },
-      forecast_action: {
-        tap_action: { action: "toggle-forecast" },
-      },
-      tap_action: { action: "more-info" },
-    };
+    if (config.show_current === false && config.show_forecast === false) {
+      throw new Error(
+        "At least one of show_current or show_forecast must be true"
+      );
+    }
 
-    this.config = merge(defaults, config);
+    this.config = merge({}, DEFAULT_CONFIG, config);
     this._currentForecastType = this.config.default_forecast || "daily";
   }
 
@@ -179,39 +210,42 @@ export class WeatherForecastCard extends LitElement {
                 ></wfc-current-weather>
               </div>`
             : nothing}
-          <div
-            class="wfc-forecast-container"
-            .actionHandler=${actionHandler({
-              hasHold: hasAction(
-                this.config.forecast_action?.hold_action as ActionConfig
-              ),
-              hasDoubleClick: hasAction(
-                this.config.forecast_action?.double_tap_action as ActionConfig
-              ),
-            })}
-            @action=${this.onForecastAction}
-          >
-            ${isChartMode
-              ? html`
-                  <wfc-forecast-chart
-                    .hass=${this.hass}
-                    .config=${this.config}
-                    .weatherEntity=${stateObject}
-                    .forecast=${currentForecast}
-                    .forecastType=${this._currentForecastType}
-                    .itemWidth=${this._currentItemWidth}
-                  ></wfc-forecast-chart>
-                `
-              : html`
-                  <wfc-forecast-simple
-                    .hass=${this.hass}
-                    .config=${this.config}
-                    .weatherEntity=${stateObject}
-                    .forecast=${currentForecast}
-                    .forecastType=${this._currentForecastType}
-                  ></wfc-forecast-simple>
-                `}
-          </div>
+          ${this.config.show_forecast === false
+            ? nothing
+            : html`<div
+                class="wfc-forecast-container"
+                .actionHandler=${actionHandler({
+                  hasHold: hasAction(
+                    this.config.forecast_action?.hold_action as ActionConfig
+                  ),
+                  hasDoubleClick: hasAction(
+                    this.config.forecast_action
+                      ?.double_tap_action as ActionConfig
+                  ),
+                })}
+                @action=${this.onForecastAction}
+              >
+                ${isChartMode
+                  ? html`
+                      <wfc-forecast-chart
+                        .hass=${this.hass}
+                        .config=${this.config}
+                        .weatherEntity=${stateObject}
+                        .forecast=${currentForecast}
+                        .forecastType=${this._currentForecastType}
+                        .itemWidth=${this._currentItemWidth}
+                      ></wfc-forecast-chart>
+                    `
+                  : html`
+                      <wfc-forecast-simple
+                        .hass=${this.hass}
+                        .config=${this.config}
+                        .weatherEntity=${stateObject}
+                        .forecast=${currentForecast}
+                        .forecastType=${this._currentForecastType}
+                      ></wfc-forecast-simple>
+                    `}
+              </div>`}
         </div>
       </ha-card>
     `;

@@ -16,25 +16,30 @@ export interface ForecastToggleActionConfig extends BaseActionConfig {
   action: "toggle-forecast";
 }
 
+export interface WeatherForecastCardForecastConfig {
+  extra_attribute?: string;
+  mode?: ForecastMode;
+  show_sun_times?: boolean;
+  hourly_group_size?: number;
+}
+
+export interface WeatherForecastCardForecastActionConfig {
+  tap_action?: ForecastActionConfig;
+  hold_action?: ForecastActionConfig;
+  double_tap_action?: ForecastActionConfig;
+}
+
 export interface WeatherForecastCardConfig {
   type: "custom:weather-forecast-card";
   entity: string;
   name?: string;
   temperature_entity?: string;
   show_current?: boolean;
+  show_forecast?: boolean;
   default_forecast?: "hourly" | "daily";
   icons_path?: string;
-  forecast?: {
-    extra_attribute?: string;
-    mode?: ForecastMode;
-    show_sun_times?: boolean;
-    hourly_group_size?: number;
-  };
-  forecast_action?: {
-    tap_action?: ForecastActionConfig;
-    hold_action?: ForecastActionConfig;
-    double_tap_action?: ForecastActionConfig;
-  };
+  forecast?: WeatherForecastCardForecastConfig;
+  forecast_action?: WeatherForecastCardForecastActionConfig;
   tap_action?: ActionConfig | undefined;
   hold_action?: ActionConfig | undefined;
   double_tap_action?: ActionConfig | undefined;
