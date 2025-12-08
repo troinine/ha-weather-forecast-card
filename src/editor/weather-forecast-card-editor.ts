@@ -305,7 +305,7 @@ export class WeatherForecastCardEditor
       return nothing;
     }
 
-    const scehma = this._schema(this.hass.localize);
+    const schema = this._schema(this.hass.localize);
 
     const data = {
       ...flattenNestedKeys(this._config),
@@ -322,7 +322,7 @@ export class WeatherForecastCardEditor
       <ha-form
         .hass=${this.hass}
         .data=${data}
-        .schema=${scehma}
+        .schema=${schema}
         .computeLabel=${this._computeLabel}
         .computeHelper=${this._computeHelper}
         @value-changed=${this._valueChanged}
@@ -393,8 +393,6 @@ export class WeatherForecastCardEditor
           `ui.panel.lovelace.editor.card.generic.${name}`
         );
     }
-
-    return undefined;
   };
 
   private _computeHelper = (schema: HaFormSchema): string | undefined => {
@@ -415,9 +413,9 @@ export class WeatherForecastCardEditor
         return "Aggregate hourly forecast data into groups to reduce the number of forecast entries shown.";
       case "name":
         return "Overrides the friendly name of the entity.";
+      default:
+        return undefined;
     }
-
-    return undefined;
   };
 
   private _valueChanged(ev: CustomEvent): void {
