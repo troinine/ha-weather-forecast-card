@@ -89,23 +89,25 @@ resources:
 | `name`               | string  | optional     | Custom name to display. Defaults to the entity's friendly name.                                                                                                               |
 | `temperature_entity` | string  | optional     | Bring your own temperature entity to override the temperature from the main weather `entity`.                                                                                 |
 | `show_current`       | boolean | `true`       | Show current weather conditions.                                                                                                                                              |
+| `show_forecast`      | boolean | `true`       | Show forecast section.                                                                                                                                                        |
 | `default_forecast`   | string  | `daily`      | Default forecast to view (`daily` or `hourly`).                                                                                                                               |
 | `icons_path`         | string  | optional     | Path to custom icons. For example. `/local/img/my-custom-weather-icons`. See [Custom Weather Icons](#custom-weather-icons) for more details.                                  |
-| `forecast`           | object  | optional     | Forecast configuration options.                                                                                                                                               |
-| `forecast_actions`   | object  | optional     | Actions for the forecast area. See [actions](#actions)                                                                                                                        |
+| `forecast`           | object  | optional     | Forecast configuration options. See [Forecast Object](#forecast-object).                                                                                                      |
+| `forecast_action`    | object  | optional     | Actions for the forecast area. See [Forecast Actions](#forecast-actions).                                                                                                     |
 | `tap_action`         | object  | optional     | Defines the type action to perform on tap for the main card. Action defaults to `more-info`. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
 | `hold_action`        | object  | optional     | Defines the type of action to perform on hold for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                             |
 | `double_tap_action`  | object  | optional     | Defines the type of action to perform on double click for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                     |
 
 ### Forecast Object
 
-| Name              | Type    | Default  | Description                                                                                                                                  |
-| :---------------- | :------ | :------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`            | string  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                 |
-| `show_sun_times`  | boolean | `true`   | Show sunrise/sunset times in hourly forecast.                                                                                                |
-| `extra_attribute` | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing` |
+| Name                | Type    | Default  | Description                                                                                                                                  |
+| :------------------ | :------ | :------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`              | string  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                 |
+| `show_sun_times`    | boolean | `true`   | Show sunrise/sunset times in hourly forecast.                                                                                                |
+| `hourly_group_size` | number  | `1`      | Number of hours to group together in hourly forecast. Groups data will be aggregated per forecast attribute.                                 |
+| `extra_attribute`   | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing` |
 
-### Actions
+### Forecast Actions
 
 Actions support standard Home Assistant card actions. However, one additional action has been defined: `toggle-forecast` will toggle the forecast between daily and hourly forecast.
 
