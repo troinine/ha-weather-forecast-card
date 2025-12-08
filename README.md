@@ -104,7 +104,7 @@ resources:
 | :------------------ | :------ | :------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mode`              | string  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                 |
 | `show_sun_times`    | boolean | `true`   | Show sunrise/sunset times in hourly forecast.                                                                                                |
-| `hourly_group_size` | number  | `1`      | Number of hours to group together in hourly forecast. Groups data will be aggregated per forecast attribute.                                 |
+| `hourly_group_size` | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                  |
 | `extra_attribute`   | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing` |
 
 ### Forecast Actions
