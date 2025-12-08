@@ -1,5 +1,6 @@
 import { WeatherForecastCard } from "./weather-forecast-card";
 import * as pjson from "../package.json";
+import "./editor/weather-forecast-card-editor";
 
 declare global {
   interface Window {

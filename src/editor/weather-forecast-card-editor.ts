@@ -1,0 +1,515 @@
+import { LitElement, html, TemplateResult, nothing } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import memoizeOne from "memoize-one";
+import {
+  HomeAssistant,
+  fireEvent,
+  LovelaceCardEditor,
+  LocalizeFunc,
+} from "custom-card-helpers";
+import {
+  WeatherForecastCardConfig,
+  WeatherForecastCardForecastActionConfig,
+  WeatherForecastCardForecastConfig,
+} from "../types";
+
+type HaFormSelector =
+  | { entity: { domain?: string; device_class?: string | string[] } }
+  | { boolean: {} }
+  | { text: {} }
+  | { entity_name: {} }
+  | { number: { min?: number; max?: number } }
+  | { ui_action: { default_action: string } }
+  | {
+      select: {
+        mode?: "dropdown" | "list";
+        options: Array<{ value: string; label: string }>;
+        custom_value?: boolean;
+      };
+    };
+
+type HaFormSchema = {
+  name:
+    | keyof WeatherForecastCardEditorConfig
+    | `forecast.${keyof WeatherForecastCardForecastConfig}`
+    | `forecast_action.${keyof WeatherForecastCardForecastActionConfig}`
+    | "";
+  type?: string;
+  iconPath?: TemplateResult;
+  schema?: HaFormSchema[];
+  flatten?: boolean;
+  default?: string | boolean | number;
+  required?: boolean;
+  selector?: HaFormSelector;
+  context?: { entity?: string };
+  optional?: boolean;
+  disabled?: boolean;
+};
+
+type WeatherForecastCardEditorConfig = {
+  forecast_mode?: "show_both" | "show_current" | "show_forecast";
+  forecast_interactions?: any;
+  interactions?: any;
+  advanced_settings?: any;
+} & WeatherForecastCardConfig;
+
+@customElement("weather-forecast-card-editor")
+export class WeatherForecastCardEditor
+  extends LitElement
+  implements LovelaceCardEditor
+{
+  @property({ attribute: false }) public hass!: HomeAssistant;
+  @state() private _config!: WeatherForecastCardEditorConfig;
+
+  public setConfig(config: WeatherForecastCardEditorConfig): void {
+    this._config = config;
+  }
+
+  private _schema = memoizeOne(
+    (localize: LocalizeFunc): HaFormSchema[] =>
+      [
+        ...this._genericSchema(localize),
+        ...this._forecastSchema(localize),
+        ...this._interactionsSchema(localize),
+        ...this._advancedSchema(localize),
+      ] as const
+  );
+
+  private _genericSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+    [
+      {
+        name: "entity",
+        required: true,
+        selector: { entity: { domain: "weather" } },
+        optional: false,
+      },
+      {
+        name: "name",
+        selector: { text: {} },
+        optional: true,
+      },
+      {
+        name: "temperature_entity",
+        selector: {
+          entity: { domain: "sensor", device_class: "temperature" },
+        },
+        optional: true,
+      },
+      {
+        name: "forecast_mode",
+        default: "show_both",
+        selector: {
+          select: {
+            options: [
+              {
+                value: "show_both",
+                label: localize(
+                  "ui.panel.lovelace.editor.card.weather-forecast.show_both"
+                ),
+              },
+              {
+                value: "show_current",
+                label: localize(
+                  "ui.panel.lovelace.editor.card.weather-forecast.show_only_current"
+                ),
+              },
+              {
+                value: "show_forecast",
+                label: localize(
+                  "ui.panel.lovelace.editor.card.weather-forecast.show_only_forecast"
+                ),
+              },
+            ],
+          },
+        },
+      },
+      {
+        name: "default_forecast",
+        default: "daily",
+        optional: true,
+        selector: {
+          select: {
+            options: [
+              {
+                value: "hourly",
+                label: localize(
+                  "ui.panel.lovelace.editor.card.weather-forecast.hourly"
+                ),
+              },
+              {
+                value: "daily",
+                label: localize(
+                  "ui.panel.lovelace.editor.card.weather-forecast.daily"
+                ),
+              },
+            ],
+          },
+        },
+      },
+    ] as const;
+
+  private _forecastSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+    [
+      {
+        name: "forecast.mode",
+        default: "simple",
+        selector: {
+          select: {
+            options: [
+              {
+                value: "simple",
+                label: "Simple",
+              },
+              {
+                value: "chart",
+                label: "Chart",
+              },
+            ],
+          },
+        },
+        optional: true,
+      },
+      {
+        name: "forecast.extra_attribute",
+        optional: true,
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: [
+              {
+                value: "none",
+                label:
+                  localize(
+                    "ui.panel.lovelace.editor.card.weather-forecast.none"
+                  ) || "(no attribute)",
+              },
+              {
+                value: "wind_bearing",
+                label:
+                  localize("ui.card.weather.attributes.wind_bearing") ||
+                  "Wind bearing",
+              },
+              {
+                value: "wind_direction",
+                label:
+                  localize("ui.card.weather.attributes.wind_direction") ||
+                  "Wind direction",
+              },
+              {
+                value: "precipitation_probability",
+                label:
+                  localize(
+                    "ui.card.weather.attributes.precipitation_probability"
+                  ) || "Precipitation probability",
+              },
+            ],
+          },
+        },
+      },
+      {
+        name: "forecast.show_sun_times",
+        selector: { boolean: {} },
+        default: true,
+        optional: true,
+      },
+      {
+        name: "forecast.hourly_group_size",
+        optional: true,
+        selector: { number: { min: 1, max: 4 } },
+        default: 1,
+      },
+    ] as const;
+
+  private _interactionsSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+    [
+      {
+        name: "forecast_interactions",
+        type: "expandable",
+        flatten: true,
+        schema: [
+          {
+            name: "forecast_action.tap_action",
+            selector: {
+              ui_action: {
+                default_action: "toggle-forecast",
+              },
+            },
+          },
+          {
+            name: "",
+            type: "optional_actions",
+            flatten: true,
+            schema: (["hold_action", "double_tap_action"] as const).map(
+              (action) => ({
+                name: `forecast_action.${action}`,
+                selector: {
+                  ui_action: {
+                    default_action: "none" as const,
+                  },
+                },
+              })
+            ),
+          },
+        ],
+      },
+      {
+        name: "interactions",
+        type: "expandable",
+        flatten: true,
+        schema: [
+          {
+            name: "tap_action",
+            selector: {
+              ui_action: {
+                default_action: "more-info",
+              },
+            },
+          },
+          {
+            name: "",
+            type: "optional_actions",
+            flatten: true,
+            schema: (["hold_action", "double_tap_action"] as const).map(
+              (action) => ({
+                name: action,
+                selector: {
+                  ui_action: {
+                    default_action: "none" as const,
+                  },
+                },
+              })
+            ),
+          },
+        ],
+      },
+    ] as const;
+
+  private _advancedSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+    [
+      {
+        name: "advanced_settings",
+        type: "expandable",
+        flatten: true,
+        schema: [
+          {
+            name: "icons_path",
+            selector: { text: {} },
+            optional: true,
+          },
+        ],
+      },
+    ] as const;
+
+  protected render(): TemplateResult | typeof nothing {
+    if (!this.hass || !this._config) {
+      return nothing;
+    }
+
+    const scehma = this._schema(this.hass.localize);
+
+    const data = {
+      ...flattenNestedKeys(this._config),
+    };
+
+    data.forecast_mode =
+      data.show_current && data.show_forecast
+        ? "show_both"
+        : data.show_current
+        ? "show_current"
+        : "show_forecast";
+
+    return html`
+      <ha-form
+        .hass=${this.hass}
+        .data=${data}
+        .schema=${scehma}
+        .computeLabel=${this._computeLabel}
+        .computeHelper=${this._computeHelper}
+        @value-changed=${this._valueChanged}
+      >
+      </ha-form>
+    `;
+  }
+
+  private _computeLabel = (schema: HaFormSchema): string | undefined => {
+    const name = schema.name.startsWith("forecast_action.")
+      ? schema.name.split(".")[1]
+      : schema.name;
+
+    switch (name) {
+      case "entity":
+        return `${this.hass!.localize(
+          "ui.panel.lovelace.editor.card.generic.entity"
+        )} (${(
+          this.hass!.localize(
+            "ui.panel.lovelace.editor.card.config.required"
+          ) || "required"
+        ).toLocaleLowerCase()})`;
+      case "name":
+        return this.hass.localize("ui.panel.lovelace.editor.card.generic.name");
+      case "temperature_entity":
+        return `${this.hass!.localize(
+          "ui.card.weather.attributes.temperature"
+        )} ${(
+          this.hass!.localize("ui.panel.lovelace.editor.card.generic.entity") ||
+          "entity"
+        ).toLocaleLowerCase()}`;
+      case "forecast":
+        return this.hass!.localize(
+          "ui.panel.lovelace.editor.card.weather-forecast.weather_to_show"
+        );
+      case "default_forecast":
+        return this.hass!.localize(
+          "ui.panel.lovelace.editor.card.weather-forecast.forecast_type"
+        );
+      case "icons_path":
+        return "Path to custom icons";
+      case "forecast.extra_attribute":
+        return `Extra ${(
+          this.hass!.localize("ui.card.weather.forecast") || "forecast"
+        ).toLocaleLowerCase()} ${(
+          this.hass!.localize(
+            "ui.panel.lovelace.editor.card.generic.attribute"
+          ) || "attribute"
+        ).toLocaleLowerCase()}`;
+      case "forecast.mode":
+        return "Forecast display mode";
+      case "forecast.show_sun_times":
+        return "Show sunrise and sunset times";
+      case "forecast.hourly_group_size":
+        return "Hourly forecast group size";
+      case "forecast_interactions":
+        return `${this.hass!.localize("ui.card.weather.forecast")} ${(
+          this.hass!.localize(
+            `ui.panel.lovelace.editor.card.generic.interactions`
+          ) || "interactions"
+        ).toLocaleLowerCase()}`;
+      case "advanced_settings":
+        return this.hass!.localize(
+          "ui.dialogs.helper_settings.generic.advanced_settings"
+        );
+      default:
+        return this.hass!.localize(
+          `ui.panel.lovelace.editor.card.generic.${name}`
+        );
+    }
+
+    return undefined;
+  };
+
+  private _computeHelper = (schema: HaFormSchema): string | undefined => {
+    switch (schema.name) {
+      case "temperature_entity":
+        return "Optional temperature sensor entity to override the weather entity's temperature.";
+      case "default_forecast":
+        return "Select the default forecast type to show when forecasts are enabled. Users can still toggle between hourly and daily forecasts if both are available.";
+      case "forecast.extra_attribute":
+        return "Select an extra attribute to display below each forecast.";
+      case "forecast_interactions":
+        return "Action to perform when the forecast section is interacted with. Default tap action toggles between hourly and daily forecasts.";
+      case "interactions":
+        return "Action to perform when the non-forecast area of the card is interacted with.";
+      case "icons_path":
+        return "Path to custom weather condition icons (e.g., /local/img/weather).";
+      case "forecast.hourly_group_size":
+        return "Aggregate hourly forecast data into groups to reduce the number of forecast entries shown.";
+      case "name":
+        return "Overrides the friendly name of the entity.";
+    }
+
+    return undefined;
+  };
+
+  private _valueChanged(ev: CustomEvent): void {
+    ev.stopPropagation();
+
+    const config = ev.detail.value as WeatherForecastCardEditorConfig;
+
+    if (config.forecast_mode === "show_both") {
+      config.show_current = true;
+      config.show_forecast = true;
+    } else if (config.forecast_mode === "show_current") {
+      config.show_current = true;
+      config.show_forecast = false;
+    } else {
+      config.show_current = false;
+      config.show_forecast = true;
+    }
+
+    delete config.forecast_mode;
+
+    const newConfig = moveDottedKeysToNested(config);
+
+    if (newConfig?.forecast?.extra_attribute === "none") {
+      delete newConfig.forecast.extra_attribute;
+    }
+
+    fireEvent(this, "config-changed", { config: newConfig });
+  }
+}
+
+const moveDottedKeysToNested = (obj: Record<string, any>) => {
+  const result: Record<string, any> = { ...obj };
+
+  for (const key of Object.keys(obj)) {
+    if (!key.startsWith("forecast.") && !key.startsWith("forecast_action."))
+      continue;
+
+    const parts = key.split(".");
+    if (parts.length < 2) continue;
+
+    const [prefix, prop] = parts;
+    if (!prefix || !prop) continue;
+
+    if (!result[prefix] || typeof result[prefix] !== "object") {
+      result[prefix] = {};
+    }
+
+    result[prefix][prop] = obj[key];
+    delete result[key];
+  }
+
+  return result;
+};
+
+const flattenNestedKeys = (obj: Record<string, any>) => {
+  const result: Record<string, any> = {};
+
+  for (const key in obj) {
+    const value = obj[key];
+
+    if (
+      key === "forecast" &&
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value)
+    ) {
+      for (const innerKey in value) {
+        result[`forecast.${innerKey}`] = value[innerKey];
+      }
+      continue;
+    }
+
+    if (
+      key === "forecast_action" &&
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value)
+    ) {
+      for (const innerKey in value) {
+        result[`forecast_action.${innerKey}`] = value[innerKey];
+      }
+      continue;
+    }
+
+    result[key] = value;
+  }
+
+  return result;
+};
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "weather-forecast-card-editor": WeatherForecastCardEditor;
+  }
+}

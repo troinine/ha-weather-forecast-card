@@ -10,7 +10,7 @@
       "source": [
         "src/index.ts"
       ],
-      "publicUrl": "/hacsfiles/weather-forecast-card/",
+      "publicUrl": "/hacsfiles/ha-weather-forecast-card/",
       "includeNodeModules": true
     }
   },

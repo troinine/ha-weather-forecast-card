@@ -40,7 +40,7 @@ export class WfcWeatherConditionIconProvider extends LitElement {
   }
 
   private getWeatherStateIcon(): TemplateResult | typeof nothing {
-    if (this.config.icons_path) {
+    if (this.config?.icons_path?.trim()) {
       const { path, state } = this.getCustomWeatherIconPath();
 
       return html` <img src="${path}" alt="${state}" /> `;
@@ -78,8 +78,10 @@ export class WfcWeatherConditionIconProvider extends LitElement {
       }
     }
 
+    const iconsPath = this.config.icons_path?.trim().replace(/\/$/, "");
+
     return {
-      path: `${this.config.icons_path}/${condition}.svg`,
+      path: `${iconsPath}/${condition}.svg`,
       state: condition,
     };
   };
