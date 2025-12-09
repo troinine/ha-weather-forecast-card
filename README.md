@@ -31,6 +31,7 @@ This card takes inspiration from [Weather Forecast Extended Card](https://github
 - **Custom icons** – Use your own weather icons
 - **Customizable actions** – Configure tap, hold, and double-tap behaviors
 - **Sun times** - Visualize sunrise and sunset
+- **Card editor** - Configure the card directly in the UI. No YAML required
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/troinine/ha-weather-forecast-card/refs/heads/main/docs/weather-forecast-card-scroll.gif" alt="Scrollable forecast" width="400" style="border-radius: 12px;">
@@ -40,21 +41,7 @@ This card takes inspiration from [Weather Forecast Extended Card](https://github
 
 ### HACS (recommended)
 
-> [!IMPORTANT]
-> This repository is not yet available in the HACS default repositories. You need to add it as a custom repository first.
-
-#### Step 1: Add Custom Repository
-
-1. Open Home Assistant
-2. Go to **Settings** → **Devices & Services** → **HACS**
-3. Click the **three dots menu (⋮)** in the top right corner
-4. Select **"Custom repositories"**
-5. In the dialog that opens:
-   - **Repository:** `https://github.com/troinine/ha-weather-forecast-card`
-   - **Category:** Select **"Dashboard"** from the dropdown
-6. Click **"Add"**
-
-#### Step 2: Install the Card
+The card is available in [HACS](https://hacs.xyz/) (Home Assistant Community Store). Use the following link to directly go to the repository in HACS:
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=troinine&repository=ha-weather-forecast-card&category=Dashboard)
 
@@ -64,7 +51,8 @@ Or manually:
 2. Go to **Settings** → **Devices & Services** → **HACS**
 3. Search for "Weather Forecast Card"
 4. Click "Download"
-5. Restart Home Assistant
+
+You can now go and add the card to your dashboard by clicking "Edit dashboard" from the top right corner of your dashboard. You may need to clear your browser cache.
 
 ### Manual Installation
 
@@ -82,21 +70,21 @@ resources:
 
 ## Configuration
 
-| Name                 | Type    | Default      | Description                                                                                                                                                                   |
-| :------------------- | :------ | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`               | string  | **Required** | `custom:weather-forecast-card`                                                                                                                                                |
-| `entity`             | string  | **Required** | The weather entity id (e.g., `weather.home`).                                                                                                                                 |
-| `name`               | string  | optional     | Custom name to display. Defaults to the entity's friendly name.                                                                                                               |
-| `temperature_entity` | string  | optional     | Bring your own temperature entity to override the temperature from the main weather `entity`.                                                                                 |
-| `show_current`       | boolean | `true`       | Show current weather conditions.                                                                                                                                              |
-| `show_forecast`      | boolean | `true`       | Show forecast section.                                                                                                                                                        |
-| `default_forecast`   | string  | `daily`      | Default forecast to view (`daily` or `hourly`).                                                                                                                               |
-| `icons_path`         | string  | optional     | Path to custom icons. For example, `/local/img/my-custom-weather-icons`. See [Custom Weather Icons](#custom-weather-icons) for more details.                                  |
-| `forecast`           | object  | optional     | Forecast configuration options. See [Forecast Object](#forecast-object).                                                                                                      |
-| `forecast_action`    | object  | optional     | Actions for the forecast area. See [Forecast Actions](#forecast-actions).                                                                                                     |
+| Name                 | Type    | Default      | Description                                                                                                                                                                      |
+| :------------------- | :------ | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`               | string  | **Required** | `custom:weather-forecast-card`                                                                                                                                                   |
+| `entity`             | string  | **Required** | The weather entity id (e.g., `weather.home`).                                                                                                                                    |
+| `name`               | string  | optional     | Custom name to display. Defaults to the entity's friendly name.                                                                                                                  |
+| `temperature_entity` | string  | optional     | Bring your own temperature entity to override the temperature from the main weather `entity`.                                                                                    |
+| `show_current`       | boolean | `true`       | Show current weather conditions.                                                                                                                                                 |
+| `show_forecast`      | boolean | `true`       | Show forecast section.                                                                                                                                                           |
+| `default_forecast`   | string  | `daily`      | Default forecast to view (`daily` or `hourly`).                                                                                                                                  |
+| `icons_path`         | string  | optional     | Path to custom icons. For example, `/local/img/my-custom-weather-icons`. See [Custom Weather Icons](#custom-weather-icons) for more details.                                     |
+| `forecast`           | object  | optional     | Forecast configuration options. See [Forecast Object](#forecast-object).                                                                                                         |
+| `forecast_action`    | object  | optional     | Actions for the forecast area. See [Forecast Actions](#forecast-actions).                                                                                                        |
 | `tap_action`         | object  | optional     | Defines the type of action to perform on tap for the main card. Action defaults to `more-info`. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
-| `hold_action`        | object  | optional     | Defines the type of action to perform on hold for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                             |
-| `double_tap_action`  | object  | optional     | Defines the type of action to perform on double click for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                     |
+| `hold_action`        | object  | optional     | Defines the type of action to perform on hold for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                                |
+| `double_tap_action`  | object  | optional     | Defines the type of action to perform on double click for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                        |
 
 ### Forecast Object
 
