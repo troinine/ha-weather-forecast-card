@@ -21,30 +21,28 @@ jobs:
         run: |
           set -euo pipefail
 
-          PR_DATA=$(gh pr view "$PR_URL" --repo "$REPO" --json reviews,reviewThreads)
+          PR_DATA=$(gh pr view "$PR_URL" --repo "$REPO" --json reviews)
 
-          # Check for an APPROVED review from Copilot with "Looks good to me!"
-          COPILOT_APPROVAL=$(echo "$PR_DATA" | jq -r '
-            (.reviews // [])[]
-            | select(.author.login | test("copilot"; "i"))
-            | select(.state == "APPROVED")
-            | select((.body // "") | contains("Looks good to me!"))
-            | .id
-          ' | head -n 1)
-
-          if [ -z "$COPILOT_APPROVAL" ]; then
-            echo "No matching Copilot approval found. Skipping approval."
-            exit 0
-          fi
-
-          UNRESOLVED_COUNT=$(echo "$PR_DATA" | jq '
-            [(.reviewThreads // [])[] | select(.isResolved == false)] | length
+          LATEST_COPILOT_REVIEW=$(echo "$PR_DATA" | jq -r '
+            [(.reviews // [])[] | select(.author.login == "copilot-pull-request-reviewer")]
+            | sort_by(.submittedAt) 
+            | last
           ')
 
-          if [ "$UNRESOLVED_COUNT" -gt 0 ]; then
-            echo "Found $UNRESOLVED_COUNT unresolved conversation threads. Skipping approval."
+          if [ "$LATEST_COPILOT_REVIEW" == "null" ]; then
+            echo "No reviews found from copilot-pull-request-reviewer. Skipping."
             exit 0
           fi
 
-          echo "Copilot approved and all threads resolved. Approving PR..."
-          gh pr review "$PR_URL" --repo "$REPO" --approve --body "Auto-approved based on Copilot review"
+          IS_CLEAN=$(echo "$LATEST_COPILOT_REVIEW" | jq -r '
+            .body | test("Copilot reviewed \\d+ out of \\d+ changed files in this pull request and generated no new comments."; "i")
+          ')
+
+          if [ "$IS_CLEAN" != "true" ]; then
+            echo "Latest Copilot review does not indicate a clean state (generated no new comments)."
+            echo "Review Body: $(echo "$LATEST_COPILOT_REVIEW" | jq -r .body)"
+            exit 0
+          fi
+
+          echo "Copilot review is clean and all threads resolved. Approving PR..."
+          gh pr review "$PR_URL" --repo "$REPO" --approve --body "Auto-approved based on clean Copilot review."
