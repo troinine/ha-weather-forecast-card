@@ -10,6 +10,7 @@
       "source": [
         "src/index.ts"
       ],
+      "optimize": true,
       "publicUrl": "/hacsfiles/ha-weather-forecast-card/",
       "includeNodeModules": true
     }
@@ -17,6 +18,7 @@
   "scripts": {
     "dev": "parcel serve test/app/index.html test/app/resources/img/*.svg --open",
     "build": "parcel build --no-source-maps --target module",
+    "build:debug": "parcel build --target module --no-optimize",
     "clean": "rm -rf ./dist/ ./.parcel-cache",
     "preview": "parcel serve test/app/index.html --no-hmr"
   },
