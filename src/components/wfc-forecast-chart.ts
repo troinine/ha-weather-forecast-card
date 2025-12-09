@@ -237,6 +237,10 @@ export class WfcForecastChart extends LitElement {
             type: "bar",
             yAxisID: "yPrecip",
             borderWidth: 0,
+            borderRadius: {
+              topLeft: 3,
+              topRight: 3,
+            },
             categoryPercentage: 0.6,
             barPercentage: 0.8,
             order: 0,
