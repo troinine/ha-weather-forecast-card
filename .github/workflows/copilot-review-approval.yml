@@ -1,0 +1,85 @@
+name: Approve Copilot reviews
+
+on:
+  pull_request_review:
+    types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: pr-approval-${{ github.head_ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Check Copilot Review and Approval
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          PR_DATA=$(gh pr view "$PR_URL" --repo "$REPO" --json reviews)
+
+          LATEST_COPILOT_REVIEW=$(echo "$PR_DATA" | jq -r '
+            [(.reviews // [])[] | select(.author.login == "copilot-pull-request-reviewer")]
+            | sort_by(.submittedAt)
+            | last
+          ')
+
+          if [ "$LATEST_COPILOT_REVIEW" == "null" ]; then
+            echo "No reviews found from copilot-pull-request-reviewer. Skipping."
+            exit 0
+          fi
+
+          IS_CLEAN=$(echo "$LATEST_COPILOT_REVIEW" | jq -r '
+            .body | test("Copilot reviewed \\d+ out of \\d+ changed files in this pull request and generated no new comments\\.")
+          ')
+
+          if [ "$IS_CLEAN" != "true" ]; then
+            echo "Latest Copilot review does not indicate a clean state (generated no new comments)."
+            echo "Review Body: $(echo "$LATEST_COPILOT_REVIEW" | jq -r .body)"
+            exit 0
+          fi
+
+          echo "Copilot review is clean. Checking for existing approvals..."
+
+          EXISTING_APPROVAL=$(echo "$PR_DATA" | jq -r '
+            [(.reviews // [])[] | select(
+              (.state == "APPROVED") and
+              (.author.login == "github-actions[bot]" or .author.login == "copilot-pull-request-reviewer")
+            )]
+            | length
+          ')
+          if [ "$EXISTING_APPROVAL" -gt 0 ]; then
+            echo "An approval review already exists from github-actions[bot] or copilot-pull-request-reviewer. Skipping approval."
+            exit 0
+          fi
+
+          echo "Checking if sensitive files have been modified..."
+
+          SENSITIVE_PATTERNS='
+            .github/workflows/
+          '
+          CHANGED_FILES=$(gh pr view "$PR_URL" --repo "$REPO" --json files | jq -r '.files[].path')
+          for pattern in $SENSITIVE_PATTERNS; do
+            if echo "$CHANGED_FILES" | grep -q "^$pattern"; then
+              echo "PR modifies sensitive file(s) matching pattern: $pattern"
+              echo "Auto-approval is not allowed for PRs that modify workflow, dependency, or security-sensitive files."
+              exit 0
+            fi
+          done
+
+          echo "Copilot review is clean. Approving PR..."
+
+          gh pr review "$PR_URL" --repo "$REPO" --approve --body "Auto-approved based on clean Copilot review."
