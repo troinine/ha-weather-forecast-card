@@ -9,7 +9,7 @@ on:
     types: [created]
 
 concurrency:
-  group: pr-approval-${{ github.head_ref }}
+  group: pr-approval-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 permissions:
@@ -19,12 +19,12 @@ permissions:
 jobs:
   auto-approve:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: (github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment') && github.event.pull_request.draft == false
     steps:
       - name: Check Copilot Review and Approval
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number || github.event.issue.number }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
@@ -68,11 +68,11 @@ jobs:
 
           echo "Checking if sensitive files have been modified..."
 
-          SENSITIVE_PATTERNS='
-            \.github/workflows/
-          '
+          SENSITIVE_PATTERNS=(
+            "\.github/workflows/"
+          )
           CHANGED_FILES=$(gh pr view "$PR_URL" --repo "$REPO" --json files | jq -r '.files[].path')
-          for pattern in $SENSITIVE_PATTERNS; do
+          for pattern in "${SENSITIVE_PATTERNS[@]}"; do
             if echo "$CHANGED_FILES" | grep -qE "^$pattern"; then
               echo "PR modifies sensitive file(s) matching pattern: $pattern"
               echo "Auto-approval is not allowed for PRs that modify workflow, dependency, or security-sensitive files."
