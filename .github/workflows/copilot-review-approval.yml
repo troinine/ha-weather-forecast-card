@@ -68,11 +68,11 @@ jobs:
 
           echo "Checking if sensitive files have been modified..."
 
-          SENSITIVE_PATTERNS='
-            .github/workflows/
-          '
+          SENSITIVE_PATTERNS=(
+            ".github/workflows/"
+          )
           CHANGED_FILES=$(gh pr view "$PR_URL" --repo "$REPO" --json files | jq -r '.files[].path')
-          for pattern in $SENSITIVE_PATTERNS; do
+          for pattern in "${SENSITIVE_PATTERNS[@]}"; do
             if echo "$CHANGED_FILES" | grep -q "^$pattern"; then
               echo "PR modifies sensitive file(s) matching pattern: $pattern"
               echo "Auto-approval is not allowed for PRs that modify workflow, dependency, or security-sensitive files."
