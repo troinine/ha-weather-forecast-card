@@ -58,6 +58,6 @@ jobs:
             exit 0
           fi
 
-          echo "Copilot review is clean. Approving PR..."  
+          echo "Copilot review is clean. Approving PR..."
 
           gh pr review "$PR_URL" --repo "$REPO" --approve --body "Auto-approved based on clean Copilot review."
