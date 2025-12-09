@@ -52,7 +52,7 @@ Or manually:
 3. Search for "Weather Forecast Card"
 4. Click "Download"
 
-You can now go and add the card to your dashboard by clicking "Edit dashboard" from the top right corner of your dashboard. You may need to clear your browser cache.
+You can now add the card to your dashboard by clicking "Edit dashboard" from the top right corner. You may need to clear your browser cache.
 
 ### Manual Installation
 
