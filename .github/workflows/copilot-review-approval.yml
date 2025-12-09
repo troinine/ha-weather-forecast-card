@@ -9,7 +9,7 @@ on:
     types: [created]
 
 concurrency:
-  group: pr-approval-${{ github.head_ref }}
+  group: pr-approval-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 permissions:
