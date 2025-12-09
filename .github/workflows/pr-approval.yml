@@ -35,7 +35,7 @@ jobs:
           fi
 
           IS_CLEAN=$(echo "$LATEST_COPILOT_REVIEW" | jq -r '
-            .body | test("Copilot reviewed \\d+ out of \\d+ changed files in this pull request and generated no new comments."; "i")
+            .body | test("Copilot reviewed \\d+ out of \\d+ changed files in this pull request and generated no new comments\\.)"; "i")
           ')
 
           if [ "$IS_CLEAN" != "true" ]; then
