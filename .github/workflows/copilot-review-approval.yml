@@ -3,8 +3,6 @@ name: Approve Copilot reviews
 on:
   pull_request_review:
     types: [submitted]
-  pull_request_review_comment:
-    types: [created]
   issue_comment:
     types: [created]
 
