@@ -1,0 +1,50 @@
+name: Approve Copilot reviews
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Check Copilot Review and Approval
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          PR_DATA=$(gh pr view "$PR_URL" --repo "$REPO" --json reviews,reviewThreads)
+
+          # Check for an APPROVED review from Copilot with "Looks good to me!"
+          COPILOT_APPROVAL=$(echo "$PR_DATA" | jq -r '
+            (.reviews // [])[]
+            | select(.author.login | test("copilot"; "i"))
+            | select(.state == "APPROVED")
+            | select((.body // "") | contains("Looks good to me!"))
+            | .id
+          ' | head -n 1)
+
+          if [ -z "$COPILOT_APPROVAL" ]; then
+            echo "No matching Copilot approval found. Skipping approval."
+            exit 0
+          fi
+
+          UNRESOLVED_COUNT=$(echo "$PR_DATA" | jq '
+            [(.reviewThreads // [])[] | select(.isResolved == false)] | length
+          ')
+
+          if [ "$UNRESOLVED_COUNT" -gt 0 ]; then
+            echo "Found $UNRESOLVED_COUNT unresolved conversation threads. Skipping approval."
+            exit 0
+          fi
+
+          echo "Copilot approved and all threads resolved. Approving PR..."
+          gh pr review "$PR_URL" --repo "$REPO" --approve --body "Auto-approved based on Copilot review"
