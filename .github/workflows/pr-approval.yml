@@ -44,5 +44,20 @@ jobs:
             exit 0
           fi
 
-          echo "Copilot review is clean and all threads resolved. Approving PR..."
+          echo "Copilot review is clean and all threads resolved. Checking for existing approvals..."
+
+          EXISTING_APPROVAL=$(echo "$PR_DATA" | jq -r '
+            [(.reviews // [])[] | select(
+              (.state == "APPROVED") and 
+              (.author.login == "github-actions[bot]" or .author.login == "copilot-pull-request-reviewer")
+            )]
+            | length
+          ')
+          if [ "$EXISTING_APPROVAL" -gt 0 ]; then
+            echo "An approval review already exists from github-actions[bot] or copilot-pull-request-reviewer. Skipping approval."
+            exit 0
+          fi
+
+          echo "Copilot review is clean. Approving PR..."  
+
           gh pr review "$PR_URL" --repo "$REPO" --approve --body "Auto-approved based on clean Copilot review."
