@@ -19,7 +19,7 @@ permissions:
 jobs:
   auto-approve:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: (github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment') && github.event.pull_request.draft == false
     steps:
       - name: Check Copilot Review and Approval
         env:
