@@ -3,6 +3,13 @@ name: Approve Copilot reviews
 on:
   pull_request_review:
     types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+  workflow_dispatch:
+
+concurrency:
+  group: pr-approval-${{ github.head_ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -25,7 +32,7 @@ jobs:
 
           LATEST_COPILOT_REVIEW=$(echo "$PR_DATA" | jq -r '
             [(.reviews // [])[] | select(.author.login == "copilot-pull-request-reviewer")]
-            | sort_by(.submittedAt) 
+            | sort_by(.submittedAt)
             | last
           ')
 
@@ -35,7 +42,7 @@ jobs:
           fi
 
           IS_CLEAN=$(echo "$LATEST_COPILOT_REVIEW" | jq -r '
-            .body | test("Copilot reviewed \\d+ out of \\d+ changed files in this pull request and generated no new comments\\.)"; "i")
+            .body | test("Copilot reviewed \\d+ out of \\d+ changed files in this pull request and generated no new comments\\.")
           ')
 
           if [ "$IS_CLEAN" != "true" ]; then
@@ -48,7 +55,7 @@ jobs:
 
           EXISTING_APPROVAL=$(echo "$PR_DATA" | jq -r '
             [(.reviews // [])[] | select(
-              (.state == "APPROVED") and 
+              (.state == "APPROVED") and
               (.author.login == "github-actions[bot]" or .author.login == "copilot-pull-request-reviewer")
             )]
             | length
