@@ -5,7 +5,8 @@ on:
     types: [submitted]
   pull_request_review_comment:
     types: [created]
-  workflow_dispatch:
+  issue_comment:
+    types: [created]
 
 concurrency:
   group: pr-approval-${{ github.head_ref }}
@@ -51,7 +52,7 @@ jobs:
             exit 0
           fi
 
-          echo "Copilot review is clean and all threads resolved. Checking for existing approvals..."
+          echo "Copilot review is clean. Checking for existing approvals..."
 
           EXISTING_APPROVAL=$(echo "$PR_DATA" | jq -r '
             [(.reviews // [])[] | select(
