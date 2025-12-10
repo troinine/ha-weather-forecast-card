@@ -178,15 +178,12 @@ export class WeatherForecastCard extends LitElement {
         ${createWarningText(this.hass, entity)}
       </hui-warning>`;
     }
-    if (!this._hourlyForecastData && !this._dailyForecastData) {
-      return nothing;
-    }
 
     const isChartMode = this.config.forecast?.mode === ForecastMode.Chart;
     const currentForecast =
-      this._currentForecastType === "hourly"
+      (this._currentForecastType === "hourly"
         ? this._hourlyForecastData
-        : this._dailyForecastData;
+        : this._dailyForecastData) || [];
 
     return html`
       <ha-card>
