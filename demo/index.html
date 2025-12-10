@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Forecast Card - Development Test</title>
+    <style>
+      :root {
+        --primary-text-color: #fff;
+        --secondary-text-color: #ccc;
+        --ha-font-size-3xl: 28px;
+        --ha-font-size-l: 16px;
+        --ha-font-size-m: 14px;
+        --ha-line-height-condensed: 1.2;
+        font-family: "Roboto", "Noto", sans-serif;
+        color: var(--primary-text-color);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.5px;
+      }
+      h3 {
+        color: var(--secondary-text-color);
+        font-size: 20px;
+        font-weight: 400;
+        margin: 0 0 24px 0;
+        text-align: center;
+      }
+      .tagline {
+        font-size: 16px;
+        color: var(--secondary-text-color);
+        margin: 0 0 16px 0;
+        max-width: 320px;
+        line-height: 1.5;
+      }
+      .features {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .feature {
+        font-size: 14px;
+        color: var(--secondary-text-color);
+        display: flex;
+        gap: 8px;
+        text-align: left;
+        white-space: nowrap;
+      }
+      .feature svg {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        stroke: dodgerblue;
+      }
+      .view {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        width: 100vw;
+        background: url("./background.png") no-repeat center center;
+        background-size: cover;
+      }
+      .dashboard {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        gap: 30px;
+        flex: 0 0 auto;
+      }
+      .intro {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        max-width: 380px;
+      }
+      .tap-indicator {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        border: 3px solid rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+        z-index: 1000;
+      }
+      .tap-indicator.active {
+        animation: tap-ripple 0.6s ease-out;
+      }
+      @keyframes tap-ripple {
+        0% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(0.5);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(1.5);
+        }
+      }
+      .scroll-indicator {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .scroll-indicator svg {
+        width: 100%;
+        height: 100%;
+        fill: rgba(255, 255, 255, 0.9);
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        transition: transform 0.2s ease;
+      }
+      .scroll-indicator.reverse svg {
+        transform: scaleX(-1);
+      }
+      .scroll-indicator.active {
+        animation: scroll-slide 0.8s ease-out;
+      }
+      @keyframes scroll-slide {
+        0% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(30px);
+        }
+      }
+      .scroll-indicator.reverse.active {
+        animation: scroll-slide-reverse 0.8s ease-out;
+      }
+      @keyframes scroll-slide-reverse {
+        0% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(-30px);
+        }
+      }
+      .demo-card-container {
+        display: block;
+        box-sizing: border-box;
+        box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+      }
+      .demo-card {
+        display: block;
+        padding: 16px;
+        width: 550px;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.1) 20%,
+          rgba(0, 0, 0, 0.01) 100%
+        );
+        backdrop-filter: blur(20px) saturate(110%) brightness(90%);
+        border-radius: 20px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgba(255, 255, 255, 0.05);
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+          inset 0 0 2px 1px rgba(255, 255, 255, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="view">
+      <div class="dashboard">
+        <div class="intro">
+          <h1>Weather Forecast Card</h1>
+          <h3>For Home Assistant</h3>
+          <div class="features">
+            <div class="feature">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              View more forecast entries than fit on screen
+            </div>
+            <div class="feature">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Toggle between hourly and daily forecasts with a single tap
+            </div>
+            <div class="feature">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Visualize temperature and precipitation trends
+            </div>
+            <div class="feature">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Aggregate multiple hours of forecast data for easier viewing
+            </div>
+            <div class="feature">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Card editor and more!
+            </div>
+          </div>
+        </div>
+        <div class="demo-card-container">
+          <weather-forecast-card class="demo-card"></weather-forecast-card>
+        </div>
+        <div class="tap-indicator" id="tap-indicator"></div>
+        <div class="scroll-indicator" id="scroll-indicator">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="../src/index.ts"></script>
+    <script type="module">
+      import { MockHass } from "../test/mocks/hass.ts";
+
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass();
+
+      customElements.whenDefined("weather-forecast-card").then(() => {
+        const card = document.querySelector(".demo-card");
+
+        card.setConfig({
+          type: "custom:weather-forecast-card",
+          entity: "weather.demo",
+          name: "Home",
+          forecast: {
+            mode: "chart",
+            extra_attribute: "wind_direction",
+            hourly_group_size: 2,
+          },
+        });
+        card.hass = hass;
+
+        // Auto-demo: tap, scroll, scroll back, tap sequence
+        setTimeout(() => {
+          const forecastContainer = card.shadowRoot?.querySelector(
+            ".wfc-forecast-container",
+          );
+          const scrollContainer = card.shadowRoot?.querySelector(
+            ".wfc-scroll-container",
+          );
+
+          if (scrollContainer) {
+            console.log("Starting demo sequence");
+
+            const tapIndicator = document.getElementById("tap-indicator");
+            const scrollIndicator = document.getElementById("scroll-indicator");
+
+            // Function to show tap indicator at element center
+            const showTapIndicator = (element) => {
+              const rect = element.getBoundingClientRect();
+              const x = rect.left + rect.width / 2;
+              const y = rect.top + rect.height / 2;
+
+              tapIndicator.style.left = `${x}px`;
+              tapIndicator.style.top = `${y}px`;
+              tapIndicator.classList.remove("active");
+
+              // Trigger reflow to restart animation
+              void tapIndicator.offsetWidth;
+              tapIndicator.classList.add("active");
+            };
+
+            // Function to show scroll indicator
+            const showScrollIndicator = (element, reverse = false) => {
+              const rect = element.getBoundingClientRect();
+              const indicatorWidth = 50; // Width of the indicator
+              const edgeOffset = 30; // Distance from edge
+              // Position symmetrically from edges
+              const x = reverse
+                ? rect.left + edgeOffset
+                : rect.right - edgeOffset - indicatorWidth;
+              const y = rect.top + rect.height / 3;
+
+              scrollIndicator.style.left = `${x}px`;
+              scrollIndicator.style.top = `${y}px`;
+              scrollIndicator.classList.remove("active", "reverse");
+
+              if (reverse) {
+                scrollIndicator.classList.add("reverse");
+              }
+
+              // Trigger reflow to restart animation
+              void scrollIndicator.offsetWidth;
+              scrollIndicator.classList.add("active");
+            };
+
+            let scrollPosition = 0;
+            const scrollStep = 1000;
+            let step = 0; // 0 = tap, 1 = scroll right, 2 = scroll back, 3 = tap
+
+            setInterval(() => {
+              if (step === 0 || step === 3) {
+                showTapIndicator(forecastContainer);
+                forecastContainer.click();
+                step = step === 0 ? 1 : 0;
+              } else if (step === 1) {
+                showScrollIndicator(scrollContainer, false);
+                scrollPosition += scrollStep;
+
+                // Cap at max scroll
+                const maxScroll =
+                  scrollContainer.scrollWidth - scrollContainer.clientWidth;
+                if (scrollPosition > maxScroll) {
+                  scrollPosition = maxScroll;
+                }
+
+                scrollContainer.scrollTo({
+                  left: scrollPosition,
+                  behavior: "smooth",
+                });
+                step = 2;
+              } else if (step === 2) {
+                showScrollIndicator(scrollContainer, true);
+                scrollPosition = 0;
+                scrollContainer.scrollTo({
+                  left: 0,
+                  behavior: "smooth",
+                });
+                step = 3;
+              }
+            }, 2000);
+          } else {
+            console.error(
+              "Could not find scroll container or forecast container",
+            );
+          }
+        }, 2000);
+      });
+    </script>
+  </body>
+</html>
