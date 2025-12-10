@@ -1,6 +1,6 @@
 :host {
   --wfc-wind-low: var(--success-color, #43a047);
-  --wfc-wind-medium: var(--warning-color, #43a047);
+  --wfc-wind-medium: var(--warning-color, #ffa600);
   --wfc-wind-high: var(--error-color, #db4437);
   --wfc-temp-low-color: var(--warning-color, #ffa600);
   --wfc-temp-high-color: var(--primary-color, #009ac7);
@@ -198,6 +198,7 @@ ha-card {
   color: var(--wfc-day-indicator-text-color);
   min-width: var(--indicator-width);
   height: 20px;
+  line-height: 20px;
   padding: 0 8px;
   border-radius: 12px;
   display: block;
@@ -214,9 +215,9 @@ ha-card {
 
 .wfc-forecast-slot-time {
   font-size: var(--ha-font-size-l, 16px);
-  line-height: var(--ha-line-height-condensed, 1.2);
   color: var(--secondary-text-color, #9b9b9b);
-  min-height: 20px;
+  height: 20px;
+  line-height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
