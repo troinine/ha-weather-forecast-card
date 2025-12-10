@@ -20,7 +20,7 @@
     "build": "parcel build --no-source-maps --target module",
     "build:debug": "parcel build --target module --no-optimize",
     "clean": "rm -rf ./dist/ ./.parcel-cache",
-    "preview": "parcel serve test/app/index.html --no-hmr"
+    "demo": "parcel serve demo/index.html demo/background.png"
   },
   "keywords": [],
   "author": "",

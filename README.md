@@ -1,14 +1,14 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/troinine/ha-weather-forecast-card/refs/heads/main/docs/weather-forecast-card-simple.png" alt="Weather Forecast Card" height="250" width="400" style="border-radius: 12px;">
-
-  <h1>Weather Forecast Card</h1>
-
-<a href=https://www.home-assistant.io/><img alt="Home Assistant" src="https://img.shields.io/badge/Home%20Assistant-000?logo=homeassistant&logoColor=fff&style=for-the-badge"></a>
-<a href="https://hacs.xyz/"><img alt="HACS" src="https://img.shields.io/badge/HACS-000?logo=homeassistantcommunitystore&logoColor=fff&style=for-the-badge"></a>
-<a href="https://github.com/troinine/ha-weather-forecast-card/releases"><img alt="Releases" src="https://img.shields.io/github/v/release/troinine/ha-weather-forecast-card?style=for-the-badge&labelColor=000&logoColor=fff&color=blue"></a>
-<a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&labelColor=000"></a>
-
+  <img src="https://raw.githubusercontent.com/troinine/ha-weather-forecast-card/refs/heads/main/docs/weather-forecast-card-demo.gif" alt="Weather Forecast Card" width="600" style="border-radius: 12px;">
+  <br>
+  <a href=https://www.home-assistant.io/><img alt="Home Assistant" src="https://img.shields.io/badge/Home%20Assistant-000?logo=homeassistant&logoColor=fff&style=for-the-badge"></a>
+  <a href="https://hacs.xyz/"><img alt="HACS" src="https://img.shields.io/badge/HACS-000?logo=homeassistantcommunitystore&logoColor=fff&style=for-the-badge"></a>
+  <a href="https://github.com/troinine/ha-weather-forecast-card/releases"><img alt="Releases" src="https://img.shields.io/github/v/release/troinine/ha-weather-forecast-card?style=for-the-badge&labelColor=000&logoColor=fff&color=blue"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&labelColor=000"></a>
 </div>
+
+# Weather Forecast Card
+
 A custom weather card for Home Assistant that displays current weather and forecast in a scrollable horizontal list or chart.
 
 > [!NOTE]
@@ -32,10 +32,6 @@ This card takes inspiration from [Weather Forecast Extended Card](https://github
 - **Customizable actions** – Configure tap, hold, and double-tap behaviors
 - **Sun times** - Visualize sunrise and sunset
 - **Card editor** - Configure the card directly in the UI. No YAML required
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/troinine/ha-weather-forecast-card/refs/heads/main/docs/weather-forecast-card-scroll.gif" alt="Scrollable forecast" width="400" style="border-radius: 12px;">
-</p>
 
 ## Installation
 
