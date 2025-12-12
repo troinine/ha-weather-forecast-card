@@ -1,0 +1,183 @@
+:host {
+  --sun-color: var(--wfc-sun-color, rgba(255, 210, 50, 1));
+  --sun-ray-color: var(--wfc-sun-ray-color, rgba(255, 230, 140, 0.6));
+  --sun-size: var(--wfc-sun-size, 100px);
+  --sun-spin-duration: var(--wfc-sun-spin-duration, 100s);
+  --snow-color: var(--wfc-snow-color, #cfe4ff);
+
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+  border-radius: var(--ha-card-border-radius, var(--ha-border-radius-lg));
+}
+
+.particle {
+  position: absolute;
+  will-change: transform;
+  animation: fall linear infinite;
+}
+
+.snow {
+  background: var(--snow-color);
+  clip-path: polygon(
+    30% 0%,
+    70% 0%,
+    100% 30%,
+    100% 70%,
+    70% 100%,
+    30% 100%,
+    0% 70%,
+    0% 30%
+  );
+  box-shadow: 0 0 4px var(--snow-color);
+  top: -15px;
+}
+
+.rain {
+  background: linear-gradient(
+    to bottom,
+    rgba(174, 194, 224, 0.8),
+    rgba(174, 194, 224, 0.4)
+  );
+  width: 2px;
+  border-radius: 1px;
+  top: -20px;
+}
+
+.lightning-flash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  bottom: 0;
+  background: #fff;
+  opacity: 0;
+  mix-blend-mode: overlay;
+  animation: lightning-loop 20s infinite;
+}
+
+@keyframes lightning-loop {
+  /* Long pause (0% to 90%) */
+  0%,
+  90% {
+    opacity: 0;
+  }
+
+  /* FLASH 1: Instant On */
+  90.1% {
+    opacity: 0.4;
+  }
+  90.2% {
+    opacity: 0;
+  } /* Immediate off */
+
+  /* Short Pause */
+  90.3% {
+    opacity: 0;
+  }
+
+  /* FLASH 2: Big Crack (Instant On) */
+  90.4% {
+    opacity: 0.8;
+  }
+  90.7% {
+    opacity: 0.1;
+  } /* Slight fade out for "glow" */
+  91% {
+    opacity: 0;
+  }
+
+  /* Residual Flicker */
+  91.1% {
+    opacity: 0.3;
+  }
+  91.3% {
+    opacity: 0;
+  }
+
+  /* Stay dark until end */
+  100% {
+    opacity: 0;
+  }
+}
+
+.sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(31, 110, 163, 0.7) 0%,
+    rgba(255, 255, 255, 0) 25%
+  );
+}
+
+.sun {
+  position: absolute;
+  top: calc(var(--sun-size) * -0.95);
+  right: 35%;
+  transform: translateX(50%);
+  width: var(--sun-size);
+  height: var(--sun-size);
+  border-radius: 50%;
+  background: var(--sun-color);
+  opacity: 0.8;
+  box-shadow: 0px 0px 10px 10px var(--sun-color);
+}
+
+.ray-box {
+  position: absolute;
+  margin: auto;
+  top: 0px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--sun-size);
+  -webkit-animation: spin var(--sun-spin-duration) linear infinite;
+  animation: spin var(--sun-spin-duration) linear infinite;
+}
+
+.sun-ray {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    var(--sun-ray-color) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  border-radius: 80% 80% 0 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: top center;
+  opacity: 0.1;
+  filter: blur(2px);
+  box-shadow: 0 0 10px var(--sun-ray-color);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fall {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(var(--drift), calc(100vh + 20px));
+  }
+}

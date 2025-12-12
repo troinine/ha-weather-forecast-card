@@ -1,22 +1,46 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Weather Forecast Card - Development Test</title>
     <style>
+      :root {
+        --primary-text-color: #000;
+        --secondary-text-color: #5e5e5e;
+        --ha-font-size-3xl: 28px;
+        --ha-font-size-2xl: 24px;
+        --ha-font-size-xl: 20px;
+        --ha-font-size-l: 16px;
+        --ha-font-size-m: 14px;
+        --ha-line-height-condensed: 1.2;
+        --ha-card-border-radius: 20px;
+        font-family: "Roboto", "Noto", sans-serif;
+        color: var(--primary-text-color);
+        --card-padding: 24px;
+      }
+      .body {
+        background-color: #fafafa;
+        margin: 0;
+        padding: 0;
+      }
       .view {
         margin: auto;
         width: 40vw;
         max-width: 600px;
       }
-      weather-forecast-card {
-        --ha-font-size-scale: 1;
-        --ha-font-size-4xl: calc(32px * var(--ha-font-size-scale));
-
-        border: 1px solid #000;
+      .test-card {
         display: block;
-        box-sizing: border-box;
+        border-radius: 20px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgba(0, 0, 0, 1);
+      }
+      .dark {
+        background-color: rgba(0, 0, 0, 0.85);
+        --primary-text-color: #fff;
+        --secondary-text-color: #ccc;
+        color: var(--primary-text-color);
       }
     </style>
   </head>
@@ -24,19 +48,36 @@
     <div class="view">
       <h2>Weather Forecast Card test</h2>
       <h3>With current weather</h3>
-      <weather-forecast-card id="test-card-1"></weather-forecast-card>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-1"></weather-forecast-card>
+      </div>
       <h3>Without current weather</h3>
-      <weather-forecast-card id="test-card-2"></weather-forecast-card>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-2"></weather-forecast-card>
+      </div>
       <h3>Custom icons</h3>
-      <weather-forecast-card id="test-card-3"></weather-forecast-card>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-3"></weather-forecast-card>
+      </div>
       <h3>Custom temperature entity</h3>
-      <weather-forecast-card id="test-card-4"></weather-forecast-card>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-4"></weather-forecast-card>
+      </div>
       <h3>Chart mode</h3>
-      <weather-forecast-card id="test-card-5"></weather-forecast-card>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-5"></weather-forecast-card>
+      </div>
       <h3>Aggregated hourly data</h3>
-      <weather-forecast-card id="test-card-6"></weather-forecast-card>
-      <div id="error">
-        <p id="error-message"></p>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-6"></weather-forecast-card>
+      </div>
+      <h3>Animated background</h3>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-7"></weather-forecast-card>
+      </div>
+      <h3>Animated background (dark)</h3>
+      <div class="test-card dark">
+        <weather-forecast-card id="test-card-8"></weather-forecast-card>
       </div>
     </div>
     <script type="module" src="../../src/index.ts"></script>
@@ -66,7 +107,7 @@
         initializeCard(
           "test-card-2",
           { entity: "weather.demo", show_current: false },
-          hass
+          hass,
         );
 
         initializeCard(
@@ -78,7 +119,7 @@
               extra_attribute: "precipitation_probability",
             },
           },
-          hass
+          hass,
         );
 
         initializeCard(
@@ -90,7 +131,7 @@
               extra_attribute: "wind_direction",
             },
           },
-          hass
+          hass,
         );
 
         initializeCard(
@@ -103,7 +144,7 @@
               extra_attribute: "wind_direction",
             },
           },
-          hass
+          hass,
         );
         initializeCard(
           "test-card-6",
@@ -116,7 +157,23 @@
               hourly_group_size: 3,
             },
           },
-          hass
+          hass,
+        );
+        initializeCard(
+          "test-card-7",
+          {
+            entity: "weather.demo",
+            animated_background_conditions: true,
+          },
+          hass,
+        );
+        initializeCard(
+          "test-card-8",
+          {
+            entity: "weather.demo",
+            animated_background_conditions: true,
+          },
+          hass,
         );
       });
     </script>
