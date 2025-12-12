@@ -29,7 +29,7 @@
     --wfc-forecast-conditions-icon-size,
     28px
   );
-  --current-conditions-icon-size: var(--wfc-current-conditions-icon-size, 48px);
+  --current-conditions-icon-size: var(--wfc-current-conditions-icon-size, 64px);
   --indicator-width: 20px;
 }
 
@@ -38,7 +38,7 @@ ha-card {
   display: block;
   width: 100%;
   min-width: 0;
-  padding: var(--card-padding, 10px);
+  padding: var(--card-padding, 16px);
 }
 
 .wfc-container {
@@ -49,6 +49,8 @@ ha-card {
   display: flex;
   flex-direction: column;
   gap: var(--ha-space-3, 12px);
+  container-type: inline-size;
+  container-name: wfc-container;
 }
 
 .wfc-current-weather-container {
@@ -74,7 +76,6 @@ ha-card {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--ha-space-1, 4px);
   min-width: 0;
 }
 
@@ -94,7 +95,7 @@ ha-card {
 .wfc-weather-condition-icon-slot.wfc-current-icon {
   width: var(--current-conditions-icon-size);
   height: var(--current-conditions-icon-size);
-  margin-right: 12px;
+  margin-right: 16px;
 }
 
 .wfc-weather-condition-icon-slot.wfc-current-icon svg {
@@ -176,6 +177,7 @@ ha-card {
 
 .wfc-secondary {
   font-size: var(--ha-font-size-m, 14px);
+  line-height: var(--ha-line-height-condensed);
   color: var(--secondary-text-color, #9b9b9b);
 }
 
@@ -358,4 +360,11 @@ wfc-current-weather,
 wfc-forecast-header-items,
 wfc-weather-condition-icon-provider {
   display: contents;
+}
+
+@container wfc-container (max-width: 375px) {
+  .wfc-current-state,
+  .wfc-current-temperature {
+    font-size: var(--ha-font-size-xl);
+  }
 }
