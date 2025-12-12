@@ -1,4 +1,11 @@
-import { css, html, LitElement, nothing, TemplateResult } from "lit";
+import {
+  css,
+  html,
+  LitElement,
+  nothing,
+  PropertyValues,
+  TemplateResult,
+} from "lit";
 import { customElement, property } from "lit/decorators.js";
 import {
   ExtendedHomeAssistant,
@@ -31,10 +38,10 @@ export class WfcForecastHeaderItems extends LitElement {
     }
   `;
 
-  public connectedCallback(): void {
-    super.connectedCallback();
-
-    this.suntimesInfo = getSuntimesInfo(this.hass, this.forecast.datetime);
+  protected willUpdate(changedProperties: PropertyValues): void {
+    if (changedProperties.has("hass") || changedProperties.has("forecast")) {
+      this.suntimesInfo = getSuntimesInfo(this.hass, this.forecast.datetime);
+    }
   }
 
   protected createRenderRoot() {
@@ -90,7 +97,7 @@ export class WfcForecastHeaderItems extends LitElement {
         const eventOnForecastDay = new Date(startDate);
         eventOnForecastDay.setHours(
           eventDate.getHours(),
-          eventDate.getMinutes()
+          eventDate.getMinutes(),
         );
 
         return (

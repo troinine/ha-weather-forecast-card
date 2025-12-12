@@ -47,7 +47,7 @@ export class WfcWeatherConditionIconProvider extends LitElement {
     }
 
     const userDefinedIcon = getComputedStyle(this).getPropertyValue(
-      `--weather-icon-${this.state}`
+      `--weather-icon-${this.state}`,
     );
 
     if (userDefinedIcon) {
@@ -130,21 +130,28 @@ const lightningStates = new Set<string>(["lightning", "lightning-rainy"]);
 
 const getWeatherStateSVG = (
   state: string,
-  nightTime?: boolean
+  nightTime?: boolean,
 ): SVGTemplateResult => svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 17 17"
   >
   ${
-    state === "sunny"
+    state === "sunny" && nightTime
       ? svg`
+          <path
+            class="moon"
+            d="m 13.502891,11.382935 c -1.011285,1.859223 -2.976664,3.121381 -5.2405751,3.121381 -3.289929,0 -5.953329,-2.663833 -5.953329,-5.9537625 0,-2.263911 1.261724,-4.228856 3.120948,-5.240575 -0.452782,0.842738 -0.712753,1.806363 -0.712753,2.832381 0,3.289928 2.663833,5.9533275 5.9533291,5.9533275 1.026017,0 1.989641,-0.259969 2.83238,-0.712752"
+          />
+        `
+      : state === "sunny"
+        ? svg`
           <path
             class="sun"
             d="m 14.39303,8.4033507 c 0,3.3114723 -2.684145,5.9956173 -5.9956169,5.9956173 -3.3114716,0 -5.9956168,-2.684145 -5.9956168,-5.9956173 0,-3.311471 2.6841452,-5.995617 5.9956168,-5.995617 3.3114719,0 5.9956169,2.684146 5.9956169,5.995617"
           />
         `
-      : ""
+        : ""
   }
   ${
     state === "clear-night"
@@ -165,13 +172,13 @@ const getWeatherStateSVG = (
           />
         `
       : state === "partlycloudy"
-      ? svg`
+        ? svg`
           <path
             class="sun"
             d="m14.981 4.2112c0 1.9244-1.56 3.4844-3.484 3.4844-1.9244 0-3.4844-1.56-3.4844-3.4844s1.56-3.484 3.4844-3.484c1.924 0 3.484 1.5596 3.484 3.484"
           />
         `
-      : ""
+        : ""
   }
   ${
     cloudyStates.has(state)
