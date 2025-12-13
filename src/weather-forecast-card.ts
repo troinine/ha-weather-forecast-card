@@ -81,10 +81,10 @@ export class WeatherForecastCard extends LitElement {
   }
 
   public static getStubConfig(
-    hass: ExtendedHomeAssistant,
+    hass: ExtendedHomeAssistant
   ): Partial<WeatherForecastCardConfig> {
     const weatherEntities = Object.keys(hass?.states ?? {}).filter((entityId) =>
-      entityId.startsWith("weather."),
+      entityId.startsWith("weather.")
     );
 
     const defaultEntity =
@@ -105,7 +105,7 @@ export class WeatherForecastCard extends LitElement {
 
     if (config.show_current === false && config.show_forecast === false) {
       throw new Error(
-        "At least one of show_current or show_forecast must be true",
+        "At least one of show_current or show_forecast must be true"
       );
     }
 
@@ -190,8 +190,12 @@ export class WeatherForecastCard extends LitElement {
       <ha-card>
         ${this.config.animated_background_conditions
           ? html`<wfc-animation-provider
+              .hass=${this.hass}
               .weatherEntity=${stateObject}
               .config=${this.config}
+              .currentForecast=${currentForecast
+                ? currentForecast[0]
+                : undefined}
             ></wfc-animation-provider>`
           : nothing}
         <div class="wfc-container">
@@ -201,7 +205,7 @@ export class WeatherForecastCard extends LitElement {
                 .actionHandler=${actionHandler({
                   hasHold: hasAction(this.config.hold_action as ActionConfig),
                   hasDoubleClick: hasAction(
-                    this.config.double_tap_action as ActionConfig,
+                    this.config.double_tap_action as ActionConfig
                   ),
                 })}
                 @action=${this.onCardAction}
@@ -220,11 +224,11 @@ export class WeatherForecastCard extends LitElement {
                 class="wfc-forecast-container"
                 .actionHandler=${actionHandler({
                   hasHold: hasAction(
-                    this.config.forecast_action?.hold_action as ActionConfig,
+                    this.config.forecast_action?.hold_action as ActionConfig
                   ),
                   hasDoubleClick: hasAction(
                     this.config.forecast_action
-                      ?.double_tap_action as ActionConfig,
+                      ?.double_tap_action as ActionConfig
                   ),
                 })}
                 @action=${this.onForecastAction}
@@ -260,7 +264,7 @@ export class WeatherForecastCard extends LitElement {
 
     if (!this._forecastContainer) {
       this._forecastContainer = this.renderRoot?.querySelector(
-        ".wfc-forecast-container",
+        ".wfc-forecast-container"
       );
     }
 
@@ -317,12 +321,12 @@ export class WeatherForecastCard extends LitElement {
     const hourlyForecastData = getForecast(
       attributes,
       this._hourlyForecastEvent,
-      "hourly",
+      "hourly"
     );
     const dailyForecastData = getForecast(
       attributes,
       this._dailyForecastEvent,
-      "daily",
+      "daily"
     );
 
     if (!hourlyForecastData && !dailyForecastData) {
@@ -335,7 +339,7 @@ export class WeatherForecastCard extends LitElement {
     if (hourlyGroupSize > 1 && hourlyForecastData?.forecast) {
       this._hourlyForecastData = aggregateHourlyForecastData(
         hourlyForecastData.forecast,
-        hourlyGroupSize,
+        hourlyGroupSize
       );
     } else {
       this._hourlyForecastData = hourlyForecastData?.forecast;
@@ -381,7 +385,7 @@ export class WeatherForecastCard extends LitElement {
         subscribeForecast(this.hass!, this.config!.entity, "daily", (event) => {
           this._dailyForecastEvent = event;
           this.processForecastData();
-        }),
+        })
       );
     } catch (error: any) {
       if (error.code === "invalid_entity_id") {
@@ -401,8 +405,8 @@ export class WeatherForecastCard extends LitElement {
           (event) => {
             this._hourlyForecastEvent = event;
             this.processForecastData();
-          },
-        ),
+          }
+        )
       );
     } catch (error: any) {
       if (error.code === "invalid_entity_id") {
@@ -426,7 +430,7 @@ export class WeatherForecastCard extends LitElement {
 
     const itemsPerView = Math.max(
       1,
-      Math.floor(containerWidth / this._minForecastItemWidth),
+      Math.floor(containerWidth / this._minForecastItemWidth)
     );
 
     const calculatedItemWidth = Math.floor(containerWidth / itemsPerView);
@@ -496,7 +500,7 @@ export class WeatherForecastCard extends LitElement {
           double_tap_action: this.config.forecast_action
             ?.double_tap_action as ActionConfig,
         },
-        event.detail.action,
+        event.detail.action
       );
     }
   };

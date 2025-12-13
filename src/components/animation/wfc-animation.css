@@ -4,6 +4,9 @@
   --sun-size: var(--wfc-sun-size, 100px);
   --sun-spin-duration: var(--wfc-sun-spin-duration, 100s);
   --snow-color: var(--wfc-snow-color, #cfe4ff);
+  --drop-height: var(--wfc-drop-height, 20px);
+  --drop-start-pos-diff-y: 50px;
+  --container-height: 0px; /* Set dynamically in TS */
 
   display: block;
   position: absolute;
@@ -41,14 +44,43 @@
 }
 
 .rain {
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.raindrop {
+  position: absolute;
+  overflow: visible;
+  width: 1px;
+  height: var(--drop-height);
   background: linear-gradient(
     to bottom,
-    rgba(174, 194, 224, 0.8),
-    rgba(174, 194, 224, 0.4)
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.15)
   );
-  width: 2px;
   border-radius: 1px;
-  top: -20px;
+  animation: raindrop var(--duration) linear infinite;
+  animation-delay: var(--delay);
+  top: calc(-1 * var(--drop-height) - 50px);
+  left: var(--pos-x);
+}
+
+.splat {
+  content: "";
+  position: absolute;
+  width: 15px;
+  height: 10px;
+  border-top: 2px dotted rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  left: calc(var(--pos-x) - 7.5px);
+  top: calc(var(--landing-pos-y) - 5px);
+  opacity: 1;
+  transform: scale(0);
+  animation: splat var(--duration) linear infinite;
+  animation-delay: var(--delay);
 }
 
 .lightning-flash {
@@ -62,51 +94,6 @@
   opacity: 0;
   mix-blend-mode: overlay;
   animation: lightning-loop 20s infinite;
-}
-
-@keyframes lightning-loop {
-  /* Long pause (0% to 90%) */
-  0%,
-  90% {
-    opacity: 0;
-  }
-
-  /* FLASH 1: Instant On */
-  90.1% {
-    opacity: 0.4;
-  }
-  90.2% {
-    opacity: 0;
-  } /* Immediate off */
-
-  /* Short Pause */
-  90.3% {
-    opacity: 0;
-  }
-
-  /* FLASH 2: Big Crack (Instant On) */
-  90.4% {
-    opacity: 0.8;
-  }
-  90.7% {
-    opacity: 0.1;
-  } /* Slight fade out for "glow" */
-  91% {
-    opacity: 0;
-  }
-
-  /* Residual Flicker */
-  91.1% {
-    opacity: 0.3;
-  }
-  91.3% {
-    opacity: 0;
-  }
-
-  /* Stay dark until end */
-  100% {
-    opacity: 0;
-  }
 }
 
 .sky {
@@ -164,6 +151,51 @@
   box-shadow: 0 0 10px var(--sun-ray-color);
 }
 
+@keyframes raindrop {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  65% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0;
+    transform: translate3d(
+      0,
+      calc(var(--landing-pos-y) + var(--drop-start-pos-diff-y)),
+      0
+    );
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(
+      0,
+      calc(var(--landing-pos-y) + var(--drop-start-pos-diff-y)),
+      0
+    );
+  }
+}
+
+@keyframes splat {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  80% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  90% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -179,5 +211,50 @@
   }
   100% {
     transform: translate(var(--drift), calc(100vh + 20px));
+  }
+}
+
+@keyframes lightning-loop {
+  /* Long pause (0% to 90%) */
+  0%,
+  90% {
+    opacity: 0;
+  }
+
+  /* FLASH 1: Instant On */
+  90.1% {
+    opacity: 0.4;
+  }
+  90.2% {
+    opacity: 0;
+  } /* Immediate off */
+
+  /* Short Pause */
+  90.3% {
+    opacity: 0;
+  }
+
+  /* FLASH 2: Big Crack (Instant On) */
+  90.4% {
+    opacity: 0.8;
+  }
+  90.7% {
+    opacity: 0.1;
+  } /* Slight fade out for "glow" */
+  91% {
+    opacity: 0;
+  }
+
+  /* Residual Flicker */
+  91.1% {
+    opacity: 0.3;
+  }
+  91.3% {
+    opacity: 0;
+  }
+
+  /* Stay dark until end */
+  100% {
+    opacity: 0;
   }
 }
