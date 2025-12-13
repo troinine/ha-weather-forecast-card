@@ -51,6 +51,14 @@
   height: 100%;
 }
 
+.raindrop-path {
+  position: absolute;
+  left: var(--pos-x);
+  top: calc(-1 * var(--drop-height) - 50px);
+  transform: rotate(var(--rain-angle, 0deg));
+  transform-origin: top center;
+}
+
 .raindrop {
   position: absolute;
   overflow: visible;
@@ -62,10 +70,10 @@
     rgba(255, 255, 255, 0.15)
   );
   border-radius: 1px;
+  left: 0;
+  top: 0;
   animation: raindrop var(--duration) linear infinite;
   animation-delay: var(--delay);
-  top: calc(-1 * var(--drop-height) - 50px);
-  left: var(--pos-x);
 }
 
 .splat {
@@ -75,8 +83,8 @@
   height: 10px;
   border-top: 2px dotted rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-  left: calc(var(--pos-x) - 7.5px);
-  top: calc(var(--landing-pos-y) - 5px);
+  left: -7.5px;
+  top: calc(var(--landing-pos-y) + var(--drop-height) + 50px - 5px);
   opacity: 1;
   transform: scale(0);
   animation: splat var(--duration) linear infinite;

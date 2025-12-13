@@ -276,6 +276,37 @@ export const getMaxPrecipitationForUnit = memoizeOne(
   }
 );
 
+export const getNormalizedWindSpeed = (
+  hass: ExtendedHomeAssistant,
+  stateObj: WeatherEntity,
+  forecast: ForecastAttribute
+): number | undefined => {
+  if (forecast.wind_speed === undefined) {
+    return undefined;
+  }
+
+  const unit = getWeatherUnit(hass, stateObj, "wind_speed");
+  return normalizeWindSpeed(forecast.wind_speed, unit);
+};
+
+export const normalizeWindSpeed = (speed: number, unit: string): number => {
+  const multipliers: Record<string, number> = {
+    "km/h": 1 / 3.6,
+    kmh: 1 / 3.6,
+    mph: 0.44704,
+    kn: 0.514444,
+    kt: 0.514444,
+    knot: 0.514444,
+    knots: 0.514444,
+    "m/s": 1,
+    ms: 1,
+  };
+
+  const multiplier = multipliers[unit] || 1;
+
+  return speed * multiplier;
+};
+
 export const aggregateHourlyForecastData = (
   forecast: ForecastAttribute[],
   groupSize: number

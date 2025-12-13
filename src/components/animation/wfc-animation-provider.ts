@@ -6,13 +6,15 @@ import { random } from "lodash-es";
 import {
   ForecastAttribute,
   getMaxPrecipitationForUnit,
+  getNormalizedWindSpeed,
   getWeatherUnit,
   WeatherEntity,
 } from "../../data/weather";
 
 const RAIN_INTENSITY_MAX = 10;
 const RAIN_INTENSITY_MEDIUM = 3;
-const RAIN_INTENSITY_LOW = 1;
+const RAIN_TILT_DEG_MAX = 30;
+const WIND_SPEED_MS_MAX = 14;
 
 @customElement("wfc-animation-provider")
 export class WeatherAnimationProvider extends LitElement {
@@ -111,6 +113,7 @@ export class WeatherAnimationProvider extends LitElement {
     const intensity = this.computeRainIntensity();
 
     this.style.setProperty("--container-height", `${this._containerHeight}px`);
+    this.style.setProperty("--rain-angle", `${this.computeRainAngle()}deg`);
 
     const drops = [];
     let currentX = 0;
@@ -137,8 +140,10 @@ export class WeatherAnimationProvider extends LitElement {
 
       drops.push(
         html`
-          <div class="raindrop" style="${style}"></div>
-          <div class="splat" style="${style}"></div>
+          <div class="raindrop-path" style="${style}">
+            <div class="raindrop"></div>
+            <div class="splat"></div>
+          </div>
         `
       );
     }
@@ -243,6 +248,33 @@ export class WeatherAnimationProvider extends LitElement {
       ? RAIN_INTENSITY_MAX
       : RAIN_INTENSITY_MEDIUM;
   }
+
+  private computeRainAngle(): number {
+    if (
+      !this.currentForecast ||
+      !this.currentForecast.wind_bearing ||
+      !this.currentForecast.wind_speed
+    ) {
+      return 0;
+    }
+
+    const bearing = this.currentForecast.wind_bearing;
+    const speedMS =
+      getNormalizedWindSpeed(
+        this.hass,
+        this.weatherEntity,
+        this.currentForecast
+      ) || 0;
+
+    const radians = (bearing * Math.PI) / 180;
+    const directionFactor = Math.sin(radians);
+
+    const speedFactor =
+      Math.min(speedMS, WIND_SPEED_MS_MAX) / WIND_SPEED_MS_MAX;
+
+    return directionFactor * speedFactor * RAIN_TILT_DEG_MAX;
+  }
+
   private computeWindDrift(driftScale: number): number {
     // Calculate wind drift based on wind speed and bearing
     const windSpeed = Number(this.weatherEntity?.attributes.wind_speed) || 0;
