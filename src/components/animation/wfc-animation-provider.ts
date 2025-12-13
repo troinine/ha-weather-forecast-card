@@ -13,7 +13,8 @@ import {
 
 const RAIN_INTENSITY_MAX = 10;
 const RAIN_INTENSITY_MEDIUM = 3;
-const RAIN_TILT_DEG_MAX = 30;
+const RAIN_TILT_DEG_MAX = 20;
+const SNOW_TILT_DEG_MAX = 40;
 const WIND_SPEED_MS_MAX = 14;
 
 @customElement("wfc-animation-provider")
@@ -40,10 +41,6 @@ export class WeatherAnimationProvider extends LitElement {
     });
 
     this._resizeObserver = new ResizeObserver((entries) => {
-      console.log(
-        "ResizeObserver triggered for wfc-animation-provider. Entries:",
-        entries
-      );
       const entry = entries[0];
       const height = Math.round(entry?.contentRect.height || 0);
       this._containerHeight = height;
@@ -77,43 +74,68 @@ export class WeatherAnimationProvider extends LitElement {
   }
 
   private renderSnow() {
-    // Calculate base wind drift (15px per m/s of wind)
-    const baseDrift = this.computeWindDrift(15);
+    const intensity = this.computeIntensity();
 
-    return Array.from({ length: 20 }).map(() => {
-      const size = 3 + Math.random() * 5; // 3-8px
-      const duration = 12 + Math.random() * 8; // 12-20s
-      const delay = -Math.random() * duration;
-      const startLeft = Math.random() * 100;
+    this.style.setProperty("--container-height", `${this._containerHeight}px`);
+    this.style.setProperty(
+      "--fall-angle",
+      `${this.computeFallingAngle(SNOW_TILT_DEG_MAX)}deg`
+    );
 
-      // Add some randomness to the wind drift for natural variation
-      const driftVariation = -10 + Math.random() * 20;
-      const totalDrift = baseDrift + driftVariation;
+    const flakes = [];
+    let currentX = 0;
 
-      const opacity = 0.3 + Math.random() * 0.5;
+    const safeIntensity = Math.max(1, intensity);
 
-      return html`
-        <div
-          class="particle snow"
-          style="
-            left: ${startLeft}%;
-            width: ${size}px;
-            height: ${size}px;
-            opacity: ${opacity};
-            animation-duration: ${duration}s;
-            animation-delay: ${delay}s;
-            --drift: ${totalDrift}px;
-          "
-        ></div>
+    while (currentX < 100) {
+      const baseSpacing = random(2, 40);
+      const actualSpacing = baseSpacing / safeIntensity;
+
+      currentX += actualSpacing;
+
+      const timingOffset = random(1, 5, true);
+      const duration = random(2, 4, true);
+      const flakeSize = random(4, 8, true);
+      const opacity = random(0.3, 1, true);
+
+      // Random waypoints for non-linear path with varied ranges
+      const drift1 = random(-25, 25, true);
+      const drift2 = random(-30, 30, true);
+      const drift3 = random(-20, 35, true);
+      const drift4 = random(-35, 20, true);
+
+      const style = `
+        --duration: ${duration}s;
+        --delay: ${timingOffset}s;
+        --pos-x: ${currentX}%;
+        --flake-size: ${flakeSize}px;
+        --flake-opacity: ${opacity};
+        --drift-1: ${drift1}px;
+        --drift-2: ${drift2}px;
+        --drift-3: ${drift3}px;
+        --drift-4: ${drift4}px;
       `;
-    });
+
+      flakes.push(
+        html`
+          <div class="snowflake-path" style="${style}">
+            <div class="snowflake"></div>
+          </div>
+        `
+      );
+    }
+
+    return flakes;
   }
 
   private renderRain() {
-    const intensity = this.computeRainIntensity();
+    const intensity = this.computeIntensity();
 
     this.style.setProperty("--container-height", `${this._containerHeight}px`);
-    this.style.setProperty("--rain-angle", `${this.computeRainAngle()}deg`);
+    this.style.setProperty(
+      "--fall-angle",
+      `${this.computeFallingAngle(RAIN_TILT_DEG_MAX)}deg`
+    );
 
     const drops = [];
     let currentX = 0;
@@ -121,7 +143,7 @@ export class WeatherAnimationProvider extends LitElement {
     const safeIntensity = Math.max(1, intensity);
 
     while (currentX < 100) {
-      const baseSpacing = random(2, 50);
+      const baseSpacing = random(2, 35);
       const actualSpacing = baseSpacing / safeIntensity;
 
       currentX += actualSpacing;
@@ -148,7 +170,7 @@ export class WeatherAnimationProvider extends LitElement {
       );
     }
 
-    return html`<div class="rain">${drops}</div>`;
+    return drops;
   }
 
   private renderLightning() {
@@ -223,10 +245,10 @@ export class WeatherAnimationProvider extends LitElement {
     return state === "sunny" && this.isBackgroundConfiguredForState("sunny");
   }
 
-  private computeRainIntensity(): number {
-    const precip = this.currentForecast?.precipitation;
+  private computeIntensity(): number {
+    const precip = this.currentForecast?.precipitation || 0;
 
-    if (precip) {
+    if (precip > 0) {
       const unit = getWeatherUnit(
         this.hass,
         this.weatherEntity,
@@ -249,7 +271,7 @@ export class WeatherAnimationProvider extends LitElement {
       : RAIN_INTENSITY_MEDIUM;
   }
 
-  private computeRainAngle(): number {
+  private computeFallingAngle(maxAngle: number): number {
     if (
       !this.currentForecast ||
       !this.currentForecast.wind_bearing ||
@@ -272,28 +294,6 @@ export class WeatherAnimationProvider extends LitElement {
     const speedFactor =
       Math.min(speedMS, WIND_SPEED_MS_MAX) / WIND_SPEED_MS_MAX;
 
-    return directionFactor * speedFactor * RAIN_TILT_DEG_MAX;
-  }
-
-  private computeWindDrift(driftScale: number): number {
-    // Calculate wind drift based on wind speed and bearing
-    const windSpeed = Number(this.weatherEntity?.attributes.wind_speed) || 0;
-    const windBearing = this.weatherEntity?.attributes.wind_bearing;
-
-    if (windSpeed === 0 || windBearing === undefined) {
-      return 0;
-    }
-
-    // Wind bearing indicates where wind is coming FROM
-    // So we need to drift in the opposite direction
-    // 0° = North wind (blows south), 90° = East wind (blows west), etc.
-    const bearingRad = (Number(windBearing) * Math.PI) / 180;
-
-    // Calculate horizontal (east-west) component
-    // Negate to get the direction wind is blowing TO
-    const eastComponent = -Math.sin(bearingRad);
-
-    // Scale drift by wind speed and provided scale factor
-    return eastComponent * windSpeed * driftScale;
+    return directionFactor * speedFactor * maxAngle;
   }
 }

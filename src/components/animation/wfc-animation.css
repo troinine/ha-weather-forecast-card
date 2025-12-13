@@ -4,6 +4,9 @@
   --sun-size: var(--wfc-sun-size, 100px);
   --sun-spin-duration: var(--wfc-sun-spin-duration, 100s);
   --snow-color: var(--wfc-snow-color, #cfe4ff);
+  --rain-color: var(--wfc-rain-color, #a3c9ff);
+  --drop-color-start: color-mix(in srgb, var(--rain-color), transparent 100%);
+  --drop-color-end: color-mix(in srgb, var(--rain-color), transparent 40%);
   --drop-height: var(--wfc-drop-height, 20px);
   --drop-start-pos-diff-y: 50px;
   --container-height: 0px; /* Set dynamically in TS */
@@ -21,53 +24,44 @@
   border-radius: var(--ha-card-border-radius, var(--ha-border-radius-lg));
 }
 
-.particle {
+.snowflake-path {
   position: absolute;
-  will-change: transform;
-  animation: fall linear infinite;
+  left: var(--pos-x);
+  top: -50px;
+  transform: rotate(var(--fall-angle, 0deg));
+  transform-origin: top center;
 }
 
-.snow {
-  background: var(--snow-color);
-  clip-path: polygon(
-    30% 0%,
-    70% 0%,
-    100% 30%,
-    100% 70%,
-    70% 100%,
-    30% 100%,
-    0% 70%,
-    0% 30%
-  );
-  box-shadow: 0 0 4px var(--snow-color);
-  top: -15px;
-}
-
-.rain {
-  box-sizing: border-box;
+.snowflake {
   position: absolute;
+  background: rgba(255, 255, 255, var(--flake-opacity));
+  width: var(--flake-size);
+  height: var(--flake-size);
+  border-radius: 50%;
+  opacity: 0.8;
+  box-shadow: 0 0 5px rgba(255, 255, 255, calc(var(--flake-opacity) * 0.5));
   left: 0;
-  width: 100%;
-  height: 100%;
+  top: -var(--drop-start-pos-diff-y);
+  animation: snowflake var(--duration) linear infinite;
+  animation-delay: var(--delay);
 }
 
 .raindrop-path {
   position: absolute;
   left: var(--pos-x);
-  top: calc(-1 * var(--drop-height) - 50px);
-  transform: rotate(var(--rain-angle, 0deg));
+  top: calc(-1 * var(--drop-height) - var(--drop-start-pos-diff-y));
+  transform: rotate(var(--fall-angle, 0deg));
   transform-origin: top center;
 }
 
 .raindrop {
   position: absolute;
-  overflow: visible;
   width: 1px;
   height: var(--drop-height);
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0.15)
+    var(--drop-color-start),
+    var(--drop-color-end)
   );
   border-radius: 1px;
   left: 0;
@@ -100,6 +94,9 @@
   bottom: 0;
   background: #fff;
   opacity: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
   mix-blend-mode: overlay;
   animation: lightning-loop 20s infinite;
 }
@@ -159,6 +156,49 @@
   box-shadow: 0 0 10px var(--sun-ray-color);
 }
 
+@keyframes snowflake {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate3d(
+      var(--drift-1, 10px),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.2),
+      0
+    );
+  }
+  40% {
+    transform: translate3d(
+      var(--drift-2, -5px),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.4),
+      0
+    );
+  }
+  60% {
+    transform: translate3d(
+      var(--drift-3, 8px),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.6),
+      0
+    );
+  }
+  80% {
+    transform: translate3d(
+      var(--drift-4, -10px),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.8),
+      0
+    );
+  }
+  100% {
+    opacity: 0.2;
+    transform: translate3d(
+      0,
+      calc(var(--container-height) + var(--drop-start-pos-diff-y)),
+      0
+    );
+  }
+}
+
 @keyframes raindrop {
   0% {
     opacity: 1;
@@ -210,15 +250,6 @@
   }
   100% {
     transform: rotate(360deg);
-  }
-}
-
-@keyframes fall {
-  0% {
-    transform: translate(0, 0);
-  }
-  100% {
-    transform: translate(var(--drift), calc(100vh + 20px));
   }
 }
 
