@@ -144,13 +144,13 @@ show_condition_effects:
 
 ### Available Effects
 
-| Effect Type       | Description                                                                                                                                                   | Related conditions             |
-| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------- |
-| **`rain`**        | Animated raindrops falling with realistic wind drift. Droplet angle and speed adapt to wind conditions from weather data. Includes splash effects on landing. | `rainy`, `pouring`             |
-| **`snow`**        | Snowflakes falling with randomized, wandering paths. Each flake follows a unique non-linear trajectory with varying sizes and opacities for depth.            | `snowy`, `snowy-rainy`         |
-| **`lightning`**   | Dramatic lightning flash sequences with multiple strikes and residual flickers, creating an authentic storm atmosphere.                                       | `lightning`, `lightning-rainy` |
-| **`sunny`**       | Animated sun with rotating rays positioned at the top of the card. Creates a warm, dynamic daytime atmosphere.                                                | `sunny`                        |
-| **`clear-night`** | Moon with twinkling stars scattered across a night sky gradient. Stars have randomized positions, sizes, and twinkle animations.                              | `clear-night`                  |
+| Effect Type       | Description                                                                                                                                                                                   | Related conditions             |
+| :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------- |
+| **`rain`**        | Animated raindrops falling with realistic wind drift. Droplet angle and speed adapt to wind conditions from weather data. Includes splash effects on landing.                                 | `rainy`, `pouring`             |
+| **`snow`**        | Snowflakes falling with randomized, wandering paths. Each flake follows a unique non-linear trajectory with varying sizes and opacities for depth.                                            | `snowy`, `snowy-rainy`         |
+| **`lightning`**   | Dramatic lightning flash sequences with multiple strikes and residual flickers, creating an authentic storm atmosphere.                                                                       | `lightning`, `lightning-rainy` |
+| **`sunny`**       | Animated sun with rotating rays positioned at the top of the card. Creates a warm, dynamic daytime atmosphere. Moon effect is displayed after sunset if `forecast.show_sun_times` is enabled. | `sunny`                        |
+| **`clear-night`** | Moon with twinkling stars scattered across a night sky gradient. Stars have randomized positions, sizes, and twinkle animations.                                                              | `clear-night`                  |
 
 ## Custom Icons
 
