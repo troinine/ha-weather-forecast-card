@@ -32,16 +32,10 @@ export class WeatherAnimationProvider extends LitElement {
 
   static styles = styles;
 
-  public disconnectedCallback() {
+  public connectedCallback(): void {
+    super.connectedCallback();
+
     this._resizeObserver?.disconnect();
-    super.disconnectedCallback();
-  }
-
-  public firstUpdated() {
-    requestAnimationFrame(() => {
-      this.style.setProperty("--container-height", `${this.clientHeight}px`);
-    });
-
     this._resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0];
       const height = Math.round(entry?.contentRect.height || 0);
@@ -49,6 +43,11 @@ export class WeatherAnimationProvider extends LitElement {
     });
 
     this._resizeObserver.observe(this);
+  }
+
+  public disconnectedCallback() {
+    super.disconnectedCallback();
+    this._resizeObserver?.disconnect();
   }
 
   protected render() {
