@@ -3,6 +3,8 @@
   --sun-ray-color: var(--wfc-sun-ray-color, rgba(255, 230, 140, 0.6));
   --sun-size: var(--wfc-sun-size, 100px);
   --sun-spin-duration: var(--wfc-sun-spin-duration, 100s);
+  --moon-color: var(--wfc-moon-color, rgba(220, 220, 230, 1));
+  --moon-size: var(--wfc-moon-size, 80px);
   --snow-color: var(--wfc-snow-color, #cfe4ff);
   --rain-color: var(--wfc-rain-color, #a3c9ff);
   --drop-color-start: color-mix(in srgb, var(--rain-color), transparent 100%);
@@ -154,6 +156,50 @@
   opacity: 0.1;
   filter: blur(2px);
   box-shadow: 0 0 10px var(--sun-ray-color);
+}
+
+.night-sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 20, 50, 0.6) 0%,
+    rgba(0, 0, 0, 0) 40%
+  );
+}
+
+.moon {
+  position: absolute;
+  top: calc(var(--moon-size) * -0.85);
+  right: 30%;
+  transform: translateX(50%);
+  width: var(--moon-size);
+  height: var(--moon-size);
+  border-radius: 50%;
+  background: var(--moon-color);
+  opacity: 0.9;
+  box-shadow: 0px 0px 20px 5px rgba(220, 220, 230, 0.4);
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: var(--star-opacity, 1);
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 @keyframes snowflake {

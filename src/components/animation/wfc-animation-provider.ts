@@ -4,6 +4,7 @@ import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../../types";
 import { styles } from "./wfc-animation.styles";
 import { styleMap } from "lit/directives/style-map.js";
 import { random } from "lodash-es";
+import { getSuntimesInfo } from "../../helpers";
 import {
   ForecastAttribute,
   getMaxPrecipitationForUnit,
@@ -55,8 +56,8 @@ export class WeatherAnimationProvider extends LitElement {
 
     const parts = [];
 
-    if (this.isSunny()) {
-      parts.push(this.renderSunny());
+    if (this.isClear()) {
+      parts.push(this.renderClear());
     }
 
     if (this.isRainy()) {
@@ -72,6 +73,25 @@ export class WeatherAnimationProvider extends LitElement {
     }
 
     return html`${parts}`;
+  }
+
+  private renderClear() {
+    const state = this.weatherEntity?.state;
+
+    if (state === "clear-night") {
+      return this.renderMoon();
+    } else {
+      if (this.config.forecast?.show_sun_times) {
+        const now = new Date();
+        const suntimes = getSuntimesInfo(this.hass, now);
+
+        if (suntimes?.isNightTime) {
+          return this.renderMoon();
+        }
+      }
+
+      return this.renderSunny();
+    }
   }
 
   private renderSnow() {
@@ -205,6 +225,32 @@ export class WeatherAnimationProvider extends LitElement {
     `;
   }
 
+  private renderMoon() {
+    return html`
+      <div class="night-sky"></div>
+      <div class="moon"></div>
+      ${Array.from({ length: 30 }).map(() => {
+        const x = random(2, 98);
+        const y = random(2, 28);
+        const size = random(1, 3);
+        const opacity = random(0.3, 1, true);
+        const twinkleDelay = random(0, 5, true);
+
+        return html`<div
+          class="star"
+          style="${styleMap({
+            left: `${x}%`,
+            top: `${y}%`,
+            width: `${size}px`,
+            height: `${size}px`,
+            opacity: `${opacity}`,
+            animationDelay: `${twinkleDelay}s`,
+          })}"
+        ></div>`;
+      })}
+    `;
+  }
+
   private isBackgroundConfiguredForState(state?: string): boolean {
     if (!this.config.animated_background_conditions) {
       return false;
@@ -244,9 +290,13 @@ export class WeatherAnimationProvider extends LitElement {
     );
   }
 
-  private isSunny(): boolean {
+  private isClear(): boolean {
     const state = this.weatherEntity?.state;
-    return state === "sunny" && this.isBackgroundConfiguredForState("sunny");
+    return (
+      (state === "sunny" && this.isBackgroundConfiguredForState("sunny")) ||
+      (state === "clear-night" &&
+        this.isBackgroundConfiguredForState("clear-night"))
+    );
   }
 
   private computeIntensity(): number {
