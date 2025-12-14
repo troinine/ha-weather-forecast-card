@@ -38,7 +38,7 @@ export interface WeatherForecastCardConfig {
   show_forecast?: boolean;
   default_forecast?: "hourly" | "daily";
   icons_path?: string;
-  animated_background_conditions?: boolean | string[];
+  show_condition_effects?: boolean | string[];
   forecast?: WeatherForecastCardForecastConfig;
   forecast_action?: WeatherForecastCardForecastActionConfig;
   tap_action?: ActionConfig | undefined;
@@ -52,7 +52,7 @@ export type ExtendedHomeAssistant = HomeAssistant & {
   formatEntityState?: (stateObj: HassEntity) => string | undefined;
   formatEntityAttributeValue?: (
     stateObj: HassEntity,
-    attribute: string,
+    attribute: string
   ) => unknown;
 };
 

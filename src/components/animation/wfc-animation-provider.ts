@@ -250,17 +250,17 @@ export class WeatherAnimationProvider extends LitElement {
     `;
   }
 
-  private isBackgroundConfiguredForState(state?: string): boolean {
-    if (!this.config.animated_background_conditions) {
+  private isEffectEnabledForState(state?: string): boolean {
+    if (!this.config.show_condition_effects) {
       return false;
     }
 
-    if (typeof this.config.animated_background_conditions === "boolean") {
-      return this.config.animated_background_conditions;
+    if (typeof this.config.show_condition_effects === "boolean") {
+      return this.config.show_condition_effects;
     }
 
-    if (Array.isArray(this.config.animated_background_conditions) && state) {
-      return this.config.animated_background_conditions.includes(state);
+    if (Array.isArray(this.config.show_condition_effects) && state) {
+      return this.config.show_condition_effects.includes(state);
     }
 
     return false;
@@ -268,33 +268,29 @@ export class WeatherAnimationProvider extends LitElement {
 
   private isSnowy(): boolean {
     const state = this.weatherEntity?.state || "";
-    return (
-      state?.includes("snowy") && this.isBackgroundConfiguredForState("snow")
-    );
+    return state?.includes("snowy") && this.isEffectEnabledForState("snow");
   }
 
   private isRainy(): boolean {
     const state = this.weatherEntity?.state || "";
     return (
       state.includes("rainy") ||
-      (state === "pouring" && this.isBackgroundConfiguredForState("rain"))
+      (state === "pouring" && this.isEffectEnabledForState("rain"))
     );
   }
 
   private isLightning(): boolean {
     const state = this.weatherEntity?.state || "";
     return (
-      state?.includes("lightning") &&
-      this.isBackgroundConfiguredForState("lightning")
+      state?.includes("lightning") && this.isEffectEnabledForState("lightning")
     );
   }
 
   private isClear(): boolean {
     const state = this.weatherEntity?.state;
     return (
-      (state === "sunny" && this.isBackgroundConfiguredForState("sunny")) ||
-      (state === "clear-night" &&
-        this.isBackgroundConfiguredForState("clear-night"))
+      (state === "sunny" && this.isEffectEnabledForState("sunny")) ||
+      (state === "clear-night" && this.isEffectEnabledForState("clear-night"))
     );
   }
 

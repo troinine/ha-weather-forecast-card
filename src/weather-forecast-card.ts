@@ -188,7 +188,7 @@ export class WeatherForecastCard extends LitElement {
 
     return html`
       <ha-card>
-        ${this.config.animated_background_conditions
+        ${this.config.show_condition_effects
           ? html`<wfc-animation-provider
               .hass=${this.hass}
               .weatherEntity=${stateObject}
