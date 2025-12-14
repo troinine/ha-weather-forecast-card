@@ -31,6 +31,7 @@ This card takes inspiration from [Weather Forecast Extended Card](https://github
 - **Custom icons** – Use your own weather icons
 - **Customizable actions** – Configure tap, hold, and double-tap behaviors
 - **Sun times** - Visualize sunrise and sunset
+- **Condition effects** - Add a special touch with animated weather effects
 - **Card editor** - Configure the card directly in the UI. No YAML required
 
 ## Installation
@@ -66,30 +67,31 @@ resources:
 
 ## Configuration
 
-| Name                 | Type    | Default      | Description                                                                                                                                                                      |
-| :------------------- | :------ | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`               | string  | **Required** | `custom:weather-forecast-card`                                                                                                                                                   |
-| `entity`             | string  | **Required** | The weather entity id (e.g., `weather.home`).                                                                                                                                    |
-| `name`               | string  | optional     | Custom name to display. Defaults to the entity's friendly name.                                                                                                                  |
-| `temperature_entity` | string  | optional     | Bring your own temperature entity to override the temperature from the main weather `entity`.                                                                                    |
-| `show_current`       | boolean | `true`       | Show current weather conditions.                                                                                                                                                 |
-| `show_forecast`      | boolean | `true`       | Show forecast section.                                                                                                                                                           |
-| `default_forecast`   | string  | `daily`      | Default forecast to view (`daily` or `hourly`).                                                                                                                                  |
-| `icons_path`         | string  | optional     | Path to custom icons. For example, `/local/img/my-custom-weather-icons`. See [Custom Weather Icons](#custom-weather-icons) for more details.                                     |
-| `forecast`           | object  | optional     | Forecast configuration options. See [Forecast Object](#forecast-object).                                                                                                         |
-| `forecast_action`    | object  | optional     | Actions for the forecast area. See [Forecast Actions](#forecast-actions).                                                                                                        |
-| `tap_action`         | object  | optional     | Defines the type of action to perform on tap for the main card. Action defaults to `more-info`. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
-| `hold_action`        | object  | optional     | Defines the type of action to perform on hold for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                                |
-| `double_tap_action`  | object  | optional     | Defines the type of action to perform on double click for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                        |
+| Name                     | Type              | Default      | Description                                                                                                                                                                       |
+| :----------------------- | :---------------- | :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                   | `string`          | **Required** | `custom:weather-forecast-card`                                                                                                                                                    |
+| `entity`                 | `string`          | **Required** | The weather entity id (e.g., `weather.home`).                                                                                                                                     |
+| `name`                   | `string`          | optional     | Custom name to display. Defaults to the entity's friendly name.                                                                                                                   |
+| `temperature_entity`     | `string`          | optional     | Bring your own temperature entity to override the temperature from the main weather `entity`.                                                                                     |
+| `show_current`           | `boolean`         | `true`       | Show current weather conditions.                                                                                                                                                  |
+| `show_forecast`          | `boolean`         | `true`       | Show forecast section.                                                                                                                                                            |
+| `default_forecast`       | `string`          | `daily`      | Default forecast to view (`daily` or `hourly`).                                                                                                                                   |
+| `icons_path`             | `string`          | optional     | Path to custom icons. For example, `/local/img/my-custom-weather-icons`. See [Custom Weather Icons](#custom-weather-icons) for more details.                                      |
+| `show_condition_effects` | `boolean`/`array` | optional     | Enable animated weather condition effects. Set to `true` for all conditions or provide an array of specific effects. See [Weather Condition Effects](#weather-condition-effects). |
+| `forecast`               | `object`          | optional     | Forecast configuration options. See [Forecast Object](#forecast-object).                                                                                                          |
+| `forecast_action`        | `object`          | optional     | Actions for the forecast area. See [Forecast Actions](#forecast-actions).                                                                                                         |
+| `tap_action`             | `object`          | optional     | Defines the type of action to perform on tap for the main card. Action defaults to `more-info`. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).  |
+| `hold_action`            | `object`          | optional     | Defines the type of action to perform on hold for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                                 |
+| `double_tap_action`      | `object`          | optional     | Defines the type of action to perform on double click for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                         |
 
 ### Forecast Object
 
-| Name                | Type    | Default  | Description                                                                                                                                  |
-| :------------------ | :------ | :------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`              | string  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                 |
-| `show_sun_times`    | boolean | `true`   | Show sunrise/sunset times in hourly forecast.                                                                                                |
-| `hourly_group_size` | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                  |
-| `extra_attribute`   | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing` |
+| Name                | Type      | Default  | Description                                                                                                                                  |
+| :------------------ | :-------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`              | `string`  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                 |
+| `show_sun_times`    | `boolean` | `true`   | Show sunrise/sunset times in hourly forecast.                                                                                                |
+| `hourly_group_size` | `number`  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                  |
+| `extra_attribute`   | `string`  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing` |
 
 ### Forecast Actions
 
@@ -97,11 +99,11 @@ Actions support standard Home Assistant card actions. However, one additional ac
 
 Forecast actions have the following options
 
-| Name                | Type   | Default action    | Description                                                                                                                             |
-| :------------------ | :----- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
-| `tap_action`        | object | `toggle-forecast` | Defines the type action to perform on tap. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).             |
-| `hold_action`       | object | `none`            | Defines the type of action to perform on hold. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).         |
-| `double_tap_action` | object | `none`            | Defines the type of action to perform on double click. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
+| Name                | Type     | Default action    | Description                                                                                                                             |
+| :------------------ | :------- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| `tap_action`        | `object` | `toggle-forecast` | Defines the type action to perform on tap. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).             |
+| `hold_action`       | `object` | `none`            | Defines the type of action to perform on hold. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).         |
+| `double_tap_action` | `object` | `none`            | Defines the type of action to perform on double click. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
 
 ## Example
 
@@ -112,6 +114,43 @@ forecast:
   mode: chart
   extra_attribute: wind_direction
 ```
+
+## Weather Condition Effects
+
+The card supports animated visual effects that respond to current weather conditions, adding an immersive layer to your weather display. These effects are rendered as background animations behind the card content.
+
+### Configuration
+
+Enable weather effects using the `show_condition_effects` option:
+
+**Enable all effects:**
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+show_condition_effects: true
+```
+
+**Enable specific effects only:**
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+show_condition_effects:
+  - rain
+  - snow
+  - lightning
+```
+
+### Available Effects
+
+| Effect Type       | Description                                                                                                                                                   | Related conditions             |
+| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------- |
+| **`rain`**        | Animated raindrops falling with realistic wind drift. Droplet angle and speed adapt to wind conditions from weather data. Includes splash effects on landing. | `rainy`, `pouring`             |
+| **`snow`**        | Snowflakes falling with randomized, wandering paths. Each flake follows a unique non-linear trajectory with varying sizes and opacities for depth.            | `snowy`, `snowy-rainy`         |
+| **`lightning`**   | Dramatic lightning flash sequences with multiple strikes and residual flickers, creating an authentic storm atmosphere.                                       | `lightning`, `lightning-rainy` |
+| **`sunny`**       | Animated sun with rotating rays positioned at the top of the card. Creates a warm, dynamic daytime atmosphere.                                                | `sunny`                        |
+| **`clear-night`** | Moon with twinkling stars scattered across a night sky gradient. Stars have randomized positions, sizes, and twinkle animations.                              | `clear-night`                  |
 
 ## Custom Icons
 
