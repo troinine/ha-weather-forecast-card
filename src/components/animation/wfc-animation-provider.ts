@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../../types";
 import { styles } from "./wfc-animation.styles";
+import { styleMap } from "lit/directives/style-map.js";
 import { random } from "lodash-es";
 import {
   ForecastAttribute,
@@ -83,11 +84,14 @@ export class WeatherAnimationProvider extends LitElement {
     );
 
     const flakes = [];
-    let currentX = 0;
+
+    // Starts slightly off-screen and goes slightly off-screen to ensure full coverage
+    // even with significant wind drift.
+    let currentX = -10;
 
     const safeIntensity = Math.max(1, intensity);
 
-    while (currentX < 100) {
+    while (currentX < 110) {
       const baseSpacing = random(2, 40);
       const actualSpacing = baseSpacing / safeIntensity;
 
@@ -95,30 +99,29 @@ export class WeatherAnimationProvider extends LitElement {
 
       const timingOffset = random(1, 5, true);
       const duration = random(2, 4, true);
-      const flakeSize = random(4, 8, true);
+      const flakeSize = random(4, 8);
       const opacity = random(0.3, 1, true);
 
-      // Random waypoints for non-linear path with varied ranges
-      const drift1 = random(-25, 25, true);
-      const drift2 = random(-30, 30, true);
-      const drift3 = random(-20, 35, true);
-      const drift4 = random(-35, 20, true);
-
-      const style = `
-        --duration: ${duration}s;
-        --delay: ${timingOffset}s;
-        --pos-x: ${currentX}%;
-        --flake-size: ${flakeSize}px;
-        --flake-opacity: ${opacity};
-        --drift-1: ${drift1}px;
-        --drift-2: ${drift2}px;
-        --drift-3: ${drift3}px;
-        --drift-4: ${drift4}px;
-      `;
+      const driftStyles = Array.from({ length: 4 }).reduce<
+        Record<string, string>
+      >((acc, _, i) => {
+        acc[`--drift-${i + 1}`] = `${random(-35, 35)}px`;
+        return acc;
+      }, {});
 
       flakes.push(
         html`
-          <div class="snowflake-path" style="${style}">
+          <div
+            class="snowflake-path"
+            style="${styleMap({
+              "--duration": `${duration}s`,
+              "--delay": `${timingOffset}s`,
+              "--pos-x": `${currentX}%`,
+              "--flake-size": `${flakeSize}px`,
+              "--flake-opacity": `${opacity}`,
+              ...driftStyles,
+            })}"
+          >
             <div class="snowflake"></div>
           </div>
         `
@@ -153,16 +156,17 @@ export class WeatherAnimationProvider extends LitElement {
       const depthVariance = random(0.85, 1, true);
       const landingPos = this._containerHeight * depthVariance;
 
-      const style = `
-        --duration: ${duration}s;
-        --delay: ${timingOffset}s;
-        --pos-x: ${currentX}%;
-        --landing-pos-y: ${landingPos}px;
-      `;
-
       drops.push(
         html`
-          <div class="raindrop-path" style="${style}">
+          <div
+            class="raindrop-path"
+            style="${styleMap({
+              "--duration": `${duration}s`,
+              "--delay": `${timingOffset}s`,
+              "--pos-x": `${currentX}%`,
+              "--landing-pos-y": `${landingPos}px`,
+            })}"
+          >
             <div class="raindrop"></div>
             <div class="splat"></div>
           </div>
@@ -189,11 +193,11 @@ export class WeatherAnimationProvider extends LitElement {
 
             return html`<div
               class="sun-ray"
-              style="
-                transform: translate(-50%, 0) rotate(${angle}deg);
-                height: ${height}px;
-                width: ${width}px;
-              "
+              style="${styleMap({
+                transform: `translate(-50%, 0) rotate(${angle}deg)`,
+                height: `${height}px`,
+                width: `${width}px`,
+              })}"
             ></div>`;
           })}
         </div>
