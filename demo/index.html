@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -179,8 +179,7 @@
         border-width: 1px;
         border-style: solid;
         border-color: rgba(255, 255, 255, 0.05);
-        box-shadow:
-          0 8px 32px rgba(0, 0, 0, 0.1),
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
           inset 0 1px 0 rgba(255, 255, 255, 0.5),
           inset 0 -1px 0 rgba(255, 255, 255, 0.1),
           inset 0 0 2px 1px rgba(255, 255, 255, 0.1);
@@ -296,6 +295,7 @@
           type: "custom:weather-forecast-card",
           entity: "weather.demo",
           name: "Home",
+          show_condition_animations: true,
           forecast: {
             mode: "chart",
             extra_attribute: "wind_direction",
@@ -307,10 +307,10 @@
         // Auto-demo: tap, scroll, scroll back, tap sequence
         setTimeout(() => {
           const forecastContainer = card.shadowRoot?.querySelector(
-            ".wfc-forecast-container",
+            ".wfc-forecast-container"
           );
           const scrollContainer = card.shadowRoot?.querySelector(
-            ".wfc-scroll-container",
+            ".wfc-scroll-container"
           );
 
           if (scrollContainer) {
@@ -395,7 +395,7 @@
             }, 2000);
           } else {
             console.error(
-              "Could not find scroll container or forecast container",
+              "Could not find scroll container or forecast container"
             );
           }
         }, 2000);

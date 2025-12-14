@@ -24,19 +24,32 @@ const generateRandomHourlyForecast = (startDate: Date) => {
     } else if (temperature < 2) {
       condition = rand < 0.3 ? "snowy" : rand < 0.5 ? "cloudy" : "partlycloudy";
     } else {
-      condition = rand < 0.2 ? "rainy" : rand < 0.4 ? "cloudy" : rand < 0.7 ? "partlycloudy" : "sunny";
+      condition =
+        rand < 0.2
+          ? "rainy"
+          : rand < 0.4
+          ? "cloudy"
+          : rand < 0.7
+          ? "partlycloudy"
+          : "sunny";
     }
 
     // Precipitation is more likely with snowy/rainy conditions
-    const hasPrecipitation = (condition === "snowy" || condition === "rainy") ?
-      Math.random() < 0.7 : Math.random() < 0.2;
+    const hasPrecipitation =
+      condition === "snowy" || condition === "rainy"
+        ? Math.random() < 0.7
+        : Math.random() < 0.2;
 
     forecast.push({
       datetime: forecastTime.toISOString(),
       temperature,
       condition,
-      precipitation: hasPrecipitation ? Math.round(Math.random() * 2 * 10) / 10 : 0,
-      precipitation_probability: hasPrecipitation ? Math.round(60 + Math.random() * 40) : Math.round(Math.random() * 30),
+      precipitation: hasPrecipitation
+        ? Math.round(Math.random() * 2 * 10) / 10
+        : 0,
+      precipitation_probability: hasPrecipitation
+        ? Math.round(60 + Math.random() * 40)
+        : Math.round(Math.random() * 30),
       wind_speed: Math.round((1 + Math.random() * 9) * 10) / 10,
       wind_bearing: Math.round(Math.random() * 360),
       humidity: Math.round(40 + Math.random() * 40),
@@ -70,20 +83,33 @@ const generateRandomDailyForecast = (startDate: Date) => {
     } else if (highTemp < 2) {
       condition = rand < 0.4 ? "snowy" : rand < 0.6 ? "cloudy" : "partlycloudy";
     } else {
-      condition = rand < 0.25 ? "rainy" : rand < 0.45 ? "cloudy" : rand < 0.75 ? "partlycloudy" : "sunny";
+      condition =
+        rand < 0.25
+          ? "rainy"
+          : rand < 0.45
+          ? "cloudy"
+          : rand < 0.75
+          ? "partlycloudy"
+          : "sunny";
     }
 
     // Precipitation is more likely with snowy/rainy conditions
-    const hasPrecipitation = (condition === "snowy" || condition === "rainy") ?
-      Math.random() < 0.7 : Math.random() < 0.3;
+    const hasPrecipitation =
+      condition === "snowy" || condition === "rainy"
+        ? Math.random() < 0.7
+        : Math.random() < 0.3;
 
     forecast.push({
       datetime: forecastTime.toISOString(),
       temperature: highTemp,
       templow: lowTemp,
       condition,
-      precipitation: hasPrecipitation ? Math.round(Math.random() * 10 * 10) / 10 : 0,
-      precipitation_probability: hasPrecipitation ? Math.round(60 + Math.random() * 40) : Math.round(Math.random() * 40),
+      precipitation: hasPrecipitation
+        ? Math.round(Math.random() * 10 * 10) / 10
+        : 0,
+      precipitation_probability: hasPrecipitation
+        ? Math.round(60 + Math.random() * 40)
+        : Math.round(Math.random() * 40),
       wind_speed: Math.round((1 + Math.random() * 9) * 10) / 10,
       wind_bearing: Math.round(Math.random() * 360),
       humidity: Math.round(35 + Math.random() * 50),
@@ -158,7 +184,8 @@ export class MockHass {
       localize: (key: string) => {
         // Finnish weather state localizations
         const translations: Record<string, string> = {
-          "component.weather.entity_component._.state.clear-night": "Clear night",
+          "component.weather.entity_component._.state.clear-night":
+            "Clear night",
           "component.weather.entity_component._.state.cloudy": "Cloudy",
           "component.weather.entity_component._.state.exceptional":
             "Exceptional",
@@ -175,8 +202,7 @@ export class MockHass {
           "component.weather.entity_component._.state.snowy-rainy": "Sleet",
           "component.weather.entity_component._.state.sunny": "Sunny",
           "component.weather.entity_component._.state.windy": "Windy",
-          "component.weather.entity_component._.state.windy-variant":
-            "Windy",
+          "component.weather.entity_component._.state.windy-variant": "Windy",
         };
 
         return translations[key] || key;
@@ -203,12 +229,10 @@ export class MockHass {
             "component.weather.entity_component._.state.pouring": "Pouring",
             "component.weather.entity_component._.state.rainy": "Rainy",
             "component.weather.entity_component._.state.snowy": "Snowy",
-            "component.weather.entity_component._.state.snowy-rainy":
-              "Sleet",
+            "component.weather.entity_component._.state.snowy-rainy": "Sleet",
             "component.weather.entity_component._.state.sunny": "Sunny",
             "component.weather.entity_component._.state.windy": "Windy",
-            "component.weather.entity_component._.state.windy-variant":
-              "Windy",
+            "component.weather.entity_component._.state.windy-variant": "Windy",
           };
           return translations[stateKey] || stateObj.state;
         }
