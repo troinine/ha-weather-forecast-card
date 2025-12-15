@@ -4,7 +4,7 @@ import { styles } from "./weather-forecast-card.styles";
 import { createWarningText } from "./helpers";
 import { logger } from "./logger";
 import { actionHandler } from "./hass/action-handler-directive";
-import { ForecastMode } from "./types";
+import { ForecastActionEvent, ForecastMode } from "./types";
 import {
   LitElement,
   html,
@@ -49,6 +49,7 @@ const DEFAULT_CONFIG: Partial<WeatherForecastCardConfig> = {
   forecast: {
     mode: ForecastMode.Simple,
     show_sun_times: true,
+    scroll_to_selected: true,
   },
   forecast_action: {
     tap_action: { action: "toggle-forecast" },
@@ -335,9 +336,64 @@ export class WeatherForecastCard extends LitElement {
     }
   }
 
-  private _toggleForecastView() {
+  private _toggleForecastView(selectedForecast?: ForecastAttribute) {
+    const willSwitchToHourly = this._currentForecastType === "daily";
+
     this._currentForecastType =
       this._currentForecastType === "daily" ? "hourly" : "daily";
+
+    if (!selectedForecast) {
+      return;
+    }
+
+    if (this.config?.forecast?.scroll_to_selected) {
+      if (willSwitchToHourly) {
+        requestAnimationFrame(() => {
+          this.scrollToForecastItem(selectedForecast);
+        });
+      } else {
+        requestAnimationFrame(() => {
+          this.scrollToForecastItem(this._dailyForecastData?.[0]!, "instant");
+        });
+      }
+    }
+  }
+
+  private scrollToForecastItem(
+    selectedForecast: ForecastAttribute,
+    behavior: ScrollBehavior = "smooth"
+  ) {
+    if (!this._forecastContainer) return;
+
+    const scrollContainer = this._forecastContainer.querySelector(
+      ".wfc-scroll-container"
+    ) as HTMLElement;
+
+    if (!scrollContainer) return;
+
+    const currentForecast = this._hourlyForecastData || [];
+    let index = currentForecast.findIndex((item) => {
+      const d1 = new Date(item.datetime);
+      const d2 = new Date(selectedForecast.datetime);
+
+      return (
+        d1.getFullYear() === d2.getFullYear() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getDate() === d2.getDate()
+      );
+    });
+
+    if (index === -1) {
+      index = currentForecast.length - 1;
+    }
+
+    const itemWidth = this._currentItemWidth || 0;
+    const leftPosition = index * itemWidth;
+
+    scrollContainer.scrollTo({
+      left: leftPosition,
+      behavior,
+    });
   }
 
   private unsubscribeForecastEvents() {
@@ -459,7 +515,7 @@ export class WeatherForecastCard extends LitElement {
     });
   }
 
-  private onForecastAction = (event: ActionHandlerEvent): void => {
+  private onForecastAction = (event: ForecastActionEvent): void => {
     if (!this.config) {
       return;
     }
@@ -477,7 +533,7 @@ export class WeatherForecastCard extends LitElement {
         this.config.forecast_action?.double_tap_action?.action ===
           "toggle-forecast")
     ) {
-      this._toggleForecastView();
+      this._toggleForecastView(event.detail.selectedForecast ?? undefined);
     } else {
       handleAction(
         this,

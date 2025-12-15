@@ -1,10 +1,21 @@
 import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
-import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../types";
-import { formatNumber } from "custom-card-helpers";
+import {
+  ExtendedHomeAssistant,
+  ForecastActionHandler,
+  FreocastActionDetails,
+  WeatherForecastCardConfig,
+} from "../types";
+import {
+  ActionHandlerEvent,
+  fireEvent,
+  formatNumber,
+} from "custom-card-helpers";
 import { formatDay } from "../helpers";
 import { styleMap } from "lit/directives/style-map.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+import { getRelativePosition } from "chart.js/helpers";
+import { actionHandler } from "../hass/action-handler-directive";
 import {
   ForecastAttribute,
   ForecastType,
@@ -48,6 +59,7 @@ export class WfcForecastChart extends LitElement {
   @property({ attribute: false }) itemWidth: number = 0;
   @query("canvas") private _canvas?: HTMLCanvasElement;
 
+  private _lastChartEvent: PointerEvent | null = null;
   private _chart: Chart | null = null;
 
   protected createRenderRoot() {
@@ -120,7 +132,17 @@ export class WfcForecastChart extends LitElement {
             id="chart-container"
             style=${styleMap(canvasStyle)}
           >
-            <canvas id="forecast-canvas"></canvas>
+            <canvas
+              id="forecast-canvas"
+              .actionHandler=${actionHandler({
+                hasHold: this.config.forecast_action?.hold_action !== undefined,
+                hasDoubleClick:
+                  this.config.forecast_action?.double_tap_action !== undefined,
+                stopPropagation: true,
+              })}
+              @pointerdown=${this._handlePointerDown}
+              @action=${this.handleAction}
+            ></canvas>
           </div>
         </div>
 
@@ -402,6 +424,44 @@ export class WfcForecastChart extends LitElement {
 
     return parts;
   }
+
+  private _handlePointerDown(event: PointerEvent) {
+    this._lastChartEvent = event;
+  }
+
+  private handleAction = (event: ActionHandlerEvent): void => {
+    if (!this._chart || !this._lastChartEvent) {
+      return;
+    }
+
+    const lastChartEvent = this._lastChartEvent;
+    this._lastChartEvent = null;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const canvasPosition = getRelativePosition(lastChartEvent, this._chart);
+
+    const xScale = this._chart.scales.x;
+    if (!xScale) return;
+
+    const dataX = xScale.getValueForPixel(canvasPosition.x);
+    if (dataX === null || dataX === undefined) return;
+
+    const label = xScale.getLabelForValue(dataX);
+    const index = this._chart.data.labels?.indexOf(label as string) ?? -1;
+    if (index === -1) return;
+
+    const selectedForecast = this.forecast[index];
+    if (!selectedForecast) return;
+
+    const actionDetails: FreocastActionDetails = {
+      selectedForecast,
+      action: event.detail.action,
+    };
+
+    fireEvent(this, "action", actionDetails);
+  };
 }
 
 declare global {

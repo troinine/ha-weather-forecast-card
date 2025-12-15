@@ -88,7 +88,7 @@ class ActionHandler extends HTMLElement implements ActionHandler {
 
   public bind(
     element: ActionHandlerElement,
-    options: ActionHandlerOptions
+    options: ExtendedActionHandlerOptions
   ): void {
     if (element.actionHandler) {
       return;

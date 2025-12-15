@@ -1,11 +1,21 @@
 import {
   ActionConfig,
+  ActionHandlerDetail,
   BaseActionConfig,
+  HASSDomEvent,
   HomeAssistant,
 } from "custom-card-helpers";
 import { HassEntity } from "home-assistant-js-websocket";
+import { ForecastAttribute } from "./data/weather";
 
 export type ForecastSubscription = Promise<() => void> | undefined;
+
+export type FreocastActionDetails = ActionHandlerDetail & {
+  selectedForecast: ForecastAttribute;
+};
+export type ForecastActionEvent = HASSDomEvent<FreocastActionDetails>;
+
+export type ForecastActionHandler = (event: ForecastActionEvent) => void;
 
 export enum ForecastMode {
   Chart = "chart",
@@ -21,6 +31,7 @@ export interface WeatherForecastCardForecastConfig {
   mode?: ForecastMode;
   show_sun_times?: boolean;
   hourly_group_size?: number;
+  scroll_to_selected?: boolean;
 }
 
 export interface WeatherForecastCardForecastActionConfig {
