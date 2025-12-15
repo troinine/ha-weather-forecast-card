@@ -1,15 +1,17 @@
 :host {
-  --sun-color: var(--wfc-sun-color, rgba(255, 210, 50, 1));
-  --sun-ray-color: var(--wfc-sun-ray-color, rgba(255, 230, 140, 0.6));
-  --sun-size: var(--wfc-sun-size, 100px);
-  --sun-spin-duration: var(--wfc-sun-spin-duration, 100s);
-  --moon-color: var(--wfc-moon-color, rgba(220, 220, 230, 1));
-  --moon-size: var(--wfc-moon-size, 80px);
-  --snow-color: var(--wfc-snow-color, #cfe4ff);
-  --rain-color: var(--wfc-rain-color, #a3c9ff);
+  --sun-color: var(--wfc-effects-sun-color, rgba(255, 210, 50, 1));
+  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(255, 230, 140, 0.6));
+  --sun-size: var(--wfc-effects-sun-size, 100px);
+  --sun-spin-duration: var(--wfc-effects-sun-spin-duration, 100s);
+  --moon-color: var(--wfc-effects-moon-color, rgba(220, 220, 230, 1));
+  --moon-size: var(--wfc-effects-moon-size, 80px);
+  --snow-color: var(--wfc-effects-snow-color, #b8d7f5);
+  --rain-color: var(--wfc-effects-rain-color, #6cb4ee);
+  --clear-sky-color: var(--wfc-effects-clear-sky-color, #1f6ea3b3);
+  --clear-night-sky-color: var(--wfc-effects-clear-night-sky-color, #0a143299);
   --drop-color-start: color-mix(in srgb, var(--rain-color), transparent 100%);
   --drop-color-end: color-mix(in srgb, var(--rain-color), transparent 40%);
-  --drop-height: var(--wfc-drop-height, 20px);
+  --drop-height: var(--wfc-effects-drop-height, 20px);
   --drop-start-pos-diff-y: 50px;
   --container-height: 0px; /* Set dynamically in TS */
 
@@ -105,13 +107,14 @@
 
 .sky {
   position: absolute;
+  z-index: 0;
   top: 0;
   left: 0;
   right: 0;
   height: 100%;
   background: linear-gradient(
     180deg,
-    rgba(31, 110, 163, 0.7) 0%,
+    var(--clear-sky-color) 0%,
     rgba(255, 255, 255, 0) 25%
   );
 }
@@ -160,13 +163,14 @@
 
 .night-sky {
   position: absolute;
+  z-index: 0;
   top: 0;
   left: 0;
   right: 0;
   height: 100%;
   background: linear-gradient(
     180deg,
-    rgba(10, 20, 50, 0.6) 0%,
+    var(--clear-night-sky-color) 0%,
     rgba(0, 0, 0, 0) 40%
   );
 }
