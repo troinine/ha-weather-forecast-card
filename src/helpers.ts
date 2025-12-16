@@ -49,6 +49,12 @@ export const formatDay = (
   });
 };
 
+export const normalizeDate = (dateString: string) => {
+  const date = new Date(dateString);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+};
+
 export const useAmPm = memoizeOne(
   (hass: HomeAssistant | undefined): boolean => {
     const locale = hass?.locale;

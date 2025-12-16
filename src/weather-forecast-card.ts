@@ -1,7 +1,7 @@
 import { merge } from "lodash-es";
 import { property, state } from "lit/decorators.js";
 import { styles } from "./weather-forecast-card.styles";
-import { createWarningText } from "./helpers";
+import { createWarningText, normalizeDate } from "./helpers";
 import { logger } from "./logger";
 import { actionHandler } from "./hass/action-handler-directive";
 import { ForecastActionEvent, ForecastMode } from "./types";
@@ -341,21 +341,21 @@ export class WeatherForecastCard extends LitElement {
     this._currentForecastType =
       this._currentForecastType === "daily" ? "hourly" : "daily";
 
-    if (!selectedForecast) {
+    if (!selectedForecast || !this.config?.forecast?.scroll_to_selected) {
       return;
     }
 
-    if (this.config?.forecast?.scroll_to_selected) {
+    requestAnimationFrame(() => {
       if (willSwitchToHourly) {
-        requestAnimationFrame(() => {
-          this.scrollToForecastItem(selectedForecast);
-        });
+        this.scrollToForecastItem(selectedForecast);
       } else {
-        requestAnimationFrame(() => {
-          this.scrollToForecastItem(this._dailyForecastData?.[0]!, "instant");
-        });
+        const firstDaily = this._dailyForecastData?.[0];
+
+        if (firstDaily) {
+          this.scrollToForecastItem(firstDaily, "instant");
+        }
       }
-    }
+    });
   }
 
   private scrollToForecastItem(
@@ -370,24 +370,16 @@ export class WeatherForecastCard extends LitElement {
 
     if (!scrollContainer) return;
 
+    const normalizedSelectedDate = normalizeDate(selectedForecast.datetime);
     const currentForecast = this._hourlyForecastData || [];
-    let index = currentForecast.findIndex((item) => {
-      const d1 = new Date(item.datetime);
-      const d2 = new Date(selectedForecast.datetime);
 
-      return (
-        d1.getFullYear() === d2.getFullYear() &&
-        d1.getMonth() === d2.getMonth() &&
-        d1.getDate() === d2.getDate()
-      );
+    let index = currentForecast.findIndex((item) => {
+      return normalizeDate(item.datetime) === normalizedSelectedDate;
     });
 
-    if (index === -1) {
-      index = currentForecast.length - 1;
-    }
-
+    const finalIndex = index !== -1 ? index : currentForecast.length - 1;
     const itemWidth = this._currentItemWidth || 0;
-    const leftPosition = index * itemWidth;
+    const leftPosition = finalIndex * itemWidth;
 
     scrollContainer.scrollTo({
       left: leftPosition,
