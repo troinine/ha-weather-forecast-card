@@ -14,7 +14,7 @@ import { formatDay } from "../helpers";
 import { styleMap } from "lit/directives/style-map.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { getRelativePosition } from "chart.js/helpers";
-import { actionHandler } from "../hass/action-handler-directive";
+import { actionHandler } from "../hass";
 import {
   ForecastAttribute,
   ForecastType,
@@ -45,7 +45,7 @@ Chart.register(
   PointElement,
   LinearScale,
   CategoryScale,
-  ChartDataLabels
+  ChartDataLabels,
 );
 
 @customElement("wfc-forecast-chart")
@@ -157,7 +157,7 @@ export class WfcForecastChart extends LitElement {
                   .hidePrecipitation=${true}
                 ></wfc-forecast-info>
               </div>
-            `
+            `,
           )}
         </div>
       </div>
@@ -213,7 +213,7 @@ export class WfcForecastChart extends LitElement {
 
     const maxPrecip = getMaxPrecipitationForUnit(
       getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
-      this.forecastType
+      this.forecastType,
     );
 
     return {
@@ -253,7 +253,7 @@ export class WfcForecastChart extends LitElement {
           },
           {
             data: this.forecast.map((f) =>
-              f.precipitation && f.precipitation !== 0 ? f.precipitation : null
+              f.precipitation && f.precipitation !== 0 ? f.precipitation : null,
             ),
             backgroundColor: precipColor,
             type: "bar",
@@ -274,7 +274,11 @@ export class WfcForecastChart extends LitElement {
               formatter: (value: number) =>
                 formatPrecipitation(
                   value,
-                  getWeatherUnit(this.hass, this.weatherEntity, "precipitation")
+                  getWeatherUnit(
+                    this.hass,
+                    this.weatherEntity,
+                    "precipitation",
+                  ),
                 ),
             },
           },
@@ -368,7 +372,7 @@ export class WfcForecastChart extends LitElement {
     const dataMax = Math.max(...temps);
 
     const hasLowTempData = this.forecast.some(
-      (f) => f.templow !== undefined && f.templow !== null
+      (f) => f.templow !== undefined && f.templow !== null,
     );
 
     const spread = Math.max(dataMax - dataMin, 8);
@@ -405,7 +409,7 @@ export class WfcForecastChart extends LitElement {
           parts.push(
             html`<div class="wfc-day-indicator-container">
               <div class="wfc-day-indicator wfc-label">${forecastDay}</div>
-            </div>`
+            </div>`,
           );
         }
       }

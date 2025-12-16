@@ -1,3 +1,7 @@
+import { html, LitElement, nothing, TemplateResult } from "lit";
+import { customElement, property } from "lit/decorators.js";
+import { actionHandler } from "../hass";
+import { getSuntimesInfo } from "../helpers";
 import {
   ActionConfig,
   ActionHandlerEvent,
@@ -5,8 +9,6 @@ import {
   handleAction,
   hasAction,
 } from "custom-card-helpers";
-import { html, LitElement, nothing, TemplateResult } from "lit";
-import { customElement, property } from "lit/decorators.js";
 import {
   ExtendedHomeAssistant,
   TemperatureHighLow,
@@ -18,9 +20,8 @@ import {
   getWeatherUnit,
   WeatherEntity,
 } from "../data/weather";
-import { actionHandler } from "../hass/action-handler-directive";
+
 import "./wfc-weather-condition-icon-provider";
-import { getSuntimesInfo } from "../helpers";
 
 @customElement("wfc-current-weather")
 export class WfcCurrentWeather extends LitElement {
@@ -76,7 +77,7 @@ export class WfcCurrentWeather extends LitElement {
                     stopPropagation: true,
                     hasHold: hasAction(this.config.hold_action as ActionConfig),
                     hasDoubleClick: hasAction(
-                      this.config.double_tap_action as ActionConfig
+                      this.config.double_tap_action as ActionConfig,
                     ),
                   })}
                   @action=${this.onAction}
@@ -129,12 +130,12 @@ export class WfcCurrentWeather extends LitElement {
       return {
         temperature: formatNumber(
           this.weatherEntity.attributes.temperature,
-          this.hass.locale
+          this.hass.locale,
         ),
         temperatureUnit: getWeatherUnit(
           this.hass,
           this.weatherEntity,
-          "temperature"
+          "temperature",
         ),
       };
     }
@@ -157,7 +158,7 @@ export class WfcCurrentWeather extends LitElement {
         temperatureHighLowUnit: getWeatherUnit(
           this.hass,
           this.weatherEntity,
-          "temperature"
+          "temperature",
         ),
       };
     }

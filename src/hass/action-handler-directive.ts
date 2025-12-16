@@ -21,9 +21,9 @@ type ExtendedActionHandlerOptions = ActionHandlerOptions & {
   stopPropagation?: boolean;
 };
 
-interface ActionHandler extends HTMLElement {
+interface IActionHandler extends HTMLElement {
   holdTime: number;
-  bind(element: Element, options: ActionHandlerOptions): void;
+  bind(element: Element, options: ExtendedActionHandlerOptions): void;
 }
 interface ActionHandlerElement extends HTMLElement {
   actionHandler?: boolean;
@@ -35,7 +35,7 @@ declare global {
   }
 }
 
-class ActionHandler extends HTMLElement implements ActionHandler {
+class ActionHandler extends HTMLElement implements IActionHandler {
   public holdTime = 500;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -240,7 +240,7 @@ export const actionHandlerBind = (
   if (!actionhandler) {
     return;
   }
-  actionhandler.bind(element, options as any);
+  actionhandler.bind(element, options as ActionHandlerOptions);
 };
 
 export const actionHandler = directive(
@@ -250,7 +250,7 @@ export const actionHandler = directive(
       return noChange;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     render(_options?: ExtendedActionHandlerOptions) {}
   }
 );

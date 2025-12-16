@@ -6,14 +6,14 @@ import { SuntimesInfo } from "./types";
 
 export const createWarningText = (
   hass: HomeAssistant | undefined,
-  _entity: string
+  entity: string
 ): string => {
   if (!hass) {
     return "Home Assistant instance is not available.";
   }
 
   return hass.config.state !== STATE_NOT_RUNNING
-    ? hass.localize("ui.card.common.entity_not_found")
+    ? `${hass.localize("ui.card.common.entity_not_found")}: ${entity}`
     : hass.localize("ui.panel.lovelace.warning.starting");
 };
 

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LitElement, html, TemplateResult, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import memoizeOne from "memoize-one";
@@ -48,9 +50,9 @@ type HaFormSchema = {
 
 type WeatherForecastCardEditorConfig = {
   forecast_mode?: "show_both" | "show_current" | "show_forecast";
-  forecast_interactions?: any;
-  interactions?: any;
-  advanced_settings?: any;
+  forecast_interactions?: unknown;
+  interactions?: unknown;
+  advanced_settings?: unknown;
 } & WeatherForecastCardConfig;
 
 @customElement("weather-forecast-card-editor")
@@ -70,8 +72,8 @@ export class WeatherForecastCardEditor
       [
         ...this._genericSchema(localize),
         ...this._forecastSchema(localize),
-        ...this._interactionsSchema(localize),
-        ...this._advancedSchema(localize),
+        ...this._interactionsSchema(),
+        ...this._advancedSchema(),
       ] as const
   );
 
@@ -226,7 +228,7 @@ export class WeatherForecastCardEditor
       },
     ] as const;
 
-  private _interactionsSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+  private _interactionsSchema = (): HaFormSchema[] =>
     [
       {
         name: "forecast_interactions",
@@ -290,7 +292,7 @@ export class WeatherForecastCardEditor
       },
     ] as const;
 
-  private _advancedSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+  private _advancedSchema = (): HaFormSchema[] =>
     [
       {
         name: "advanced_settings",
