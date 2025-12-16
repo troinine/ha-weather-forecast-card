@@ -180,10 +180,7 @@ export class WeatherForecastCard extends LitElement {
     }
 
     const isChartMode = this.config.forecast?.mode === ForecastMode.Chart;
-    const currentForecast =
-      (this._currentForecastType === "hourly"
-        ? this._hourlyForecastData
-        : this._dailyForecastData) || [];
+    const currentForecast = this.getCurrentForecast();
 
     return html`
       <ha-card>
@@ -371,7 +368,7 @@ export class WeatherForecastCard extends LitElement {
     if (!scrollContainer) return;
 
     const normalizedSelectedDate = normalizeDate(selectedForecast.datetime);
-    const currentForecast = this._hourlyForecastData || [];
+    const currentForecast = this.getCurrentForecast();
 
     let index = currentForecast.findIndex((item) => {
       return normalizeDate(item.datetime) === normalizedSelectedDate;
@@ -452,6 +449,14 @@ export class WeatherForecastCard extends LitElement {
       }
       throw error;
     }
+  }
+
+  private getCurrentForecast(): ForecastAttribute[] {
+    return (
+      (this._currentForecastType === "hourly"
+        ? this._hourlyForecastData
+        : this._dailyForecastData) || []
+    );
   }
 
   private layoutForecastItems(containerWidth: number) {
