@@ -123,7 +123,18 @@ export class WfcForecastChart extends LitElement {
     };
 
     return html`
-      <div class="wfc-scroll-container" style=${styleMap(scrollContainerStyle)}>
+      <div
+        class="wfc-scroll-container"
+        style=${styleMap(scrollContainerStyle)}
+        .actionHandler=${actionHandler({
+          hasHold: this.config.forecast_action?.hold_action !== undefined,
+          hasDoubleClick:
+            this.config.forecast_action?.double_tap_action !== undefined,
+          stopPropagation: true,
+        })}
+        @pointerdown=${this._onPointerDown}
+        @action=${this._onForecastAction}
+      >
         <div class="wfc-forecast-chart-header">${this.renderHeaderItems()}</div>
 
         <div class="wfc-chart-clipper" style=${styleMap(clipperStyle)}>
@@ -132,17 +143,7 @@ export class WfcForecastChart extends LitElement {
             id="chart-container"
             style=${styleMap(canvasStyle)}
           >
-            <canvas
-              id="forecast-canvas"
-              .actionHandler=${actionHandler({
-                hasHold: this.config.forecast_action?.hold_action !== undefined,
-                hasDoubleClick:
-                  this.config.forecast_action?.double_tap_action !== undefined,
-                stopPropagation: true,
-              })}
-              @pointerdown=${this._handlePointerDown}
-              @action=${this.handleAction}
-            ></canvas>
+            <canvas id="forecast-canvas"></canvas>
           </div>
         </div>
 
@@ -425,11 +426,11 @@ export class WfcForecastChart extends LitElement {
     return parts;
   }
 
-  private _handlePointerDown(event: PointerEvent) {
+  private _onPointerDown(event: PointerEvent) {
     this._lastChartEvent = event;
   }
 
-  private handleAction = (event: ActionHandlerEvent): void => {
+  private _onForecastAction = (event: ActionHandlerEvent): void => {
     if (!this._chart || !this._lastChartEvent) {
       return;
     }
