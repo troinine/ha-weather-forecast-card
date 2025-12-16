@@ -70,8 +70,8 @@ export class WeatherForecastCardEditor
       [
         ...this._genericSchema(localize),
         ...this._forecastSchema(localize),
-        ...this._interactionsSchema(localize),
-        ...this._advancedSchema(localize),
+        ...this._interactionsSchema(),
+        ...this._advancedSchema(),
       ] as const
   );
 
