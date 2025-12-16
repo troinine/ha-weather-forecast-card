@@ -4,7 +4,7 @@ import "./editor/weather-forecast-card-editor";
 
 declare global {
   interface Window {
-    customCards: Array<Object>;
+    customCards: Array<object>;
   }
 }
 

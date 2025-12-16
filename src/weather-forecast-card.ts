@@ -3,7 +3,7 @@ import { property, state } from "lit/decorators.js";
 import { styles } from "./weather-forecast-card.styles";
 import { createWarningText, normalizeDate } from "./helpers";
 import { logger } from "./logger";
-import { actionHandler } from "./hass/action-handler-directive";
+import { actionHandler, isInvalidEntityIdError } from "./hass";
 import { ForecastActionEvent, ForecastMode } from "./types";
 import {
   LitElement,
@@ -370,7 +370,7 @@ export class WeatherForecastCard extends LitElement {
     const normalizedSelectedDate = normalizeDate(selectedForecast.datetime);
     const currentForecast = this.getCurrentForecast();
 
-    let index = currentForecast.findIndex((item) => {
+    const index = currentForecast.findIndex((item) => {
       return normalizeDate(item.datetime) === normalizedSelectedDate;
     });
 
@@ -420,8 +420,8 @@ export class WeatherForecastCard extends LitElement {
           this.processForecastData();
         }),
       );
-    } catch (error: any) {
-      if (error.code === "invalid_entity_id") {
+    } catch (error: unknown) {
+      if (isInvalidEntityIdError(error)) {
         setTimeout(() => {
           this._dailyForecastEvent = undefined;
         }, 2000);
@@ -441,8 +441,8 @@ export class WeatherForecastCard extends LitElement {
           },
         ),
       );
-    } catch (error: any) {
-      if (error.code === "invalid_entity_id") {
+    } catch (error: unknown) {
+      if (isInvalidEntityIdError(error)) {
         setTimeout(() => {
           this._hourlyForecastEvent = undefined;
         }, 2000);

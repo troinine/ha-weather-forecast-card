@@ -2,7 +2,7 @@ import { HomeAssistant } from "custom-card-helpers";
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
-import { actionHandler } from "../hass/action-handler-directive";
+import { actionHandler } from "../hass";
 import { ForecastActionDetails, WeatherForecastCardConfig } from "../types";
 import { formatDay } from "../helpers";
 import {
@@ -33,7 +33,7 @@ export class WfcForecastSimple extends LitElement {
 
     this.maxPrecipitation = getMaxPrecipitationForUnit(
       getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
-      this.forecastType
+      this.forecastType,
     );
   }
 
@@ -62,7 +62,7 @@ export class WfcForecastSimple extends LitElement {
           forecastTemplates.push(
             html`<div class="wfc-day-indicator-container">
               <div class="wfc-day-indicator wfc-label">${forecastDay}</div>
-            </div>`
+            </div>`,
           );
         }
       }

@@ -21,7 +21,7 @@ type ExtendedActionHandlerOptions = ActionHandlerOptions & {
   stopPropagation?: boolean;
 };
 
-interface ActionHandler extends HTMLElement {
+interface IActionHandler extends HTMLElement {
   holdTime: number;
   bind(element: Element, options: ActionHandlerOptions): void;
 }
@@ -35,7 +35,7 @@ declare global {
   }
 }
 
-class ActionHandler extends HTMLElement implements ActionHandler {
+class ActionHandler extends HTMLElement implements IActionHandler {
   public holdTime = 500;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,14 +81,14 @@ class ActionHandler extends HTMLElement implements ActionHandler {
           this.stopAnimation();
           this.timer = undefined;
         },
-        { passive: true }
+        { passive: true },
       );
     });
   }
 
   public bind(
     element: ActionHandlerElement,
-    options: ExtendedActionHandlerOptions
+    options: ExtendedActionHandlerOptions,
   ): void {
     if (element.actionHandler) {
       return;
@@ -147,7 +147,7 @@ class ActionHandler extends HTMLElement implements ActionHandler {
           element,
           "action",
           { action: "hold" },
-          { bubbles: !options.stopPropagation }
+          { bubbles: !options.stopPropagation },
         );
       } else if (options.hasDoubleClick) {
         if (
@@ -160,7 +160,7 @@ class ActionHandler extends HTMLElement implements ActionHandler {
               element,
               "action",
               { action: "tap" },
-              { bubbles: !options.stopPropagation }
+              { bubbles: !options.stopPropagation },
             );
           }, 250);
         } else {
@@ -170,7 +170,7 @@ class ActionHandler extends HTMLElement implements ActionHandler {
             element,
             "action",
             { action: "double_tap" },
-            { bubbles: !options.stopPropagation }
+            { bubbles: !options.stopPropagation },
           );
         }
       } else {
@@ -178,7 +178,7 @@ class ActionHandler extends HTMLElement implements ActionHandler {
           element,
           "action",
           { action: "tap" },
-          { bubbles: !options.stopPropagation }
+          { bubbles: !options.stopPropagation },
         );
       }
     };
@@ -234,13 +234,13 @@ const getActionHandler = (): ActionHandler => {
 
 export const actionHandlerBind = (
   element: ActionHandlerElement,
-  options?: ActionHandlerOptions
+  options?: ActionHandlerOptions,
 ): void => {
   const actionhandler: ActionHandler = getActionHandler();
   if (!actionhandler) {
     return;
   }
-  actionhandler.bind(element, options as any);
+  actionhandler.bind(element, options as ActionHandlerOptions);
 };
 
 export const actionHandler = directive(
@@ -250,7 +250,7 @@ export const actionHandler = directive(
       return noChange;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     render(_options?: ExtendedActionHandlerOptions) {}
-  }
+  },
 );

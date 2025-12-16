@@ -15,9 +15,9 @@ import {
 
 type HaFormSelector =
   | { entity: { domain?: string; device_class?: string | string[] } }
-  | { boolean: {} }
-  | { text: {} }
-  | { entity_name: {} }
+  | { boolean: Record<string, never> }
+  | { text: Record<string, never> }
+  | { entity_name: Record<string, never> }
   | { number: { min?: number; max?: number } }
   | { ui_action: { default_action: string } }
   | {
@@ -48,9 +48,9 @@ type HaFormSchema = {
 
 type WeatherForecastCardEditorConfig = {
   forecast_mode?: "show_both" | "show_current" | "show_forecast";
-  forecast_interactions?: any;
-  interactions?: any;
-  advanced_settings?: any;
+  forecast_interactions?: unknown;
+  interactions?: unknown;
+  advanced_settings?: unknown;
 } & WeatherForecastCardConfig;
 
 @customElement("weather-forecast-card-editor")
@@ -226,7 +226,7 @@ export class WeatherForecastCardEditor
       },
     ] as const;
 
-  private _interactionsSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+  private _interactionsSchema = (): HaFormSchema[] =>
     [
       {
         name: "forecast_interactions",
@@ -290,7 +290,7 @@ export class WeatherForecastCardEditor
       },
     ] as const;
 
-  private _advancedSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+  private _advancedSchema = (): HaFormSchema[] =>
     [
       {
         name: "advanced_settings",
@@ -458,8 +458,8 @@ export class WeatherForecastCardEditor
   }
 }
 
-const moveDottedKeysToNested = (obj: Record<string, any>) => {
-  const result: Record<string, any> = { ...obj };
+const moveDottedKeysToNested = (obj: Record<string, unknown>) => {
+  const result: Record<string, unknown> = { ...obj };
 
   for (const key of Object.keys(obj)) {
     if (!key.startsWith("forecast.") && !key.startsWith("forecast_action."))
@@ -482,8 +482,8 @@ const moveDottedKeysToNested = (obj: Record<string, any>) => {
   return result;
 };
 
-const flattenNestedKeys = (obj: Record<string, any>) => {
-  const result: Record<string, any> = {};
+const flattenNestedKeys = (obj: Record<string, unknown>) => {
+  const result: Record<string, unknown> = {};
 
   for (const key in obj) {
     const value = obj[key];
