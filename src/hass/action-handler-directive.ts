@@ -23,7 +23,7 @@ type ExtendedActionHandlerOptions = ActionHandlerOptions & {
 
 interface IActionHandler extends HTMLElement {
   holdTime: number;
-  bind(element: Element, options: ActionHandlerOptions): void;
+  bind(element: Element, options: ExtendedActionHandlerOptions): void;
 }
 interface ActionHandlerElement extends HTMLElement {
   actionHandler?: boolean;
@@ -81,14 +81,14 @@ class ActionHandler extends HTMLElement implements IActionHandler {
           this.stopAnimation();
           this.timer = undefined;
         },
-        { passive: true },
+        { passive: true }
       );
     });
   }
 
   public bind(
     element: ActionHandlerElement,
-    options: ExtendedActionHandlerOptions,
+    options: ExtendedActionHandlerOptions
   ): void {
     if (element.actionHandler) {
       return;
@@ -147,7 +147,7 @@ class ActionHandler extends HTMLElement implements IActionHandler {
           element,
           "action",
           { action: "hold" },
-          { bubbles: !options.stopPropagation },
+          { bubbles: !options.stopPropagation }
         );
       } else if (options.hasDoubleClick) {
         if (
@@ -160,7 +160,7 @@ class ActionHandler extends HTMLElement implements IActionHandler {
               element,
               "action",
               { action: "tap" },
-              { bubbles: !options.stopPropagation },
+              { bubbles: !options.stopPropagation }
             );
           }, 250);
         } else {
@@ -170,7 +170,7 @@ class ActionHandler extends HTMLElement implements IActionHandler {
             element,
             "action",
             { action: "double_tap" },
-            { bubbles: !options.stopPropagation },
+            { bubbles: !options.stopPropagation }
           );
         }
       } else {
@@ -178,7 +178,7 @@ class ActionHandler extends HTMLElement implements IActionHandler {
           element,
           "action",
           { action: "tap" },
-          { bubbles: !options.stopPropagation },
+          { bubbles: !options.stopPropagation }
         );
       }
     };
@@ -234,7 +234,7 @@ const getActionHandler = (): ActionHandler => {
 
 export const actionHandlerBind = (
   element: ActionHandlerElement,
-  options?: ActionHandlerOptions,
+  options?: ActionHandlerOptions
 ): void => {
   const actionhandler: ActionHandler = getActionHandler();
   if (!actionhandler) {
@@ -252,5 +252,5 @@ export const actionHandler = directive(
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     render(_options?: ExtendedActionHandlerOptions) {}
-  },
+  }
 );
