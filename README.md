@@ -85,12 +85,13 @@ resources:
 
 ### Forecast Object
 
-| Name                | Type    | Default  | Description                                                                                                                                  |
-| :------------------ | :------ | :------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`              | string  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                 |
-| `show_sun_times`    | boolean | `true`   | Show sunrise/sunset times in hourly forecast.                                                                                                |
-| `hourly_group_size` | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                  |
-| `extra_attribute`   | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing` |
+| Name                 | Type    | Default  | Description                                                                                                                                                      |
+| :------------------- | :------ | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`               | string  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                                     |
+| `scroll_to_selected` | boolean | `false`  | Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back. |
+| `show_sun_times`     | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                           |
+| `hourly_group_size`  | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                                      |
+| `extra_attribute`    | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing`                     |
 
 ### Forecast Actions
 
