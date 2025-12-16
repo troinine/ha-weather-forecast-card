@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LitElement, html, TemplateResult, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import memoizeOne from "memoize-one";
@@ -15,9 +17,9 @@ import {
 
 type HaFormSelector =
   | { entity: { domain?: string; device_class?: string | string[] } }
-  | { boolean: Record<string, never> }
-  | { text: Record<string, never> }
-  | { entity_name: Record<string, never> }
+  | { boolean: {} }
+  | { text: {} }
+  | { entity_name: {} }
   | { number: { min?: number; max?: number } }
   | { ui_action: { default_action: string } }
   | {
@@ -458,8 +460,8 @@ export class WeatherForecastCardEditor
   }
 }
 
-const moveDottedKeysToNested = (obj: Record<string, unknown>) => {
-  const result: Record<string, unknown> = { ...obj };
+const moveDottedKeysToNested = (obj: Record<string, any>) => {
+  const result: Record<string, any> = { ...obj };
 
   for (const key of Object.keys(obj)) {
     if (!key.startsWith("forecast.") && !key.startsWith("forecast_action."))
@@ -482,8 +484,8 @@ const moveDottedKeysToNested = (obj: Record<string, unknown>) => {
   return result;
 };
 
-const flattenNestedKeys = (obj: Record<string, unknown>) => {
-  const result: Record<string, unknown> = {};
+const flattenNestedKeys = (obj: Record<string, any>) => {
+  const result: Record<string, any> = {};
 
   for (const key in obj) {
     const value = obj[key];
