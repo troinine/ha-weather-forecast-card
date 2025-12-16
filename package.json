@@ -46,7 +46,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "parcel": "^2.16.1",
-    "prettier": "3.7.4",
+    "prettier": "^3.7.4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.0"
   }
