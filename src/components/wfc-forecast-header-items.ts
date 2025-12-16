@@ -97,7 +97,7 @@ export class WfcForecastHeaderItems extends LitElement {
         const eventOnForecastDay = new Date(startDate);
         eventOnForecastDay.setHours(
           eventDate.getHours(),
-          eventDate.getMinutes(),
+          eventDate.getMinutes()
         );
 
         return (

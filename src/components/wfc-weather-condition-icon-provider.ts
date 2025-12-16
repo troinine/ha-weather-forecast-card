@@ -47,7 +47,7 @@ export class WfcWeatherConditionIconProvider extends LitElement {
     }
 
     const userDefinedIcon = getComputedStyle(this).getPropertyValue(
-      `--weather-icon-${this.state}`,
+      `--weather-icon-${this.state}`
     );
 
     if (userDefinedIcon) {
@@ -130,7 +130,7 @@ const lightningStates = new Set<string>(["lightning", "lightning-rainy"]);
 
 const getWeatherStateSVG = (
   state: string,
-  nightTime?: boolean,
+  nightTime?: boolean
 ): SVGTemplateResult => svg`
   <svg
     xmlns="http://www.w3.org/2000/svg"

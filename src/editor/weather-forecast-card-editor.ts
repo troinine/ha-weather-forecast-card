@@ -323,8 +323,8 @@ export class WeatherForecastCardEditor
       data.show_current && data.show_forecast
         ? "show_both"
         : data.show_current
-        ? "show_current"
-        : "show_forecast";
+          ? "show_current"
+          : "show_forecast";
 
     return html`
       <ha-form
@@ -346,9 +346,7 @@ export class WeatherForecastCardEditor
 
     switch (name) {
       case "entity":
-        return `${this.hass!.localize(
-          "ui.panel.lovelace.editor.card.generic.entity"
-        )} (${(
+        return `${this.hass!.localize("ui.panel.lovelace.editor.card.generic.entity")} (${(
           this.hass!.localize(
             "ui.panel.lovelace.editor.card.config.required"
           ) || "required"
@@ -356,9 +354,7 @@ export class WeatherForecastCardEditor
       case "name":
         return this.hass.localize("ui.panel.lovelace.editor.card.generic.name");
       case "temperature_entity":
-        return `${this.hass!.localize(
-          "ui.card.weather.attributes.temperature"
-        )} ${(
+        return `${this.hass!.localize("ui.card.weather.attributes.temperature")} ${(
           this.hass!.localize("ui.panel.lovelace.editor.card.generic.entity") ||
           "entity"
         ).toLocaleLowerCase()}`;

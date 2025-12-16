@@ -33,7 +33,7 @@ export class WfcForecastSimple extends LitElement {
 
     this.maxPrecipitation = getMaxPrecipitationForUnit(
       getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
-      this.forecastType,
+      this.forecastType
     );
   }
 
@@ -62,7 +62,7 @@ export class WfcForecastSimple extends LitElement {
           forecastTemplates.push(
             html`<div class="wfc-day-indicator-container">
               <div class="wfc-day-indicator wfc-label">${forecastDay}</div>
-            </div>`,
+            </div>`
           );
         }
       }

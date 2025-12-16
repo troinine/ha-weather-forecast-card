@@ -70,7 +70,7 @@ const generateRandomDailyForecast = (startDate: Date) => {
 
   for (let i = 0; i < FORECAST_DAYS; i++) {
     const forecastTime = new Date(
-      currentDay.getTime() + i * 24 * 60 * 60 * 1000,
+      currentDay.getTime() + i * 24 * 60 * 60 * 1000
     ); // Add i days
     const baseHighTemp = 2.5 + Math.sin((i / 7) * Math.PI) * 7.5; // Vary temperature over the week
     const tempVariation = (Math.random() - 0.5) * 6; // ±3°C variation

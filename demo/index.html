@@ -307,10 +307,10 @@
         // Auto-demo: tap, scroll, scroll back, tap sequence
         setTimeout(() => {
           const forecastContainer = card.shadowRoot?.querySelector(
-            ".wfc-forecast-container",
+            ".wfc-forecast-container"
           );
           const scrollContainer = card.shadowRoot?.querySelector(
-            ".wfc-scroll-container",
+            ".wfc-scroll-container"
           );
 
           if (scrollContainer) {
@@ -395,7 +395,7 @@
             }, 2000);
           } else {
             console.error(
-              "Could not find scroll container or forecast container",
+              "Could not find scroll container or forecast container"
             );
           }
         }, 2000);
