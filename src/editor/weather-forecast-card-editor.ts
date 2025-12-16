@@ -207,6 +207,12 @@ export class WeatherForecastCardEditor
         },
       },
       {
+        name: "forecast.scroll_to_selected",
+        selector: { boolean: {} },
+        default: false,
+        optional: true,
+      },
+      {
         name: "forecast.show_sun_times",
         selector: { boolean: {} },
         default: true,
@@ -374,6 +380,8 @@ export class WeatherForecastCardEditor
         ).toLocaleLowerCase()}`;
       case "forecast.mode":
         return "Forecast display mode";
+      case "forecast.scroll_to_selected":
+        return "Scroll to selected forecast";
       case "forecast.show_sun_times":
         return "Show sunrise and sunset times";
       case "forecast.hourly_group_size":
@@ -409,6 +417,10 @@ export class WeatherForecastCardEditor
         return "Action to perform when the non-forecast area of the card is interacted with.";
       case "icons_path":
         return "Path to custom weather condition icons (e.g., /local/img/weather).";
+      case "forecast.scroll_to_selected":
+        return "Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back.";
+      case "forecast.show_sun_times":
+        return "Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.";
       case "forecast.hourly_group_size":
         return "Aggregate hourly forecast data into groups to reduce the number of forecast entries shown.";
       case "name":

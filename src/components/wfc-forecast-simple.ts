@@ -1,7 +1,9 @@
 import { HomeAssistant } from "custom-card-helpers";
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { WeatherForecastCardConfig } from "../types";
+import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
+import { actionHandler } from "../hass/action-handler-directive";
+import { ForecastActionDetails, WeatherForecastCardConfig } from "../types";
 import { formatDay } from "../helpers";
 import {
   ForecastAttribute,
@@ -23,6 +25,7 @@ export class WfcForecastSimple extends LitElement {
   @property({ attribute: false }) forecastType!: ForecastType;
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
+  private _selectedForecastIndex: number | null = null;
   private maxPrecipitation: number = 0;
 
   public connectedCallback(): void {
@@ -47,7 +50,7 @@ export class WfcForecastSimple extends LitElement {
 
     let currentDay: string | undefined;
 
-    this.forecast.forEach((forecast) => {
+    this.forecast.forEach((forecast, index) => {
       if (!forecast.datetime) {
         return;
       }
@@ -64,35 +67,72 @@ export class WfcForecastSimple extends LitElement {
         }
       }
 
-      forecastTemplates.push(
-        html`
-          <div class="wfc-forecast-slot">
-            <wfc-forecast-header-items
-              .hass=${this.hass}
-              .forecast=${forecast}
-              .forecastType=${this.forecastType}
-              .config=${this.config}
-            ></wfc-forecast-header-items>
-            <wfc-forecast-details
-              .hass=${this.hass}
-              .forecast=${forecast}
-              .maxPrecipitation=${this.maxPrecipitation}
-              .config=${this.config}
-            ></wfc-forecast-details>
-            <wfc-forecast-info
-              .hass=${this.hass}
-              .forecast=${forecast}
-              .config=${this.config}
-            ></wfc-forecast-info>
-          </div>
-        `
-      );
+      forecastTemplates.push(html`
+        <div class="wfc-forecast-slot" data-index=${index}>
+          <wfc-forecast-header-items
+            .hass=${this.hass}
+            .forecast=${forecast}
+            .forecastType=${this.forecastType}
+            .config=${this.config}
+          ></wfc-forecast-header-items>
+          <wfc-forecast-details
+            .hass=${this.hass}
+            .forecast=${forecast}
+            .maxPrecipitation=${this.maxPrecipitation}
+            .config=${this.config}
+          ></wfc-forecast-details>
+          <wfc-forecast-info
+            .hass=${this.hass}
+            .forecast=${forecast}
+            .config=${this.config}
+          ></wfc-forecast-info>
+        </div>
+      `);
     });
 
     return html`
-      <div class="wfc-forecast wfc-scroll-container">${forecastTemplates}</div>
+      <div
+        class="wfc-forecast wfc-scroll-container"
+        .actionHandler=${actionHandler({
+          hasHold: this.config.forecast_action?.hold_action !== undefined,
+          hasDoubleClick:
+            this.config.forecast_action?.double_tap_action !== undefined,
+          stopPropagation: true,
+        })}
+        @action=${this._onForecastAction}
+        @pointerdown=${this._onPointerDown}
+      >
+        ${forecastTemplates}
+      </div>
     `;
   }
+
+  private _onPointerDown = (event: PointerEvent): void => {
+    const target = event.target as HTMLElement | null;
+    const slot = target?.closest(".wfc-forecast-slot") as HTMLElement | null;
+
+    this._selectedForecastIndex = slot?.dataset.index
+      ? Number(slot.dataset.index)
+      : null;
+  };
+
+  private _onForecastAction = (event: ActionHandlerEvent): void => {
+    if (this._selectedForecastIndex === null) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const selectedForecast = this.forecast[this._selectedForecastIndex];
+
+    if (!selectedForecast) return;
+
+    const actionDetails: ForecastActionDetails = {
+      selectedForecast,
+      action: event.detail.action,
+    };
+
+    fireEvent(this, "action", actionDetails);
+  };
 }
 
 declare global {

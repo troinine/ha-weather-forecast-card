@@ -188,6 +188,7 @@ ha-card {
   position: sticky;
   left: 0px;
   z-index: 4;
+  pointer-events: none;
   min-width: var(--forecast-item-width);
   max-width: var(--forecast-item-width);
   margin-right: calc(
