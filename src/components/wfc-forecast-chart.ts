@@ -2,8 +2,7 @@ import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import {
   ExtendedHomeAssistant,
-  ForecastActionHandler,
-  FreocastActionDetails,
+  ForecastActionDetails,
   WeatherForecastCardConfig,
 } from "../types";
 import {
@@ -456,7 +455,7 @@ export class WfcForecastChart extends LitElement {
     const selectedForecast = this.forecast[index];
     if (!selectedForecast) return;
 
-    const actionDetails: FreocastActionDetails = {
+    const actionDetails: ForecastActionDetails = {
       selectedForecast,
       action: event.detail.action,
     };

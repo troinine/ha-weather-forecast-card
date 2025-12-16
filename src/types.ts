@@ -10,10 +10,10 @@ import { ForecastAttribute } from "./data/weather";
 
 export type ForecastSubscription = Promise<() => void> | undefined;
 
-export type FreocastActionDetails = ActionHandlerDetail & {
+export type ForecastActionDetails = ActionHandlerDetail & {
   selectedForecast: ForecastAttribute;
 };
-export type ForecastActionEvent = HASSDomEvent<FreocastActionDetails>;
+export type ForecastActionEvent = HASSDomEvent<ForecastActionDetails>;
 
 export type ForecastActionHandler = (event: ForecastActionEvent) => void;
 
