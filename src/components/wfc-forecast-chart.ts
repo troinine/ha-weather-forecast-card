@@ -204,10 +204,22 @@ export class WfcForecastChart extends LitElement {
   private getChartConfig(): ChartConfiguration {
     const style = getComputedStyle(this);
     const gridColor = style.getPropertyValue("--wfc-chart-grid-color");
-    const datalabelColor = style.getPropertyValue("--wfc-chart-label-color");
-    const highColor = style.getPropertyValue("--wfc-temp-high-color");
-    const lowColor = style.getPropertyValue("--wfc-temp-low-color");
-    const precipColor = style.getPropertyValue("--wfc-precipitation-bar-color");
+    const highTempLabelColor = style.getPropertyValue(
+      "--wfc-chart-temp-high-label-color"
+    );
+    const lowTempLabelColor = style.getPropertyValue(
+      "--wfc-chart-temp-low-label-color"
+    );
+    const precipLabelColor = style.getPropertyValue(
+      "--wfc-chart-precipitation-label-color"
+    );
+    const highColor = style.getPropertyValue(
+      "--wfc-chart-temp-high-line-color"
+    );
+    const lowColor = style.getPropertyValue("--wfc-chart-temp-low-line-color");
+    const precipColor = style.getPropertyValue(
+      "--wfc-chart-precipitation-bar-color"
+    );
 
     const { minTemp, maxTemp } = this.computeScaleLimits();
 
@@ -229,7 +241,7 @@ export class WfcForecastChart extends LitElement {
             datalabels: {
               anchor: "end",
               align: "top",
-              color: datalabelColor,
+              color: highTempLabelColor,
               formatter: (value) =>
                 value != null
                   ? `${formatNumber(value, this.hass.locale)}°`
@@ -244,7 +256,7 @@ export class WfcForecastChart extends LitElement {
             datalabels: {
               anchor: "start",
               align: "bottom",
-              color: datalabelColor,
+              color: lowTempLabelColor,
               formatter: (value) =>
                 value != null
                   ? `${formatNumber(value, this.hass.locale)}°`
@@ -270,7 +282,7 @@ export class WfcForecastChart extends LitElement {
               anchor: "start",
               align: "end",
               offset: -22,
-              color: datalabelColor,
+              color: precipLabelColor,
               formatter: (value: number) =>
                 formatPrecipitation(
                   value,
@@ -348,19 +360,23 @@ export class WfcForecastChart extends LitElement {
   }
 
   /**
-   * Compute dynamic scale limits for the temperature axis.
+   * Computes the Y-axis boundaries (min and max) for the temperature scale.
    *
-   * Ensures adequate padding above and below the temperature data, with special handling to guarantee sufficient space below when
-   * low temperatures are present. The alogithm works as follows:
+   * This algorithm calculates "artificial" padding to prevent data labels from being pushed
+   * outside the chart area. It specifically addresses the issue where low-temperature labels
+   * (which hang below the data point) get clipped by the x-axis.
    *
-   * 1. Calculate the spread of temperature data, enforcing a minimum spread of 8 degrees.
-   * 2. Determine dynamic padding as 20% of the spread.
-   * 3. Ensure a minimum bottom buffer of 3 degrees if low temperature data exists.
-   * 4. Set final min and max limits using Math.floor and Math.ceil for cleaner axis values.
+   * The algorithm follows these steps:
    *
-   * @returns An object containing the computed minTemp and maxTemp for the temperature scale.
+   *   1. Identify the absolute min and max from the forecast.
+   *   2. Enforce a minimum range of 10° to prevent the chart from looking "flat" or jittery on stable days.
+   *   3. Apply dynamic padding based on the spread, heavily favoring the bottom (30%) over the top (20%) to accommodate labels hanging below the line.
+   *   4. Enforces a hard minimum buffer (5° at the bottom) to guarantee sufficient "degree distance" for labels, regardless of how condensed the chart scale is.
+   *   5. Round values to the nearest integer for cleaner grid lines.
+   *
+   * @returns {Object} An object containing `minTemp` and `maxTemp` properties.
    */
-  private computeScaleLimits() {
+  private computeScaleLimits(): { minTemp: number; maxTemp: number } {
     const temps = this.forecast.map((f) => f.temperature);
     const lows = this.forecast.map((f) => f.templow ?? f.temperature);
 
@@ -371,20 +387,24 @@ export class WfcForecastChart extends LitElement {
       (f) => f.templow !== undefined && f.templow !== null
     );
 
-    const spread = Math.max(dataMax - dataMin, 8);
-    const dynamicPadding = spread * 0.2;
-    const MIN_BOTTOM_BUFFER = 3;
+    const spread = Math.max(dataMax - dataMin, 10);
+    const topPaddingFactor = 0.2;
+    const bottomPaddingFactor = hasLowTempData ? 0.35 : 0.1;
+    const dynamicTop = spread * topPaddingFactor;
+    const dynamicBottom = spread * bottomPaddingFactor;
 
-    let bottomPadding;
-    if (hasLowTempData) {
-      bottomPadding = Math.max(dynamicPadding, MIN_BOTTOM_BUFFER);
-    } else {
-      bottomPadding = Math.max(dynamicPadding, 2);
-    }
+    const MIN_TOP_BUFFER = 2;
+    const MIN_BOTTOM_BUFFER = hasLowTempData ? 5 : 1;
 
-    const topPadding = Math.max(dynamicPadding, 2);
+    const topPadding = Math.max(dynamicTop, MIN_TOP_BUFFER);
+    const bottomPadding = Math.max(dynamicBottom, MIN_BOTTOM_BUFFER);
+
     const minTemp = Math.floor(dataMin - bottomPadding);
-    const maxTemp = Math.ceil(dataMax + topPadding);
+    let maxTemp = Math.ceil(dataMax + topPadding);
+
+    if (minTemp >= maxTemp) {
+      maxTemp = minTemp + 1;
+    }
 
     return { minTemp, maxTemp };
   }

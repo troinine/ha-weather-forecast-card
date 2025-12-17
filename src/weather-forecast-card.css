@@ -2,15 +2,18 @@
   --wfc-wind-low: var(--success-color, #43a047);
   --wfc-wind-medium: var(--warning-color, #ffa600);
   --wfc-wind-high: var(--error-color, #db4437);
-  --wfc-temp-low-color: var(--warning-color, #ffa600);
-  --wfc-temp-high-color: var(--primary-color, #009ac7);
+  --wfc-chart-temp-low-line-color: var(--secondary-color, #ffa600);
+  --wfc-chart-temp-high-line-color: var(--primary-color, #009ac7);
   --wfc-chart-label-color: var(--primary-text-color, #000);
+  --wfc-chart-temp-high-label-color: var(--wfc-chart-label-color);
+  --wfc-chart-temp-low-label-color: var(--secondary-text-color, #9b9b9b);
+  --wfc-chart-precipitation-label-color: var(--wfc-chart-label-color);
   --wfc-chart-grid-color: color-mix(
     in srgb,
     var(--primary-text-color, #000) 15%,
     transparent
   );
-  --wfc-precipitation-bar-color: color-mix(
+  --wfc-chart-precipitation-bar-color: color-mix(
     in srgb,
     var(--blue-color, #2196f3) 40%,
     transparent
