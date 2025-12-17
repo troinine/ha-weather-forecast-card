@@ -3,7 +3,7 @@
  */
 export const ISSUE_14_DAILY_FORECAST = [
   {
-    datetime: new Date().toISOString(), // Today
+    datetime: new Date().toISOString(),
     temperature: 7.2,
     templow: 3.2,
     condition: "cloudy",
@@ -15,7 +15,7 @@ export const ISSUE_14_DAILY_FORECAST = [
     is_daytime: true,
   },
   {
-    datetime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+    datetime: new Date(Date.now() + 86400000).toISOString(),
     temperature: 8.0,
     templow: 2.0,
     condition: "sunny",
@@ -29,7 +29,7 @@ export const ISSUE_14_DAILY_FORECAST = [
   {
     datetime: new Date(Date.now() + 2 * 86400000).toISOString(),
     temperature: 5.4,
-    templow: -0.5, // Problematic negative value
+    templow: -0.5,
     condition: "cloudy",
     precipitation: 0,
     precipitation_probability: 20,
@@ -41,7 +41,7 @@ export const ISSUE_14_DAILY_FORECAST = [
   {
     datetime: new Date(Date.now() + 3 * 86400000).toISOString(),
     temperature: 7.3,
-    templow: -0.8, // Problematic negative value
+    templow: -0.8,
     condition: "sunny",
     precipitation: 0,
     precipitation_probability: 0,
@@ -78,7 +78,7 @@ export const ISSUE_14_DAILY_FORECAST = [
 
 export const ISSUE_14_DAILY_FORECAST_2 = [
   {
-    datetime: new Date().toISOString(), // Wed
+    datetime: new Date().toISOString(),
     temperature: 4.8,
     templow: -6.9,
     condition: "partlycloudy",
@@ -90,7 +90,7 @@ export const ISSUE_14_DAILY_FORECAST_2 = [
     is_daytime: true,
   },
   {
-    datetime: new Date(Date.now() + 86400000).toISOString(), // Thu
+    datetime: new Date(Date.now() + 86400000).toISOString(),
     temperature: 5.3,
     templow: -2.2,
     condition: "sunny",
@@ -102,7 +102,7 @@ export const ISSUE_14_DAILY_FORECAST_2 = [
     is_daytime: true,
   },
   {
-    datetime: new Date(Date.now() + 2 * 86400000).toISOString(), // Fri
+    datetime: new Date(Date.now() + 2 * 86400000).toISOString(),
     temperature: 8.4,
     templow: 2.5,
     condition: "cloudy",
@@ -114,7 +114,7 @@ export const ISSUE_14_DAILY_FORECAST_2 = [
     is_daytime: true,
   },
   {
-    datetime: new Date(Date.now() + 3 * 86400000).toISOString(), // Sat
+    datetime: new Date(Date.now() + 3 * 86400000).toISOString(),
     temperature: 10.2,
     templow: 0.2,
     condition: "partlycloudy",
@@ -126,10 +126,9 @@ export const ISSUE_14_DAILY_FORECAST_2 = [
     is_daytime: true,
   },
   {
-    datetime: new Date(Date.now() + 4 * 86400000).toISOString(), // Sun
+    datetime: new Date(Date.now() + 4 * 86400000).toISOString(),
     temperature: 10.0,
     templow: 4.2,
-    // Using rainy because of the rain cloud icon
     condition: "rainy",
     precipitation: 2.0,
     precipitation_probability: 60,
@@ -139,7 +138,7 @@ export const ISSUE_14_DAILY_FORECAST_2 = [
     is_daytime: true,
   },
   {
-    datetime: new Date(Date.now() + 5 * 86400000).toISOString(), // Mon
+    datetime: new Date(Date.now() + 5 * 86400000).toISOString(),
     temperature: 10.0,
     templow: -1.0,
     condition: "sunny",
@@ -151,7 +150,7 @@ export const ISSUE_14_DAILY_FORECAST_2 = [
     is_daytime: true,
   },
   {
-    datetime: new Date(Date.now() + 6 * 86400000).toISOString(), // Tue
+    datetime: new Date(Date.now() + 6 * 86400000).toISOString(),
     temperature: 6.1,
     templow: -2.9,
     condition: "cloudy",
@@ -163,7 +162,7 @@ export const ISSUE_14_DAILY_FORECAST_2 = [
     is_daytime: true,
   },
   {
-    datetime: new Date(Date.now() + 7 * 86400000).toISOString(), // Wed
+    datetime: new Date(Date.now() + 7 * 86400000).toISOString(),
     temperature: 4.5,
     templow: -7.9,
     condition: "partlycloudy",
@@ -175,7 +174,7 @@ export const ISSUE_14_DAILY_FORECAST_2 = [
     is_daytime: true,
   },
   {
-    datetime: new Date(Date.now() + 8 * 86400000).toISOString(), // Thu
+    datetime: new Date(Date.now() + 8 * 86400000).toISOString(),
     temperature: -3.1,
     templow: -12.8,
     condition: "cloudy",
