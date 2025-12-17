@@ -13,7 +13,7 @@
     var(--primary-text-color, #000) 15%,
     transparent
   );
-  --wfc-chart-precipitation-bar-color: color-mix(
+  --wfc-precipitation-bar-color: color-mix(
     in srgb,
     var(--blue-color, #2196f3) 40%,
     transparent
