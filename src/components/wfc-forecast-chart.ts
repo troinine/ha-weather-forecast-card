@@ -374,7 +374,7 @@ export class WfcForecastChart extends LitElement {
    *   4. Enforces a hard minimum buffer (5° at the bottom) to guarantee sufficient "degree distance" for labels, regardless of how condensed the chart scale is.
    *   5. Round values to the nearest integer for cleaner grid lines.
    *
-   * @returns {Object} An object containing `minTemp` and `maxTemp` properties.
+   * @returns An object containing `minTemp` and `maxTemp` properties.
    */
   private computeScaleLimits(): { minTemp: number; maxTemp: number } {
     const temps = this.forecast.map((f) => f.temperature);
