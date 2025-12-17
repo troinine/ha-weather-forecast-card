@@ -370,7 +370,7 @@ export class WfcForecastChart extends LitElement {
    *
    *   1. Identify the absolute min and max from the forecast.
    *   2. Enforce a minimum range of 10° to prevent the chart from looking "flat" or jittery on stable days.
-   *   3. Apply dynamic padding based on the spread, heavily favoring the bottom (30%) over the top (20%) to accommodate labels hanging below the line.
+   *   3. Apply dynamic padding based on the spread, heavily favoring the bottom (35% when low temps are available, otherwise 10%) over the top (20%) to accommodate labels hanging below the line.
    *   4. Enforces a hard minimum buffer (5° at the bottom) to guarantee sufficient "degree distance" for labels, regardless of how condensed the chart scale is.
    *   5. Round values to the nearest integer for cleaner grid lines.
    *
