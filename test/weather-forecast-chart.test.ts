@@ -176,4 +176,72 @@ describe("weather-forecast-card chart", () => {
       expect(lowTemps[index]).toBe(day.templow);
     });
   });
+
+  it("should respect styles configured in CSS", async () => {
+    const chartElement = card.shadowRoot!.querySelector(
+      "wfc-forecast-chart"
+    ) as WfcForecastChart;
+    expect(chartElement).not.toBeNull();
+
+    const testColors = {
+      grid: "rgb(1, 1, 1)",
+      highTempLabel: "rgb(2, 2, 2)",
+      lowTempLabel: "rgb(3, 3, 3)",
+      precipLabel: "rgb(4, 4, 4)",
+      highLine: "rgb(5, 5, 5)",
+      lowLine: "rgb(6, 6, 6)",
+      precipBar: "rgb(7, 7, 7)",
+    };
+
+    chartElement.style.setProperty("--wfc-chart-grid-color", testColors.grid);
+    chartElement.style.setProperty(
+      "--wfc-chart-temp-high-label-color",
+      testColors.highTempLabel
+    );
+    chartElement.style.setProperty(
+      "--wfc-chart-temp-low-label-color",
+      testColors.lowTempLabel
+    );
+    chartElement.style.setProperty(
+      "--wfc-chart-precipitation-label-color",
+      testColors.precipLabel
+    );
+    chartElement.style.setProperty(
+      "--wfc-chart-temp-high-line-color",
+      testColors.highLine
+    );
+    chartElement.style.setProperty(
+      "--wfc-chart-temp-low-line-color",
+      testColors.lowLine
+    );
+    chartElement.style.setProperty(
+      "--wfc-precipitation-bar-color",
+      testColors.precipBar
+    );
+
+    // Manually set itemWidth to trigger rendering
+    chartElement.itemWidth = 100;
+    await chartElement.updateComplete;
+
+    // @ts-expect-error: _chart is private
+    const chartInstance = chartElement._chart;
+    expect(chartInstance).toBeDefined();
+
+    const datasets = chartInstance!.data.datasets;
+
+    expect(datasets[0].borderColor).toBe(testColors.highLine);
+    // @ts-expect-error: datalabels type def missing in chartjs types
+    expect(datasets[0].datalabels.color).toBe(testColors.highTempLabel);
+    expect(datasets[1].borderColor).toBe(testColors.lowLine);
+    // @ts-expect-error: datalabels type def missing in chartjs types
+    expect(datasets[1].datalabels.color).toBe(testColors.lowTempLabel);
+    expect(datasets[2].backgroundColor).toBe(testColors.precipBar);
+    // @ts-expect-error: datalabels type def missing in chartjs types
+    expect(datasets[2].datalabels.color).toBe(testColors.precipLabel);
+    const options = chartInstance!.options;
+    // @ts-expect-error: deep access
+    expect(options.scales.x.border.color).toBe(testColors.grid);
+    // @ts-expect-error: deep access
+    expect(options.scales.x.grid.color).toBe(testColors.grid);
+  });
 });
