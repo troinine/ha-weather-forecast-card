@@ -8,9 +8,10 @@ import {
   ForecastMode,
   WeatherForecastCardConfig,
 } from "../src/types";
+import { TEST_FORECAST_DAILY, TEST_FORECAST_HOURLY } from "./mocks/test-data";
+import { formatDay, formatHour } from "../src/helpers";
 
 import "../src/index";
-import { TEST_FORECAST_DAILY, TEST_FORECAST_HOURLY } from "./mocks/test-data";
 
 describe("weather-forecast-card simple", () => {
   const mockHassInstance = new MockHass();
@@ -45,6 +46,24 @@ describe("weather-forecast-card simple", () => {
     await card.updateComplete;
 
     await new Promise((resolve) => setTimeout(resolve, 150));
+  });
+
+  it("should render correct indiator labels", async () => {
+    expect(
+      card.shadowRoot!.querySelector(".wfc-forecast-container")
+    ).not.toBeNull();
+
+    const forecastItems =
+      card.shadowRoot!.querySelectorAll(".wfc-forecast-slot");
+    expect(forecastItems.length).toBe(TEST_FORECAST_DAILY.length);
+
+    forecastItems.forEach((item, index) => {
+      const timeLabel = item.querySelector(".wfc-forecast-slot-time");
+      expect(timeLabel).not.toBeNull();
+      expect(timeLabel?.textContent?.trim()).toBe(
+        formatDay(hass, TEST_FORECAST_DAILY[index].datetime)
+      );
+    });
   });
 
   it("should render daily forecast temperatures (high/low)", async () => {
@@ -95,7 +114,7 @@ describe("weather-forecast-card simple", () => {
     }
   });
 
-  it("should toggle to hourly on tap and render hourly forecast temperature (high)", async () => {
+  it("should toggle to hourly on tap and render hourly forecast", async () => {
     const forecastContainer = card.shadowRoot!.querySelector(
       ".wfc-forecast-container"
     );
@@ -117,6 +136,12 @@ describe("weather-forecast-card simple", () => {
     expect(forecastItems.length).toBe(TEST_FORECAST_HOURLY.length);
 
     forecastItems.forEach((item, index) => {
+      const timeLabel = item.querySelector(".wfc-forecast-slot-time");
+      expect(timeLabel).not.toBeNull();
+      expect(timeLabel?.textContent?.trim()).toBe(
+        formatHour(hass, TEST_FORECAST_HOURLY[index].datetime)
+      );
+
       const temperatureHigh = item.querySelector(
         "span.wfc-forecast-temperature-high"
       );
