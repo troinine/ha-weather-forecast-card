@@ -4,10 +4,10 @@ changelog:
       - ignore-for-release
       - ci
   categories:
-    - title: ✨ New Features
+    - title: ✨ New features
       labels:
         - feature
-    - title: 🐛 Bug Fixes
+    - title: 🐛 Bug fixes and improvements
       labels:
         - bugfix
         - fix

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LitElement, html, TemplateResult, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import memoizeOne from "memoize-one";
@@ -48,9 +50,9 @@ type HaFormSchema = {
 
 type WeatherForecastCardEditorConfig = {
   forecast_mode?: "show_both" | "show_current" | "show_forecast";
-  forecast_interactions?: any;
-  interactions?: any;
-  advanced_settings?: any;
+  forecast_interactions?: unknown;
+  interactions?: unknown;
+  advanced_settings?: unknown;
 } & WeatherForecastCardConfig;
 
 @customElement("weather-forecast-card-editor")
@@ -70,8 +72,8 @@ export class WeatherForecastCardEditor
       [
         ...this._genericSchema(localize),
         ...this._forecastSchema(localize),
-        ...this._interactionsSchema(localize),
-        ...this._advancedSchema(localize),
+        ...this._interactionsSchema(),
+        ...this._advancedSchema(),
       ] as const
   );
 
@@ -207,6 +209,12 @@ export class WeatherForecastCardEditor
         },
       },
       {
+        name: "forecast.scroll_to_selected",
+        selector: { boolean: {} },
+        default: false,
+        optional: true,
+      },
+      {
         name: "forecast.show_sun_times",
         selector: { boolean: {} },
         default: true,
@@ -220,7 +228,7 @@ export class WeatherForecastCardEditor
       },
     ] as const;
 
-  private _interactionsSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+  private _interactionsSchema = (): HaFormSchema[] =>
     [
       {
         name: "forecast_interactions",
@@ -284,7 +292,7 @@ export class WeatherForecastCardEditor
       },
     ] as const;
 
-  private _advancedSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+  private _advancedSchema = (): HaFormSchema[] =>
     [
       {
         name: "advanced_settings",
@@ -315,8 +323,8 @@ export class WeatherForecastCardEditor
       data.show_current && data.show_forecast
         ? "show_both"
         : data.show_current
-        ? "show_current"
-        : "show_forecast";
+          ? "show_current"
+          : "show_forecast";
 
     return html`
       <ha-form
@@ -338,9 +346,7 @@ export class WeatherForecastCardEditor
 
     switch (name) {
       case "entity":
-        return `${this.hass!.localize(
-          "ui.panel.lovelace.editor.card.generic.entity"
-        )} (${(
+        return `${this.hass!.localize("ui.panel.lovelace.editor.card.generic.entity")} (${(
           this.hass!.localize(
             "ui.panel.lovelace.editor.card.config.required"
           ) || "required"
@@ -348,9 +354,7 @@ export class WeatherForecastCardEditor
       case "name":
         return this.hass.localize("ui.panel.lovelace.editor.card.generic.name");
       case "temperature_entity":
-        return `${this.hass!.localize(
-          "ui.card.weather.attributes.temperature"
-        )} ${(
+        return `${this.hass!.localize("ui.card.weather.attributes.temperature")} ${(
           this.hass!.localize("ui.panel.lovelace.editor.card.generic.entity") ||
           "entity"
         ).toLocaleLowerCase()}`;
@@ -374,6 +378,8 @@ export class WeatherForecastCardEditor
         ).toLocaleLowerCase()}`;
       case "forecast.mode":
         return "Forecast display mode";
+      case "forecast.scroll_to_selected":
+        return "Scroll to selected forecast";
       case "forecast.show_sun_times":
         return "Show sunrise and sunset times";
       case "forecast.hourly_group_size":
@@ -409,6 +415,10 @@ export class WeatherForecastCardEditor
         return "Action to perform when the non-forecast area of the card is interacted with.";
       case "icons_path":
         return "Path to custom weather condition icons (e.g., /local/img/weather).";
+      case "forecast.scroll_to_selected":
+        return "Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back.";
+      case "forecast.show_sun_times":
+        return "Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.";
       case "forecast.hourly_group_size":
         return "Aggregate hourly forecast data into groups to reduce the number of forecast entries shown.";
       case "name":

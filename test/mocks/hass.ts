@@ -1,4 +1,19 @@
-import type { HomeAssistant } from "custom-card-helpers";
+import {
+  NumberFormat,
+  TimeFormat,
+  type HomeAssistant,
+} from "custom-card-helpers";
+import type { ForecastAttribute, ForecastEvent } from "../../src/data/weather";
+import { HassEntity } from "home-assistant-js-websocket";
+
+export type ForecastSubscriptionCallback = (
+  forecastevent: ForecastEvent
+) => void;
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface MockHomeAssistant extends Omit<HomeAssistant, "auth"> {}
+const FORECAST_DAYS = 9;
+const FORECAST_HOURS = 24 * FORECAST_DAYS;
 
 const generateRandomHourlyForecast = (startDate: Date) => {
   const forecast = [];
@@ -9,7 +24,7 @@ const generateRandomHourlyForecast = (startDate: Date) => {
     currentHour.setHours(currentHour.getHours() - 1);
   }
 
-  for (let i = 0; i < 36; i++) {
+  for (let i = 0; i < FORECAST_HOURS; i++) {
     const forecastTime = new Date(currentHour.getTime() + i * 60 * 60 * 1000); // Add i hours
     const baseTemp = 2.5 + Math.sin((i / 24) * Math.PI * 2) * 7.5; // Temperature curve throughout the day
     const randomVariation = (Math.random() - 0.5) * 4; // ±2°C variation
@@ -28,10 +43,10 @@ const generateRandomHourlyForecast = (startDate: Date) => {
         rand < 0.2
           ? "rainy"
           : rand < 0.4
-          ? "cloudy"
-          : rand < 0.7
-          ? "partlycloudy"
-          : "sunny";
+            ? "cloudy"
+            : rand < 0.7
+              ? "partlycloudy"
+              : "sunny";
     }
 
     // Precipitation is more likely with snowy/rainy conditions
@@ -65,7 +80,7 @@ const generateRandomDailyForecast = (startDate: Date) => {
   const currentDay = new Date(startDate);
   currentDay.setHours(12, 0, 0, 0);
 
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < FORECAST_DAYS; i++) {
     const forecastTime = new Date(
       currentDay.getTime() + i * 24 * 60 * 60 * 1000
     ); // Add i days
@@ -87,10 +102,10 @@ const generateRandomDailyForecast = (startDate: Date) => {
         rand < 0.25
           ? "rainy"
           : rand < 0.45
-          ? "cloudy"
-          : rand < 0.75
-          ? "partlycloudy"
-          : "sunny";
+            ? "cloudy"
+            : rand < 0.75
+              ? "partlycloudy"
+              : "sunny";
     }
 
     // Precipitation is more likely with snowy/rainy conditions
@@ -121,13 +136,13 @@ const generateRandomDailyForecast = (startDate: Date) => {
 };
 
 export class MockHass {
-  private subscriptions = new Map<string, Function>();
-  private hourlyForecast = generateRandomHourlyForecast(new Date());
-  private dailyForecast = generateRandomDailyForecast(new Date());
+  private subscriptions = new Map<string, ForecastSubscriptionCallback>();
+  public hourlyForecast = generateRandomHourlyForecast(new Date());
+  public dailyForecast = generateRandomDailyForecast(new Date());
 
   constructor() {}
 
-  getHass(): HomeAssistant {
+  getHass(): MockHomeAssistant {
     const currentForecast = this.hourlyForecast[0];
 
     return {
@@ -138,6 +153,13 @@ export class MockHass {
           attributes: {
             friendly_name: "Outdoor Temperature",
             unit_of_measurement: "°C",
+          },
+          last_changed: "2025-11-20T10:30:00.000Z",
+          last_updated: "2025-11-20T10:30:00.000Z",
+          context: {
+            id: "mock-context-id",
+            user_id: null,
+            parent_id: null,
           },
         },
         "weather.demo": {
@@ -164,6 +186,7 @@ export class MockHass {
           context: {
             id: "mock-context-id",
             user_id: null,
+            parent_id: null,
           },
         },
       },
@@ -176,10 +199,23 @@ export class MockHass {
           mass: "kg",
           temperature: "°C",
           volume: "L",
+          pressure: "hPa",
+          wind_speed: "m/s",
+          accumulated_precipitation: "mm",
         },
         location_name: "Helsinki",
         time_zone: "Europe/Helsinki",
-        components: ["weather"], // Required for weather subscriptions
+        components: ["weather"],
+        config_dir: "",
+        allowlist_external_dirs: [],
+        allowlist_external_urls: [],
+        version: "",
+        config_source: "",
+        safe_mode: false,
+        state: "RUNNING",
+        external_url: null,
+        internal_url: null,
+        currency: "",
       },
       localize: (key: string) => {
         // Finnish weather state localizations
@@ -207,7 +243,7 @@ export class MockHass {
 
         return translations[key] || key;
       },
-      formatEntityState: (stateObj: any) => {
+      formatEntityState: (stateObj: HassEntity) => {
         if (!stateObj) return "";
 
         // For weather entities, return localized state
@@ -242,10 +278,15 @@ export class MockHass {
       language: "en",
       locale: {
         language: "en",
-        time_format: "24",
+        time_format: TimeFormat.twenty_four,
+        number_format: NumberFormat.comma_decimal,
       },
       connection: {
-        subscribeMessage: (callback: Function, message: any) => {
+        // @ts-expect-error Mock subscription message
+        subscribeMessage: (
+          callback: ForecastSubscriptionCallback,
+          message: { forecast_type: "hourly" | "daily" }
+        ) => {
           console.log("Mock forecast subscription:", message);
 
           // Store subscription
@@ -258,12 +299,12 @@ export class MockHass {
               ? this.hourlyForecast
               : this.dailyForecast;
 
-          const forecastEvent = {
+          const forecastEvent: ForecastEvent = {
             type: message.forecast_type,
-            forecast: mockForecast,
+            forecast: mockForecast as [ForecastAttribute],
           };
 
-          setTimeout(() => callback(forecastEvent), 1000);
+          setTimeout(() => callback(forecastEvent), 100);
 
           return () => {
             this.subscriptions.delete(subscriptionId);
@@ -271,7 +312,7 @@ export class MockHass {
           };
         },
       },
-    } as any;
+    };
   }
 
   // Update forecast data for all subscriptions

@@ -408,7 +408,7 @@ const computeAverageBearing = (bearings: number[]): number => {
   const avgSin = sumSin / bearings.length;
   const avgCos = sumCos / bearings.length;
 
-  let avgRad = Math.atan2(avgSin, avgCos);
+  const avgRad = Math.atan2(avgSin, avgCos);
   let avgDeg = (avgRad * 180) / Math.PI;
 
   // Normalize to 0-360

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -79,10 +79,22 @@
       <div class="test-card dark">
         <weather-forecast-card id="test-card-8"></weather-forecast-card>
       </div>
+      <h2>Bug fixes</h2>
+      <h3>#14</h3>
+      <weather-forecast-card id="test-card-bug-14"></weather-forecast-card>
+      <h3>#14 - 2</h3>
+      <weather-forecast-card id="test-card-bug-14-2"></weather-forecast-card>
+      <div id="error">
+        <p id="error-message"></p>
+      </div>
     </div>
     <script type="module" src="../../src/index.ts"></script>
     <script type="module">
       import { MockHass } from "../mocks/hass.ts";
+      import {
+        ISSUE_14_DAILY_FORECAST,
+        ISSUE_14_DAILY_FORECAST_2,
+      } from "../mocks/test-data.ts";
 
       const initializeCard = (cardId, config, hass) => {
         const card = document.getElementById(cardId);
@@ -177,6 +189,36 @@
             show_condition_effects: true,
           },
           hass
+        );
+
+        const hassIssue14 = new MockHass();
+        hassIssue14.dailyForecast = ISSUE_14_DAILY_FORECAST;
+
+        initializeCard(
+          "test-card-bug-14",
+          {
+            entity: "weather.demo",
+            forecast: {
+              mode: "chart",
+              extra_attribute: "wind_direction",
+            },
+          },
+          hassIssue14.getHass()
+        );
+
+        const hassIssue14_2 = new MockHass();
+        hassIssue14_2.dailyForecast = ISSUE_14_DAILY_FORECAST_2;
+
+        initializeCard(
+          "test-card-bug-14-2",
+          {
+            entity: "weather.demo",
+            forecast: {
+              mode: "chart",
+              extra_attribute: "wind_direction",
+            },
+          },
+          hassIssue14_2.getHass()
         );
       });
     </script>

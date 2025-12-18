@@ -1,6 +1,6 @@
 {
   "name": "weather-forecast-card",
-  "version": "0.4.0-devel",
+  "version": "0.5.0-devel",
   "description": "A TypeScript weather forecast card built with Parcel",
   "type": "module",
   "module": "dist/weather-forecast-card.js",
@@ -20,7 +20,10 @@
     "build": "parcel build --no-source-maps --target module",
     "build:debug": "parcel build --target module --no-optimize",
     "clean": "rm -rf ./dist/ ./.parcel-cache",
-    "demo": "parcel serve demo/index.html demo/background.png"
+    "demo": "parcel serve demo/index.html demo/background.png",
+    "lint": "eslint 'src/**/*.ts'",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
   },
   "keywords": [],
   "author": "",
@@ -32,17 +35,24 @@
     "custom-card-helpers": "^1.9.0",
     "home-assistant-js-websocket": "^9.5.0",
     "lit": "^3.1.0",
-    "lodash-es": "^4.17.21",
+    "lodash-es": "^4.17.22",
     "memoize-one": "^6.0.0",
     "suncalc": "^1.9.0"
   },
   "devDependencies": {
-    "@parcel/transformer-inline-string": "2.16.1",
+    "@eslint/js": "^9.39.2",
+    "@open-wc/testing": "^4.0.0",
+    "@parcel/transformer-inline-string": "^2.16.3",
     "@types/lodash-es": "^4.17.12",
-    "@types/lodash.merge": "^4.6.9",
     "@types/node": "^20.10.0",
     "@types/suncalc": "^1.9.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "happy-dom": "^20.0.11",
     "parcel": "^2.16.1",
-    "typescript": "^5.9.3"
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.50.0",
+    "vitest": "^4.0.16"
   }
 }

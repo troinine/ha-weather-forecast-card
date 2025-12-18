@@ -1,9 +1,11 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/troinine/ha-weather-forecast-card/refs/heads/main/docs/weather-forecast-card-demo.gif" alt="Weather Forecast Card" width="600" style="border-radius: 12px;">
   <br>
-  <a href=https://www.home-assistant.io/><img alt="Home Assistant" src="https://img.shields.io/badge/Home%20Assistant-000?logo=homeassistant&logoColor=fff&style=for-the-badge"></a>
-  <a href="https://hacs.xyz/"><img alt="HACS" src="https://img.shields.io/badge/HACS-000?logo=homeassistantcommunitystore&logoColor=fff&style=for-the-badge"></a>
+  <a href=https://www.home-assistant.io/><img alt="Home Assistant" src="https://img.shields.io/badge/Home%20Assistant-Start-blue?logo=homeassistant&logoColor=fff&style=for-the-badge&labelColor=000"></a>
+  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=troinine&repository=ha-weather-forecast-card&category=Dashboard"><img alt="HACS" src="https://img.shields.io/badge/HACS-default-blue?logo=homeassistantcommunitystore&logoColor=fff&style=for-the-badge&labelColor=000"></a>
   <a href="https://github.com/troinine/ha-weather-forecast-card/releases"><img alt="Releases" src="https://img.shields.io/github/v/release/troinine/ha-weather-forecast-card?style=for-the-badge&labelColor=000&logoColor=fff&color=blue"></a>
+  <a href="https://github.com/troinine/ha-weather-forecast-card/actions/workflows/build.yml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/troinine/ha-weather-forecast-card/build.yml?branch=main&style=for-the-badge&logo=github&label=Tests&labelColor=000&logoColor=fff&color=blue"></a>
+  <a href="https://github.com/troinine/ha-weather-forecast-card/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/troinine/ha-weather-forecast-card/total?style=for-the-badge&labelColor=000&logoColor=fff&color=blue"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&labelColor=000"></a>
 </div>
 
@@ -86,12 +88,13 @@ resources:
 
 ### Forecast Object
 
-| Name                | Type      | Default  | Description                                                                                                                                  |
-| :------------------ | :-------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`              | `string`  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                 |
-| `show_sun_times`    | `boolean` | `true`   | Show sunrise/sunset times in hourly forecast.                                                                                                |
-| `hourly_group_size` | `number`  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                  |
-| `extra_attribute`   | `string`  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing` |
+| Name                 | Type    | Default  | Description                                                                                                                                                      |
+| :------------------- | :------ | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`               | string  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                                     |
+| `scroll_to_selected` | boolean | `false`  | Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back. |
+| `show_sun_times`     | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                           |
+| `hourly_group_size`  | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                                      |
+| `extra_attribute`    | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing`                     |
 
 ### Forecast Actions
 

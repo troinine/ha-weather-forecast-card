@@ -1,10 +1,10 @@
 import { merge } from "lodash-es";
 import { property, state } from "lit/decorators.js";
 import { styles } from "./weather-forecast-card.styles";
-import { createWarningText } from "./helpers";
+import { createWarningText, normalizeDate } from "./helpers";
 import { logger } from "./logger";
-import { actionHandler } from "./hass/action-handler-directive";
-import { ForecastMode } from "./types";
+import { actionHandler, isInvalidEntityIdError } from "./hass";
+import { ForecastActionEvent, ForecastMode } from "./types";
 import {
   LitElement,
   html,
@@ -181,10 +181,7 @@ export class WeatherForecastCard extends LitElement {
     }
 
     const isChartMode = this.config.forecast?.mode === ForecastMode.Chart;
-    const currentForecast =
-      (this._currentForecastType === "hourly"
-        ? this._hourlyForecastData
-        : this._dailyForecastData) || [];
+    const currentForecast = this.getCurrentForecast();
 
     return html`
       <ha-card>
@@ -344,9 +341,56 @@ export class WeatherForecastCard extends LitElement {
     }
   }
 
-  private _toggleForecastView() {
+  private _toggleForecastView(selectedForecast?: ForecastAttribute) {
+    const willSwitchToHourly = this._currentForecastType === "daily";
+
     this._currentForecastType =
       this._currentForecastType === "daily" ? "hourly" : "daily";
+
+    if (!selectedForecast || !this.config?.forecast?.scroll_to_selected) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      if (willSwitchToHourly) {
+        this.scrollToForecastItem(selectedForecast);
+      } else {
+        const firstDaily = this._dailyForecastData?.[0];
+
+        if (firstDaily) {
+          this.scrollToForecastItem(firstDaily, "instant");
+        }
+      }
+    });
+  }
+
+  private scrollToForecastItem(
+    selectedForecast: ForecastAttribute,
+    behavior: ScrollBehavior = "smooth"
+  ) {
+    if (!this._forecastContainer) return;
+
+    const scrollContainer = this._forecastContainer.querySelector(
+      ".wfc-scroll-container"
+    ) as HTMLElement;
+
+    if (!scrollContainer) return;
+
+    const normalizedSelectedDate = normalizeDate(selectedForecast.datetime);
+    const currentForecast = this.getCurrentForecast();
+
+    const index = currentForecast.findIndex((item) => {
+      return normalizeDate(item.datetime) === normalizedSelectedDate;
+    });
+
+    const finalIndex = index !== -1 ? index : currentForecast.length - 1;
+    const itemWidth = this._currentItemWidth || 0;
+    const leftPosition = finalIndex * itemWidth;
+
+    scrollContainer.scrollTo({
+      left: leftPosition,
+      behavior,
+    });
   }
 
   private unsubscribeForecastEvents() {
@@ -385,8 +429,8 @@ export class WeatherForecastCard extends LitElement {
           this.processForecastData();
         })
       );
-    } catch (error: any) {
-      if (error.code === "invalid_entity_id") {
+    } catch (error: unknown) {
+      if (isInvalidEntityIdError(error)) {
         setTimeout(() => {
           this._dailyForecastEvent = undefined;
         }, 2000);
@@ -406,14 +450,22 @@ export class WeatherForecastCard extends LitElement {
           }
         )
       );
-    } catch (error: any) {
-      if (error.code === "invalid_entity_id") {
+    } catch (error: unknown) {
+      if (isInvalidEntityIdError(error)) {
         setTimeout(() => {
           this._hourlyForecastEvent = undefined;
         }, 2000);
       }
       throw error;
     }
+  }
+
+  private getCurrentForecast(): ForecastAttribute[] {
+    return (
+      (this._currentForecastType === "hourly"
+        ? this._hourlyForecastData
+        : this._dailyForecastData) || []
+    );
   }
 
   private layoutForecastItems(containerWidth: number) {
@@ -468,7 +520,7 @@ export class WeatherForecastCard extends LitElement {
     });
   }
 
-  private onForecastAction = (event: ActionHandlerEvent): void => {
+  private onForecastAction = (event: ForecastActionEvent): void => {
     if (!this.config) {
       return;
     }
@@ -486,7 +538,7 @@ export class WeatherForecastCard extends LitElement {
         this.config.forecast_action?.double_tap_action?.action ===
           "toggle-forecast")
     ) {
-      this._toggleForecastView();
+      this._toggleForecastView(event.detail.selectedForecast ?? undefined);
     } else {
       handleAction(
         this,

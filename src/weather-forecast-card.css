@@ -2,9 +2,12 @@
   --wfc-wind-low: var(--success-color, #43a047);
   --wfc-wind-medium: var(--warning-color, #ffa600);
   --wfc-wind-high: var(--error-color, #db4437);
-  --wfc-temp-low-color: var(--warning-color, #ffa600);
-  --wfc-temp-high-color: var(--primary-color, #009ac7);
+  --wfc-chart-temp-low-line-color: var(--secondary-color, #ffa600);
+  --wfc-chart-temp-high-line-color: var(--primary-color, #009ac7);
   --wfc-chart-label-color: var(--primary-text-color, #000);
+  --wfc-chart-temp-high-label-color: var(--wfc-chart-label-color);
+  --wfc-chart-temp-low-label-color: var(--secondary-text-color, #9b9b9b);
+  --wfc-chart-precipitation-label-color: var(--wfc-chart-label-color);
   --wfc-chart-grid-color: color-mix(
     in srgb,
     var(--primary-text-color, #000) 15%,
@@ -173,7 +176,7 @@ ha-card {
 }
 
 .wfc-label {
-  font-size: var(--ha-font-size-l, 16px);
+  font-size: var(--ha-font-size-m, 14px);
   color: var(--secondary-text-color, #9b9b9b);
 }
 
@@ -190,6 +193,7 @@ ha-card {
   position: sticky;
   left: 0px;
   z-index: 4;
+  pointer-events: none;
   min-width: var(--forecast-item-width);
   max-width: var(--forecast-item-width);
   margin-right: calc(
@@ -218,7 +222,6 @@ ha-card {
 }
 
 .wfc-forecast-slot-time {
-  font-size: var(--ha-font-size-l, 16px);
   color: var(--secondary-text-color, #9b9b9b);
   height: 20px;
   line-height: 20px;
@@ -226,7 +229,6 @@ ha-card {
   align-items: center;
   justify-content: center;
   text-align: center;
-  margin-bottom: var(--ha-space-1, 4px);
 }
 
 .wfc-forecast-slot-temperature {
