@@ -304,7 +304,7 @@ export class MockHass {
             forecast: mockForecast as [ForecastAttribute],
           };
 
-          setTimeout(() => callback(forecastEvent), 1000);
+          setTimeout(() => callback(forecastEvent), 100);
 
           return () => {
             this.subscriptions.delete(subscriptionId);

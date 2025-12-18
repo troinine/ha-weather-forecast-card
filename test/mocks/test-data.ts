@@ -186,3 +186,28 @@ export const ISSUE_14_DAILY_FORECAST_2 = [
     is_daytime: true,
   },
 ];
+
+export const TEST_FORECAST_DAILY = Array.from({ length: 5 }, (_, i) => ({
+  datetime: new Date(Date.now() + i * 86400000).toISOString(),
+  temperature: 20 + i,
+  templow: 10 + i,
+  condition: i % 2 === 0 ? "sunny" : "cloudy",
+  precipitation: 0,
+  precipitation_probability: 0,
+  wind_speed: 10 + i,
+  wind_bearing: 180,
+  humidity: 50,
+  is_daytime: true,
+}));
+
+export const TEST_FORECAST_HOURLY = Array.from({ length: 3 * 24 }, (_, i) => ({
+  datetime: new Date(Date.now() + i * 3600000).toISOString(),
+  temperature: 10 + i,
+  condition: i % 3 === 0 ? "sunny" : i % 3 === 1 ? "cloudy" : "rainy",
+  precipitation: i % 3 === 2 ? 5 : 0,
+  precipitation_probability: i % 3 === 2 ? 60 : 0,
+  wind_speed: 5 + i,
+  wind_bearing: 90 + i,
+  humidity: 60,
+  is_daytime: true,
+}));

@@ -30,7 +30,9 @@ export class WfcWeatherConditionIconProvider extends LitElement {
 
     const icon = this.getWeatherStateIcon();
 
-    return html` <div class="${classes}">${icon}</div> `;
+    return html`
+      <div class="${classes}" data-condition="${this.state}">${icon}</div>
+    `;
   }
 
   private getClasses(): string {
