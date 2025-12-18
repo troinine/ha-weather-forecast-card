@@ -49,7 +49,7 @@ describe("weather-forecast-card simple", () => {
     await new Promise((resolve) => setTimeout(resolve, 150));
   });
 
-  it("should render correct indiator labels", async () => {
+  it("should render correct indicator labels", async () => {
     expect(
       card.shadowRoot!.querySelector(".wfc-forecast-container")
     ).not.toBeNull();
