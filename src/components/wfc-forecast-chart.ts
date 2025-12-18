@@ -217,9 +217,7 @@ export class WfcForecastChart extends LitElement {
       "--wfc-chart-temp-high-line-color"
     );
     const lowColor = style.getPropertyValue("--wfc-chart-temp-low-line-color");
-    const precipColor = style.getPropertyValue(
-      "--wfc-chart-precipitation-bar-color"
-    );
+    const precipColor = style.getPropertyValue("--wfc-precipitation-bar-color");
 
     const { minTemp, maxTemp } = this.computeScaleLimits();
 
