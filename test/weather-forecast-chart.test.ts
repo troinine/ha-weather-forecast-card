@@ -26,6 +26,7 @@ describe("weather-forecast-card chart", () => {
     entity: "weather.demo",
     forecast: {
       mode: ForecastMode.Chart,
+      show_sun_times: false,
     },
   };
 

@@ -18,6 +18,9 @@ describe("weather-forecast-card", () => {
   const testConfig: WeatherForecastCardConfig = {
     type: "custom:weather-forecast-card",
     entity: "weather.demo",
+    forecast: {
+      show_sun_times: false,
+    },
   };
 
   let card: WeatherForecastCard;
