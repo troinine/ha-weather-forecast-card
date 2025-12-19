@@ -338,7 +338,9 @@ export class WeatherForecastCard extends LitElement {
     const newLength = this.getCurrentForecast().length;
 
     const oldLength =
-      this._currentForecastType === "hourly" ? oldHourlyLength : oldDailyLength;
+      (this._currentForecastType === "hourly"
+        ? oldHourlyLength
+        : oldDailyLength) ?? 0;
 
     if (newLength !== oldLength && this._forecastContainer) {
       this.layoutForecastItems(this._forecastContainer.clientWidth);
