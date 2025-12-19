@@ -124,7 +124,7 @@ describe("weather-forecast-card", () => {
 
     mockHassInstance.updateForecasts("daily");
 
-    // @ts-expect-error: accessing private method
+    // @ts-expect-error: accessing private property
     await waitUntil(() => card._currentItemWidth !== initialWidth);
 
     // @ts-expect-error: accessing private property
