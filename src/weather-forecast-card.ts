@@ -335,10 +335,7 @@ export class WeatherForecastCard extends LitElement {
     }
 
     // Recalculate layout if the number of items changed
-    const newLength =
-      this._currentForecastType === "hourly"
-        ? this._hourlyForecastData?.length
-        : this._dailyForecastData?.length;
+    const newLength = this.getCurrentForecast().length;
 
     const oldLength =
       this._currentForecastType === "hourly" ? oldHourlyLength : oldDailyLength;
@@ -478,10 +475,7 @@ export class WeatherForecastCard extends LitElement {
   private layoutForecastItems(containerWidth: number) {
     if (containerWidth <= 0 || !this._minForecastItemWidth) return;
 
-    const items =
-      (this._currentForecastType === "hourly"
-        ? this._hourlyForecastEvent?.forecast
-        : this._dailyForecastEvent?.forecast) || [];
+    const items = this.getCurrentForecast();
 
     if (!items.length) return;
 
