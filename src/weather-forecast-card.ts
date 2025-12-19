@@ -304,6 +304,9 @@ export class WeatherForecastCard extends LitElement {
       return;
     }
 
+    const oldHourlyLength = this._hourlyForecastData?.length;
+    const oldDailyLength = this._dailyForecastData?.length;
+
     const hourlyForecastData = getForecast(
       attributes,
       this._hourlyForecastEvent,
@@ -329,6 +332,18 @@ export class WeatherForecastCard extends LitElement {
       );
     } else {
       this._hourlyForecastData = hourlyForecastData?.forecast;
+    }
+
+    // Recalculate layout if the number of items changed
+    const newLength = this.getCurrentForecast().length;
+
+    const oldLength =
+      (this._currentForecastType === "hourly"
+        ? oldHourlyLength
+        : oldDailyLength) ?? 0;
+
+    if (newLength !== oldLength && this._forecastContainer) {
+      this.layoutForecastItems(this._forecastContainer.clientWidth);
     }
   }
 
@@ -462,10 +477,7 @@ export class WeatherForecastCard extends LitElement {
   private layoutForecastItems(containerWidth: number) {
     if (containerWidth <= 0 || !this._minForecastItemWidth) return;
 
-    const items =
-      (this._currentForecastType === "hourly"
-        ? this._hourlyForecastEvent?.forecast
-        : this._dailyForecastEvent?.forecast) || [];
+    const items = this.getCurrentForecast();
 
     if (!items.length) return;
 
