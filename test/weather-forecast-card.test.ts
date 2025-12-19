@@ -113,7 +113,7 @@ describe("weather-forecast-card", () => {
 
     await card.updateComplete;
 
-    // @ts-expect-error: accessing private method
+    // @ts-expect-error: accessing private property
     await waitUntil(() => card._currentItemWidth > 0);
 
     // @ts-expect-error: accessing private property
