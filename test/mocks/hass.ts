@@ -316,9 +316,17 @@ export class MockHass {
   }
 
   // Update forecast data for all subscriptions
-  updateForecasts() {
-    this.subscriptions.forEach((callback, id) => {
-      console.log(`Updating subscription ${id}`);
+  updateForecasts(type: "hourly" | "daily") {
+    this.subscriptions.forEach((callback) => {
+      const mockForecast =
+        type === "hourly" ? this.hourlyForecast : this.dailyForecast;
+
+      const forecastEvent: ForecastEvent = {
+        type,
+        forecast: mockForecast as [ForecastAttribute],
+      };
+
+      callback(forecastEvent);
     });
   }
 }
