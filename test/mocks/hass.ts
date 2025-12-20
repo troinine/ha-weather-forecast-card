@@ -11,7 +11,11 @@ export type ForecastSubscriptionCallback = (
 ) => void;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface MockHomeAssistant extends Omit<HomeAssistant, "auth"> {}
+interface MockHomeAssistant extends Omit<HomeAssistant, "auth" | "themes"> {
+  themes: {
+    darkMode: boolean;
+  };
+}
 const FORECAST_DAYS = 9;
 const FORECAST_HOURS = 24 * FORECAST_DAYS;
 
@@ -139,6 +143,7 @@ export class MockHass {
   private subscriptions = new Map<string, ForecastSubscriptionCallback>();
   public hourlyForecast = generateRandomHourlyForecast(new Date());
   public dailyForecast = generateRandomDailyForecast(new Date());
+  public darkMode = true;
 
   constructor() {}
 
@@ -146,6 +151,9 @@ export class MockHass {
     const currentForecast = this.hourlyForecast[0];
 
     return {
+      themes: {
+        darkMode: this.darkMode,
+      },
       states: {
         "sensor.temperature_outdoor": {
           entity_id: "sensor.temperature_outdoor",
@@ -164,7 +172,7 @@ export class MockHass {
         },
         "weather.demo": {
           entity_id: "weather.demo",
-          state: currentForecast.condition,
+          state: "snowy", //currentForecast.condition,
           attributes: {
             friendly_name: "Weather Demo",
             temperature: currentForecast.temperature,

@@ -65,6 +65,9 @@ export type ExtendedHomeAssistant = HomeAssistant & {
     stateObj: HassEntity,
     attribute: string
   ) => unknown;
+  themes?: {
+    darkMode: boolean;
+  };
 };
 
 export type TemperatureHighLow = {

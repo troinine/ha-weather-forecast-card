@@ -1,18 +1,13 @@
 :host {
-  --sun-color: var(--wfc-effects-sun-color, rgba(255, 210, 50, 1));
-  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(255, 230, 140, 0.6));
   --sun-size: var(--wfc-effects-sun-size, 100px);
   --sun-spin-duration: var(--wfc-effects-sun-spin-duration, 100s);
-  --moon-color: var(--wfc-effects-moon-color, rgba(220, 220, 230, 1));
   --moon-size: var(--wfc-effects-moon-size, 80px);
-  --snow-color: var(--wfc-effects-snow-color, #b8d7f5);
-  --rain-color: var(--wfc-effects-rain-color, #6cb4ee);
-  --clear-sky-color: var(--wfc-effects-clear-sky-color, #1f6ea3b3);
-  --clear-night-sky-color: var(--wfc-effects-clear-night-sky-color, #0a143299);
+  --sky-visibility: var(--wfc-effects-sky-visibility, visible);
   --drop-color-start: color-mix(in srgb, var(--rain-color), transparent 100%);
   --drop-color-end: color-mix(in srgb, var(--rain-color), transparent 40%);
   --drop-height: var(--wfc-effects-drop-height, 20px);
   --drop-start-pos-diff-y: 50px;
+  --snow-glow-color: var(--snow-color);
   --container-height: 0px; /* Set dynamically in TS */
 
   display: block;
@@ -28,6 +23,34 @@
   border-radius: var(--ha-card-border-radius, var(--ha-border-radius-lg));
 }
 
+:host(.light) {
+  --sun-color: var(--wfc-effects-sun-color, rgba(255, 170, 0, 1));
+  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(255, 200, 50, 0.4));
+  --moon-color: var(--wfc-effects-moon-color, rgba(200, 210, 220, 0.8));
+  --snow-color: var(--wfc-effects-snow-color, #cbd5e1);
+  --glow-intensity: 0.9;
+  --rain-color: var(--wfc-effects-rain-color, #2563eb);
+  --clear-sky-color: var(
+    --wfc-effects-clear-sky-color,
+    rgba(135, 206, 250, 0.7)
+  );
+  --clear-night-sky-color: var(--wfc-effects-clear-night-sky-color, #0f172a);
+}
+
+:host(.dark) {
+  --sun-color: var(--wfc-effects-sun-color, rgba(255, 210, 50, 1));
+  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(255, 230, 140, 0.6));
+  --moon-color: var(--wfc-effects-moon-color, rgba(220, 220, 230, 1));
+  --snow-color: var(--wfc-effects-snow-color, #e2e8f0);
+  --glow-intensity: 0.6;
+  --rain-color: var(--wfc-effects-rain-color, #6cb4ee);
+  --clear-sky-color: var(
+    --wfc-effects-clear-sky-color,
+    rgba(59, 130, 246, 0.8)
+  );
+  --clear-night-sky-color: var(--wfc-effects-clear-night-sky-color, #0a143299);
+}
+
 .snowflake-path {
   position: absolute;
   left: var(--pos-x);
@@ -38,14 +61,17 @@
 
 .snowflake {
   position: absolute;
-  background: rgba(255, 255, 255, var(--flake-opacity));
+  background: var(--snow-color);
   width: var(--flake-size);
   height: var(--flake-size);
   border-radius: 50%;
-  opacity: 0.8;
-  box-shadow: 0 0 5px rgba(255, 255, 255, calc(var(--flake-opacity) * 0.5));
+  opacity: var(--flake-opacity);
+  filter: blur(var(--flake-blur));
+  box-shadow:
+    0 0 1px var(--snow-glow-color),
+    0 0 calc(var(--flake-shadow-spread) * var(--glow-intensity))
+      var(--snow-glow-color);
   left: 0;
-  top: -var(--drop-start-pos-diff-y);
   animation: snowflake var(--duration) linear infinite;
   animation-delay: var(--delay);
 }
@@ -107,6 +133,7 @@
 
 .sky {
   position: absolute;
+  visibility: var(--sky-visibility);
   z-index: 0;
   top: 0;
   left: 0;
@@ -115,7 +142,7 @@
   background: linear-gradient(
     180deg,
     var(--clear-sky-color) 0%,
-    rgba(255, 255, 255, 0) 25%
+    transparent 50%
   );
 }
 
@@ -163,6 +190,7 @@
 
 .night-sky {
   position: absolute;
+  visibility: var(--sky-visibility);
   z-index: 0;
   top: 0;
   left: 0;
@@ -171,7 +199,7 @@
   background: linear-gradient(
     180deg,
     var(--clear-night-sky-color) 0%,
-    rgba(0, 0, 0, 0) 40%
+    transparent 50%
   );
 }
 
@@ -208,7 +236,6 @@
 
 @keyframes snowflake {
   0% {
-    opacity: 1;
     transform: translate3d(0, 0, 0) rotate(0deg);
   }
   20% {

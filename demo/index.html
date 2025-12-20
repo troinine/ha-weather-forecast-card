@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <style>
       :root {
         --primary-text-color: #fff;
-        --secondary-text-color: #5e5e5e;
+        --secondary-text-color: #929292;
         --ha-font-size-3xl: 28px;
         --ha-font-size-2xl: 24px;
         --ha-font-size-xl: 20px;
@@ -15,10 +15,22 @@
         --ha-font-size-m: 14px;
         --ha-line-height-condensed: 1.2;
         --ha-card-border-radius: 20px;
+        --ha-card-background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.1) 20%,
+          rgba(0, 0, 0, 0.01) 100%
+        );
         font-family: "Roboto", "Noto", sans-serif;
         color: var(--primary-text-color);
         --card-padding: 24px;
       }
+      .light-theme {
+        --primary-text-color: #000;
+        --secondary-text-color: #929292;
+        --ha-card-background: #fff;
+        color: var(--primary-text-color);
+      }
+
       body {
         margin: 0;
         padding: 0;
@@ -30,18 +42,11 @@
         letter-spacing: -0.5px;
       }
       h3 {
-        color: var(--secondary-text-color);
+        color: #cecece;
         font-size: 20px;
         font-weight: 400;
         margin: 0 0 24px 0;
         text-align: center;
-      }
-      .tagline {
-        font-size: 16px;
-        color: var(--secondary-text-color);
-        margin: 0 0 16px 0;
-        max-width: 320px;
-        line-height: 1.5;
       }
       .features {
         display: flex;
@@ -50,7 +55,7 @@
       }
       .feature {
         font-size: 14px;
-        color: var(--secondary-text-color);
+        color: #cecece;
         display: flex;
         gap: 8px;
         text-align: left;
@@ -169,17 +174,14 @@
       .demo-card {
         display: block;
         width: 550px;
-        background: linear-gradient(
-          180deg,
-          rgba(0, 0, 0, 0.1) 20%,
-          rgba(0, 0, 0, 0.01) 100%
-        );
+        background: var(--ha-card-background);
         backdrop-filter: blur(20px) saturate(110%) brightness(90%);
         border-radius: 20px;
         border-width: 1px;
         border-style: solid;
         border-color: rgba(255, 255, 255, 0.05);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.1),
           inset 0 1px 0 rgba(255, 255, 255, 0.5),
           inset 0 -1px 0 rgba(255, 255, 255, 0.1),
           inset 0 0 2px 1px rgba(255, 255, 255, 0.1);
@@ -285,8 +287,18 @@
     <script type="module">
       import { MockHass } from "../test/mocks/hass.ts";
 
+      const theme = "dark";
+
       const mockHass = new MockHass();
+      mockHass.darkMode = theme === "dark";
       const hass = mockHass.getHass();
+      const demoMode = "none"; // 'condition_effects' | 'toggle_and_scroll' | 'none'
+
+      if (theme === "light") {
+        document.querySelector(".demo-card").classList.add("light-theme");
+      } else {
+        document.querySelector(".demo-card").classList.remove("light-theme");
+      }
 
       customElements.whenDefined("weather-forecast-card").then(() => {
         const card = document.querySelector(".demo-card");
@@ -300,12 +312,33 @@
             mode: "chart",
             extra_attribute: "wind_direction",
             hourly_group_size: 2,
+            show_sun_times: demoMode !== "condition_effects",
           },
         });
+
         card.hass = hass;
 
-        // Auto-demo: tap, scroll, scroll back, tap sequence
-        setTimeout(() => {
+        const rotateConditionsDemo = () => {
+          const conditions = ["snowy", "rainy", "snowy", "clear-night"];
+          let index = 0;
+
+          setInterval(() => {
+            card.hass = {
+              ...hass,
+              states: {
+                ...hass.states,
+                "weather.demo": {
+                  ...hass.states["weather.demo"],
+                  state: conditions[index],
+                },
+              },
+            };
+
+            index = (index + 1) % conditions.length;
+          }, 5000);
+        };
+
+        const toggleAndScrollDemo = () => {
           const forecastContainer = card.shadowRoot?.querySelector(
             ".wfc-forecast-container"
           );
@@ -398,7 +431,13 @@
               "Could not find scroll container or forecast container"
             );
           }
-        }, 2000);
+        };
+
+        if (demoMode === "toggle_and_scroll") {
+          setTimeout(toggleAndScrollDemo, 2000);
+        } else if (demoMode === "condition_effects") {
+          setTimeout(rotateConditionsDemo, 2000);
+        }
       });
     </script>
   </body>

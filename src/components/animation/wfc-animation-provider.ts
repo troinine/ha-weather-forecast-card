@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from "lit";
+import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../../types";
 import { styles } from "./wfc-animation.styles";
@@ -15,8 +15,6 @@ import {
 
 const RAIN_INTENSITY_MAX = 10;
 const RAIN_INTENSITY_MEDIUM = 3;
-const RAIN_TILT_DEG_MAX = 20;
-const SNOW_TILT_DEG_MAX = 40;
 const WIND_SPEED_MS_MAX = 14;
 
 @customElement("wfc-animation-provider")
@@ -26,6 +24,7 @@ export class WeatherAnimationProvider extends LitElement {
   @property({ attribute: false }) currentForecast?: ForecastAttribute;
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
+  @state() _isDark: boolean = false;
   @state() _containerHeight: number = 0;
 
   private _resizeObserver?: ResizeObserver;
@@ -48,6 +47,22 @@ export class WeatherAnimationProvider extends LitElement {
   public disconnectedCallback() {
     super.disconnectedCallback();
     this._resizeObserver?.disconnect();
+  }
+
+  protected updated(changedProps: PropertyValues) {
+    if (!changedProps.has("hass")) return;
+
+    const oldHass = changedProps.get("hass") as
+      | ExtendedHomeAssistant
+      | undefined;
+
+    const prevDark = oldHass?.themes?.darkMode;
+    const currentDark = this.hass?.themes?.darkMode;
+
+    if (prevDark === currentDark) return;
+
+    this._isDark = currentDark;
+    this.onThemeChanged();
   }
 
   protected render() {
@@ -97,54 +112,57 @@ export class WeatherAnimationProvider extends LitElement {
     const intensity = this.computeIntensity();
 
     this.style.setProperty("--container-height", `${this._containerHeight}px`);
-    this.style.setProperty(
-      "--fall-angle",
-      `${this.computeFallingAngle(SNOW_TILT_DEG_MAX)}deg`
-    );
+    this.style.setProperty("--fall-angle", `${this.computeFallingAngle()}deg`);
 
     const flakes = [];
-
-    // Starts slightly off-screen and goes slightly off-screen to ensure full coverage
-    // even with significant wind drift.
-    let currentX = -10;
-
+    let currentX = -15; // Slightly wider start for wind coverage
     const safeIntensity = Math.max(1, intensity);
 
-    while (currentX < 110) {
+    while (currentX < 100) {
       const baseSpacing = random(2, 40);
       const actualSpacing = baseSpacing / safeIntensity;
+      currentX += Math.round(actualSpacing);
 
-      currentX += actualSpacing;
-
-      const timingOffset = random(1, 5, true);
-      const duration = random(2, 4, true);
-      const flakeSize = random(4, 8);
-      const opacity = random(0.3, 1, true);
+      // 0 = Far away (small, slow, blurry), 1 = Close (large, fast, sharp)
+      const depth = Math.random();
+      // Flakes get larger the closer they are. 4px when far, 12px when close
+      const flakeSize = depth * 8 + 4;
+      // Closer objects fall faster and drift more dramatically
+      const duration = 4.5 / (depth + 0.5) + random(0, 0.8);
+      const timingOffset = random(0, 5, true).toFixed(1);
+      // Distant flakes are more transparent and blurry
+      const opacity = depth * 0.7 + 0.5;
+      const blur = depth < 0.3 ? 1.5 - depth * 3 : depth > 0.9 ? 0.5 : 0;
+      // Closer flakes have a wider light scatter
+      const shadowSpread = flakeSize * 0.9;
 
       const driftStyles = Array.from({ length: 4 }).reduce<
         Record<string, string>
       >((acc, _, i) => {
-        acc[`--drift-${i + 1}`] = `${random(-35, 35)}px`;
+        // Parallax drift: Background flakes move less than foreground flakes
+        const driftRange = 20 + depth * 40;
+        acc[`--drift-${i + 1}`] =
+          `${random(-driftRange, driftRange).toFixed(0)}px`;
         return acc;
       }, {});
 
-      flakes.push(
-        html`
-          <div
-            class="snowflake-path"
-            style="${styleMap({
-              "--duration": `${duration}s`,
-              "--delay": `${timingOffset}s`,
-              "--pos-x": `${currentX}%`,
-              "--flake-size": `${flakeSize}px`,
-              "--flake-opacity": `${opacity}`,
-              ...driftStyles,
-            })}"
-          >
-            <div class="snowflake"></div>
-          </div>
-        `
-      );
+      flakes.push(html`
+        <div
+          class="snowflake-path"
+          style="${styleMap({
+            "--duration": `${duration.toFixed(1)}s`,
+            "--delay": `${timingOffset}s`,
+            "--pos-x": `${currentX}%`,
+            "--flake-size": `${flakeSize.toFixed(1)}px`,
+            "--flake-opacity": `${opacity.toFixed(2)}`,
+            "--flake-blur": `${blur.toFixed(1)}px`,
+            "--flake-shadow-spread": `${shadowSpread.toFixed(1)}px`,
+            ...driftStyles,
+          })}"
+        >
+          <div class="snowflake"></div>
+        </div>
+      `);
     }
 
     return flakes;
@@ -156,7 +174,7 @@ export class WeatherAnimationProvider extends LitElement {
     this.style.setProperty("--container-height", `${this._containerHeight}px`);
     this.style.setProperty(
       "--fall-angle",
-      `${this.computeFallingAngle(RAIN_TILT_DEG_MAX)}deg`
+      `${this.computeFallingAngle(true)}deg`
     );
 
     const drops = [];
@@ -175,22 +193,20 @@ export class WeatherAnimationProvider extends LitElement {
       const depthVariance = random(0.85, 1, true);
       const landingPos = this._containerHeight * depthVariance;
 
-      drops.push(
-        html`
-          <div
-            class="raindrop-path"
-            style="${styleMap({
-              "--duration": `${duration}s`,
-              "--delay": `${timingOffset}s`,
-              "--pos-x": `${currentX}%`,
-              "--landing-pos-y": `${landingPos}px`,
-            })}"
-          >
-            <div class="raindrop"></div>
-            <div class="splat"></div>
-          </div>
-        `
-      );
+      drops.push(html`
+        <div
+          class="raindrop-path"
+          style="${styleMap({
+            "--duration": `${duration}s`,
+            "--delay": `${timingOffset}s`,
+            "--pos-x": `${currentX}%`,
+            "--landing-pos-y": `${landingPos}px`,
+          })}"
+        >
+          <div class="raindrop"></div>
+          <div class="splat"></div>
+        </div>
+      `);
     }
 
     return drops;
@@ -320,29 +336,26 @@ export class WeatherAnimationProvider extends LitElement {
       : RAIN_INTENSITY_MEDIUM;
   }
 
-  private computeFallingAngle(maxAngle: number): number {
-    if (
-      !this.currentForecast ||
-      !this.currentForecast.wind_bearing ||
-      !this.currentForecast.wind_speed
-    ) {
-      return 0;
-    }
+  private computeFallingAngle(isRain: boolean = false): number {
+    const forecast = this.currentForecast;
+    if (!forecast?.wind_bearing || !forecast?.wind_speed) return 0;
 
-    const bearing = this.currentForecast.wind_bearing;
     const speedMS =
-      getNormalizedWindSpeed(
-        this.hass,
-        this.weatherEntity,
-        this.currentForecast
-      ) || 0;
-
-    const radians = (bearing * Math.PI) / 180;
-    const directionFactor = Math.sin(radians);
-
+      getNormalizedWindSpeed(this.hass, this.weatherEntity, forecast) || 0;
+    const MAX_TILT = isRain ? 15 : 35;
     const speedFactor =
       Math.min(speedMS, WIND_SPEED_MS_MAX) / WIND_SPEED_MS_MAX;
 
-    return directionFactor * speedFactor * maxAngle;
+    const radians = (forecast.wind_bearing * Math.PI) / 180;
+    const directionFactor = Math.sin(radians);
+    const curve = isRain ? 0.8 : 0.5;
+    const adjustedSpeed = Math.pow(speedFactor, curve);
+
+    return directionFactor * adjustedSpeed * MAX_TILT;
+  }
+
+  private onThemeChanged() {
+    this.classList.toggle("dark", this._isDark);
+    this.classList.toggle("light", !this._isDark);
   }
 }
