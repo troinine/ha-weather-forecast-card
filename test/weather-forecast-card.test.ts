@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { fixture } from "@open-wc/testing";
+import { fixture, waitUntil } from "@open-wc/testing";
 import { html } from "lit";
 import { MockHass } from "./mocks/hass";
 import { WeatherForecastCard } from "../src/weather-forecast-card";
@@ -99,5 +99,38 @@ describe("weather-forecast-card", () => {
     expect(elConditionState).not.toBeNull();
 
     expect(elConditionState?.textContent.trim()).toBe("Sunny");
+  });
+
+  it("should recalculate layout if forecast item count changes", async () => {
+    const container = card.shadowRoot!.querySelector(
+      ".wfc-forecast-container"
+    ) as HTMLElement;
+
+    Object.defineProperty(container, "clientWidth", {
+      value: 350,
+      configurable: true,
+    });
+
+    await card.updateComplete;
+
+    // @ts-expect-error: accessing private property
+    await waitUntil(() => card._currentItemWidth > 0);
+
+    // @ts-expect-error: accessing private property
+    const initialWidth = card._currentItemWidth;
+
+    const shortForecast = TEST_FORECAST_DAILY.slice(0, 3);
+    mockHassInstance.dailyForecast = shortForecast;
+
+    mockHassInstance.updateForecasts("daily");
+
+    // @ts-expect-error: accessing private property
+    await waitUntil(() => card._currentItemWidth !== initialWidth);
+
+    // @ts-expect-error: accessing private property
+    const newWidth = card._currentItemWidth;
+
+    expect(newWidth).toBeDefined();
+    expect(newWidth).toBeGreaterThan(initialWidth);
   });
 });
