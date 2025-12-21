@@ -34,7 +34,11 @@
     --wfc-effects-clear-sky-color,
     rgba(135, 206, 250, 0.7)
   );
-  --clear-night-sky-color: var(--wfc-effects-clear-night-sky-color, #0f172a);
+  --clear-night-sky-color: var(
+    --wfc-effects-clear-night-sky-color,
+    rgba(30, 64, 175, 0.75)
+  );
+  --star-color: var(--wfc-effects-star-color, #ffffff);
 }
 
 :host(.dark) {
@@ -48,7 +52,11 @@
     --wfc-effects-clear-sky-color,
     rgba(59, 130, 246, 0.8)
   );
-  --clear-night-sky-color: var(--wfc-effects-clear-night-sky-color, #0a143299);
+  --clear-night-sky-color: var(
+    --wfc-effects-clear-night-sky-color,
+    rgba(10, 20, 51, 0.8)
+  );
+  --star-color: var(--wfc-effects-star-color, #ffffff);
 }
 
 .snowflake-path {
@@ -218,10 +226,10 @@
 
 .star {
   position: absolute;
-  background: white;
+  background: var(--star-color);
   border-radius: 50%;
   animation: twinkle 3s ease-in-out infinite;
-  box-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 3px 1px var(--star-color);
 }
 
 @keyframes twinkle {
