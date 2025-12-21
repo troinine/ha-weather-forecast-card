@@ -26,7 +26,7 @@
 :host(.light) {
   --sun-color: var(--wfc-effects-sun-color, rgba(255, 170, 0, 1));
   --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(255, 200, 50, 0.4));
-  --moon-color: var(--wfc-effects-moon-color, rgba(200, 210, 220, 0.8));
+  --moon-color: var(--wfc-effects-moon-color, rgba(255, 245, 200, 1));
   --snow-color: var(--wfc-effects-snow-color, #cbd5e1);
   --glow-intensity: 0.9;
   --rain-color: var(--wfc-effects-rain-color, #2563eb);
@@ -36,7 +36,15 @@
   );
   --clear-night-sky-color: var(
     --wfc-effects-clear-night-sky-color,
-    rgba(30, 64, 175, 0.75)
+    rgba(94, 114, 235, 0.5)
+  );
+  --clear-night-sky-accent: var(
+    --wfc-effects-clear-night-sky-accent,
+    rgba(162, 120, 215, 0.4)
+  );
+  --clear-night-horizon: var(
+    --wfc-effects-clear-night-horizon,
+    rgba(255, 180, 150, 0.3)
   );
   --star-color: var(--wfc-effects-star-color, #ffffff);
 }
@@ -54,7 +62,15 @@
   );
   --clear-night-sky-color: var(
     --wfc-effects-clear-night-sky-color,
-    rgba(10, 20, 51, 0.8)
+    rgba(10, 15, 40, 0.85)
+  );
+  --clear-night-sky-accent: var(
+    --wfc-effects-clear-night-sky-accent,
+    rgba(20, 30, 80, 0.6)
+  );
+  --clear-night-horizon: var(
+    --wfc-effects-clear-night-horizon,
+    rgba(40, 25, 100, 0.4)
   );
   --star-color: var(--wfc-effects-star-color, #ffffff);
 }
@@ -147,6 +163,7 @@
   left: 0;
   right: 0;
   height: 100%;
+  border-radius: inherit;
   background: linear-gradient(
     180deg,
     var(--clear-sky-color) 0%,
@@ -204,11 +221,28 @@
   left: 0;
   right: 0;
   height: 100%;
+  border-radius: inherit;
   background: linear-gradient(
     180deg,
     var(--clear-night-sky-color) 0%,
-    transparent 50%
+    var(--clear-night-sky-accent) 50%,
+    var(--clear-night-horizon) 100%
   );
+}
+
+.night-sky::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at 70% 20%,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
 }
 
 .moon {
@@ -220,8 +254,10 @@
   height: var(--moon-size);
   border-radius: 50%;
   background: var(--moon-color);
-  opacity: 0.9;
-  box-shadow: 0px 0px 20px 5px rgba(220, 220, 230, 0.4);
+  box-shadow:
+    0px 0px 25px 5px rgba(255, 255, 255, 0.2),
+    0px 0px 50px 15px rgba(200, 210, 255, 0.1);
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.1));
 }
 
 .star {
