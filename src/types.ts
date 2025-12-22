@@ -17,6 +17,14 @@ export type ForecastActionEvent = HASSDomEvent<ForecastActionDetails>;
 
 export type ForecastActionHandler = (event: ForecastActionEvent) => void;
 
+export type WeatherEffect =
+  | "rain"
+  | "snow"
+  | "lightning"
+  | "sky"
+  | "moon"
+  | "sun";
+
 export enum ForecastMode {
   Chart = "chart",
   Simple = "simple",
@@ -49,7 +57,7 @@ export interface WeatherForecastCardConfig {
   show_forecast?: boolean;
   default_forecast?: "hourly" | "daily";
   icons_path?: string;
-  show_condition_effects?: boolean | string[];
+  show_condition_effects?: boolean | WeatherEffect[];
   forecast?: WeatherForecastCardForecastConfig;
   forecast_action?: WeatherForecastCardForecastActionConfig;
   tap_action?: ActionConfig | undefined;

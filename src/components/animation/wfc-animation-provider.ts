@@ -1,6 +1,10 @@
 import { LitElement, PropertyValues, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../../types";
+import {
+  ExtendedHomeAssistant,
+  WeatherEffect,
+  WeatherForecastCardConfig,
+} from "../../types";
 import { styles } from "./wfc-animation.styles";
 import { styleMap } from "lit/directives/style-map.js";
 import { random } from "lodash-es";
@@ -66,46 +70,111 @@ export class WeatherAnimationProvider extends LitElement {
   }
 
   protected render() {
-    if (!this.weatherEntity) return nothing;
+    const active = this.getActiveEffects();
+    if (!active.length) return nothing;
 
-    const parts = [];
-
-    if (this.isClear()) {
-      parts.push(this.renderClear());
-    }
-
-    if (this.isRainy()) {
-      parts.push(this.renderRain());
-    }
-
-    if (this.isLightning()) {
-      parts.push(this.renderLightning());
-    }
-
-    if (this.isSnowy()) {
-      parts.push(this.renderSnow());
-    }
-
-    return html`${parts}`;
+    return html`
+      ${active.map((effect) => {
+        switch (effect) {
+          case "sky":
+            return this.renderSky();
+          case "moon":
+            return this.renderMoon();
+          case "sun":
+            return this.renderSun();
+          case "rain":
+            return this.renderRain();
+          case "snow":
+            return this.renderSnow();
+          case "lightning":
+            return this.renderLightning();
+          default:
+            return nothing;
+        }
+      })}
+    `;
   }
 
-  private renderClear() {
+  private getActiveEffects(): WeatherEffect[] {
     const state = this.weatherEntity?.state;
+    const effectConfig = this.config.show_condition_effects;
 
-    if (state === "clear-night") {
-      return this.renderMoon();
-    } else {
+    if (!effectConfig || !state) return [];
+
+    const effects = new Set<WeatherEffect>();
+
+    const isEnabled = (effect: WeatherEffect): boolean => {
+      if (effectConfig === true) return true;
+      if (Array.isArray(effectConfig)) return effectConfig.includes(effect);
+      return false;
+    };
+
+    if (state.includes("rainy") || state === "pouring") {
+      if (isEnabled("rain")) effects.add("rain");
+    }
+    if (state.includes("snowy")) {
+      if (isEnabled("snow")) effects.add("snow");
+    }
+    if (state.includes("lightning")) {
+      if (isEnabled("lightning")) effects.add("lightning");
+    }
+
+    const isClearState = state === "sunny" || state === "clear-night";
+
+    if (isClearState) {
+      if (isEnabled("sky")) effects.add("sky");
+
+      // Determine "Night" status based on config and state
+      let isNight = state === "clear-night";
+
+      // Only check suntimes if the user explicitly enabled the feature
       if (this.config.forecast?.show_sun_times) {
-        const now = new Date();
-        const suntimes = getSuntimesInfo(this.hass, now);
-
+        const suntimes = getSuntimesInfo(this.hass, new Date());
         if (suntimes?.isNightTime) {
-          return this.renderMoon();
+          isNight = true;
         }
       }
 
-      return this.renderSunny();
+      if (isNight) {
+        if (isEnabled("moon")) effects.add("moon");
+      } else {
+        if (isEnabled("sun")) effects.add("sun");
+      }
     }
+
+    return Array.from(effects);
+  }
+
+  private renderSky() {
+    let isNight = this.weatherEntity.state === "clear-night";
+
+    if (this.config.forecast?.show_sun_times) {
+      isNight = getSuntimesInfo(this.hass, new Date())?.isNightTime ?? isNight;
+    }
+
+    return html`<div class="${isNight ? "night-sky" : "sky"}"></div>`;
+  }
+
+  private renderSun() {
+    return html`
+      <div class="sun">
+        <div class="ray-box">
+          ${Array.from({ length: 30 }).map(() => {
+            const angle = random(0, 360);
+            const height = random(100, 200);
+            const width = random(5, 15);
+            return html`<div
+              class="sun-ray"
+              style="${styleMap({
+                transform: `translate(-50%, 0) rotate(${angle}deg)`,
+                height: `${height}px`,
+                width: `${width}px`,
+              })}"
+            ></div>`;
+          })}
+        </div>
+      </div>
+    `;
   }
 
   /**
@@ -225,37 +294,12 @@ export class WeatherAnimationProvider extends LitElement {
     return html` <div class="lightning-flash"></div> `;
   }
 
-  private renderSunny() {
-    return html`
-      <div class="sky"></div>
-      <div class="sun">
-        <div class="ray-box">
-          ${Array.from({ length: 30 }).map(() => {
-            const angle = random(0, 360);
-            const height = random(100, 200);
-            const width = random(5, 15);
-
-            return html`<div
-              class="sun-ray"
-              style="${styleMap({
-                transform: `translate(-50%, 0) rotate(${angle}deg)`,
-                height: `${height}px`,
-                width: `${width}px`,
-              })}"
-            ></div>`;
-          })}
-        </div>
-      </div>
-    `;
-  }
-
   private renderMoon() {
     const starCount = 30;
     const columns = 6;
     const rows = 5;
 
     return html`
-      <div class="night-sky"></div>
       <div class="moon"></div>
       ${Array.from({ length: starCount }).map((_, index) => {
         const col = index % columns;
@@ -293,50 +337,6 @@ export class WeatherAnimationProvider extends LitElement {
         ></div>`;
       })}
     `;
-  }
-
-  private isEffectEnabledForState(state?: string): boolean {
-    if (!this.config.show_condition_effects) {
-      return false;
-    }
-
-    if (typeof this.config.show_condition_effects === "boolean") {
-      return this.config.show_condition_effects;
-    }
-
-    if (Array.isArray(this.config.show_condition_effects) && state) {
-      return this.config.show_condition_effects.includes(state);
-    }
-
-    return false;
-  }
-
-  private isSnowy(): boolean {
-    const state = this.weatherEntity?.state || "";
-    return state?.includes("snowy") && this.isEffectEnabledForState("snow");
-  }
-
-  private isRainy(): boolean {
-    const state = this.weatherEntity?.state || "";
-    return (
-      state.includes("rainy") ||
-      (state === "pouring" && this.isEffectEnabledForState("rain"))
-    );
-  }
-
-  private isLightning(): boolean {
-    const state = this.weatherEntity?.state || "";
-    return (
-      state?.includes("lightning") && this.isEffectEnabledForState("lightning")
-    );
-  }
-
-  private isClear(): boolean {
-    const state = this.weatherEntity?.state;
-    return (
-      (state === "sunny" && this.isEffectEnabledForState("sunny")) ||
-      (state === "clear-night" && this.isEffectEnabledForState("clear-night"))
-    );
   }
 
   private computeIntensity(): number {
