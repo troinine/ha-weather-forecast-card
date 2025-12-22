@@ -360,7 +360,7 @@
           type: "custom:weather-forecast-card",
           entity: "weather.demo",
           name: "Home",
-          show_condition_effects: true,
+          show_condition_effects: demoMode === "condition_effects",
           forecast: {
             mode: "chart",
             extra_attribute: "wind_direction",
@@ -394,7 +394,7 @@
             };
 
             index = (index + 1) % conditions.length;
-          }, 5000);
+          }, 20000);
         };
 
         const toggleAndScrollDemo = () => {

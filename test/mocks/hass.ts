@@ -144,6 +144,7 @@ export class MockHass {
   public hourlyForecast = generateRandomHourlyForecast(new Date());
   public dailyForecast = generateRandomDailyForecast(new Date());
   public darkMode = true;
+  public currentCondition: string | null = null;
 
   constructor() {}
 
@@ -172,7 +173,7 @@ export class MockHass {
         },
         "weather.demo": {
           entity_id: "weather.demo",
-          state: "snowy", //currentForecast.condition,
+          state: this.currentCondition ?? currentForecast.condition,
           attributes: {
             friendly_name: "Weather Demo",
             temperature: currentForecast.temperature,
