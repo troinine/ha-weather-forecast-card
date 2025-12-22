@@ -145,15 +145,26 @@ show_condition_effects:
   - lightning
 ```
 
+**Disable all effects (default):**
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+show_condition_effects: false
+```
+
 ### Available Effects
 
-| Effect Type       | Description                                                                                                                                                                                   | Related conditions             |
-| :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------- |
-| **`rain`**        | Animated raindrops falling with realistic wind drift. Droplet angle and speed adapt to wind conditions from weather data. Includes splash effects on landing.                                 | `rainy`, `pouring`             |
-| **`snow`**        | Snowflakes falling with randomized, wandering paths. Each flake follows a unique non-linear trajectory with varying sizes and opacities for depth.                                            | `snowy`, `snowy-rainy`         |
-| **`lightning`**   | Dramatic lightning flash sequences with multiple strikes and residual flickers, creating an authentic storm atmosphere.                                                                       | `lightning`, `lightning-rainy` |
-| **`sunny`**       | Animated sun with rotating rays positioned at the top of the card. Creates a warm, dynamic daytime atmosphere. Moon effect is displayed after sunset if `forecast.show_sun_times` is enabled. | `sunny`                        |
-| **`clear-night`** | Moon with twinkling stars scattered across a night sky gradient. Stars have randomized positions, sizes, and twinkle animations.                                                              | `clear-night`                  |
+The card provides six different effect types that can be individually enabled or disabled:
+
+| Effect Type     | Description                                                                                                                                                                               | Weather Conditions Applied              |
+| :-------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------- |
+| **`rain`**      | Animated raindrops falling with realistic wind drift. Droplet angle and speed adapt to wind conditions from weather data. Includes splash effects on landing.                             | `rainy`, `pouring`, `lightning-rainy`   |
+| **`snow`**      | Snowflakes falling with smooth sinusoidal drift patterns. Each flake follows a unique non-linear trajectory with varying sizes, opacity, and depths for realistic parallax effects.       | `snowy`, `snowy-rainy`                  |
+| **`lightning`** | Dramatic lightning flash sequences with multiple strikes and residual flickers, creating an authentic storm atmosphere.                                                                   | `lightning`, `lightning-rainy`          |
+| **`sky`**       | Visually pleasing gradient sky background that adapts to time of day if sun times are enabled.                                                                                            | `sunny`, `clear-night`                  |
+| **`sun`**       | Animated sun with rotating rays positioned at the top of the card. Creates a warm, dynamic daytime atmosphere. Automatically switches to moon effect after sunset if sun times are shown. | `sunny`                                 |
+| **`moon`**      | Crescent moon with animated twinkling stars scattered across the card. Stars have randomized positions, sizes, and twinkle animations for a serene nighttime atmosphere.                  | `clear-night`, `sunny` (with sun times) |
 
 ## Custom Icons
 
