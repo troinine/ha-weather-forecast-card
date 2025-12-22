@@ -140,7 +140,7 @@ export class WeatherAnimationProvider extends LitElement {
       currentX += Math.round(actualSpacing);
 
       const depth = Math.random();
-      const flakeSize = depth * 8 + 4;
+      const flakeSize = depth * 5 + 2;
       const duration = 4.5 / (depth + 0.5) + random(0, 0.8);
       const timingOffset = random(0, 5, true).toFixed(1);
       const opacity = depth * 0.7 + 0.5;

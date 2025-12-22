@@ -64,7 +64,7 @@
   --sun-ray-opacity: 0.15;
   --moon-color: var(--wfc-effects-moon-color, rgba(220, 220, 230, 1));
   --star-color: var(--wfc-effects-star-color, #ffffff);
-  --snow-color: var(--wfc-effects-snow-color, #e2e8f0);
+  --snow-color: var(--wfc-effects-snow-color, #ffffff);
   --glow-intensity: 0.6;
   --rain-color: var(--wfc-effects-rain-color, #6cb4ee);
   --clear-sky-color: var(--wfc-effects-clear-sky-color, rgba(3, 105, 161, 0.8));
