@@ -434,7 +434,7 @@ export class WeatherForecastCardEditor
       case "name":
         return "Overrides the friendly name of the entity.";
       case "show_condition_effects":
-        return "Select which weather condition initiate visual effects and animations on the card.";
+        return "Select which weather conditions initiate visual effects and animations on the card.";
       default:
         return undefined;
     }
