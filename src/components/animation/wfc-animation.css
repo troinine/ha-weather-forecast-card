@@ -1,5 +1,5 @@
 :host {
-  --sun-size: var(--wfc-effects-sun-size, 100px);
+  --sun-size: var(--wfc-effects-sun-size, 140px);
   --sun-spin-duration: var(--wfc-effects-sun-spin-duration, 100s);
   --moon-size: var(--wfc-effects-moon-size, 80px);
   --sky-visibility: var(--wfc-effects-sky-visibility, visible);
@@ -24,8 +24,9 @@
 }
 
 :host(.light) {
-  --sun-color: var(--wfc-effects-sun-color, rgba(255, 170, 0, 1));
-  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(255, 200, 50, 0.4));
+  --sun-color: var(--wfc-effects-sun-color, #facc15);
+  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(253, 224, 71, 0.4));
+  --sun-ray-opacity: 0.25;
   --moon-color: var(--wfc-effects-moon-color, rgba(220, 220, 230, 1));
   --star-color: var(--wfc-effects-star-color, #ffffff);
   --snow-color: var(--wfc-effects-snow-color, #cbd5e1);
@@ -33,7 +34,15 @@
   --rain-color: var(--wfc-effects-rain-color, #2563eb);
   --clear-sky-color: var(
     --wfc-effects-clear-sky-color,
-    rgba(135, 206, 250, 0.7)
+    rgba(30, 130, 230, 0.6)
+  );
+  --clear-sky-accent: var(
+    --wfc-effects-clear-sky-accent,
+    rgba(100, 180, 240, 0.45)
+  );
+  --clear-sky-horizon: var(
+    --wfc-effects-clear-sky-horizon,
+    rgba(210, 235, 255, 0.3)
   );
   --clear-night-sky-color: var(
     --wfc-effects-clear-night-sky-color,
@@ -50,16 +59,22 @@
 }
 
 :host(.dark) {
-  --sun-color: var(--wfc-effects-sun-color, rgba(255, 210, 50, 1));
-  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(255, 230, 140, 0.6));
+  --sun-color: var(--wfc-effects-sun-color, #fbbf24);
+  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(251, 191, 36, 0.5));
+  --sun-ray-opacity: 0.15;
   --moon-color: var(--wfc-effects-moon-color, rgba(220, 220, 230, 1));
   --star-color: var(--wfc-effects-star-color, #ffffff);
   --snow-color: var(--wfc-effects-snow-color, #e2e8f0);
   --glow-intensity: 0.6;
   --rain-color: var(--wfc-effects-rain-color, #6cb4ee);
-  --clear-sky-color: var(
-    --wfc-effects-clear-sky-color,
-    rgba(59, 130, 246, 0.8)
+  --clear-sky-color: var(--wfc-effects-clear-sky-color, rgba(3, 105, 161, 0.8));
+  --clear-sky-accent: var(
+    --wfc-effects-clear-sky-accent,
+    rgba(7, 89, 133, 0.6)
+  );
+  --clear-sky-horizon: var(
+    --wfc-effects-clear-sky-horizon,
+    rgba(12, 74, 110, 0.4)
   );
   --clear-night-sky-color: var(
     --wfc-effects-clear-night-sky-color,
@@ -167,8 +182,24 @@
   background: linear-gradient(
     180deg,
     var(--clear-sky-color) 0%,
+    var(--clear-sky-accent) 55%,
+    var(--clear-sky-horizon) 100%
+  );
+}
+
+.sky::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at 65% 15%,
+    rgba(255, 255, 255, 0.25) 0%,
     transparent 50%
   );
+  pointer-events: none;
 }
 
 .sun {
@@ -179,38 +210,39 @@
   width: var(--sun-size);
   height: var(--sun-size);
   border-radius: 50%;
-  background: var(--sun-color);
-  opacity: 0.8;
-  box-shadow: 0px 0px 10px 10px var(--sun-color);
-}
-
-.ray-box {
-  position: absolute;
-  margin: auto;
-  top: 0px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: var(--sun-size);
-  -webkit-animation: spin var(--sun-spin-duration) linear infinite;
-  animation: spin var(--sun-spin-duration) linear infinite;
+  background: #f5fee0;
+  box-shadow:
+    0 0 20px 2px #fff7ed,
+    0 0 40px 10px var(--sun-color),
+    0 0 100px 30px rgba(253, 186, 116, 0.3);
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.1));
 }
 
 .sun-ray {
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0) 0%,
+    transparent 0%,
     var(--sun-ray-color) 50%,
-    rgba(255, 255, 255, 0) 100%
+    transparent 100%
   );
-  border-radius: 80% 80% 0 0;
+  border-radius: 50% 50% 10% 10%;
   position: absolute;
   top: 50%;
   left: 50%;
   transform-origin: top center;
-  opacity: 0.1;
-  filter: blur(2px);
-  box-shadow: 0 0 10px var(--sun-ray-color);
+  opacity: var(--sun-ray-opacity);
+  box-shadow: 0 0 15px var(--sun-ray-color);
+}
+
+.ray-box {
+  position: absolute;
+  margin: auto;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--sun-size);
+  animation: spin var(--sun-spin-duration) linear infinite;
 }
 
 .night-sky {
