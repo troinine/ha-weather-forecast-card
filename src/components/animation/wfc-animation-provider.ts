@@ -241,13 +241,33 @@ export class WeatherAnimationProvider extends LitElement {
   }
 
   private renderMoon() {
+    const starCount = 30;
+    const columns = 6;
+    const rows = 5;
+
     return html`
       <div class="night-sky"></div>
       <div class="moon"></div>
-      ${Array.from({ length: 30 }).map(() => {
-        const x = random(2, 98);
-        const y = random(2, 28);
-        const size = random(1, 3);
+      ${Array.from({ length: starCount }).map((_, index) => {
+        const col = index % columns;
+        const row = Math.floor(index / columns);
+
+        const cellWidth = 100 / columns;
+        const cellHeight = 30 / rows; // Restricted to top 30% of card
+
+        const x = random(
+          col * cellWidth + cellWidth * 0.15,
+          (col + 1) * cellWidth - cellWidth * 0.15,
+          true
+        );
+
+        const y = random(
+          row * cellHeight + cellHeight * 0.15,
+          (row + 1) * cellHeight - cellHeight * 0.15,
+          true
+        );
+
+        const size = random(1, 3, true);
         const opacity = random(0.3, 1, true);
         const twinkleDelay = random(0, 5, true);
 
