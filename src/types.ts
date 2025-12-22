@@ -17,13 +17,16 @@ export type ForecastActionEvent = HASSDomEvent<ForecastActionDetails>;
 
 export type ForecastActionHandler = (event: ForecastActionEvent) => void;
 
-export type WeatherEffect =
-  | "rain"
-  | "snow"
-  | "lightning"
-  | "sky"
-  | "moon"
-  | "sun";
+export const WEATHER_EFFECTS = [
+  "rain",
+  "snow",
+  "lightning",
+  "sky",
+  "moon",
+  "sun",
+] as const;
+
+export type WeatherEffect = (typeof WEATHER_EFFECTS)[number];
 
 export enum ForecastMode {
   Chart = "chart",

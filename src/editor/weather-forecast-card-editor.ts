@@ -3,6 +3,7 @@
 import { LitElement, html, TemplateResult, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import memoizeOne from "memoize-one";
+import { capitalize } from "lodash-es";
 import {
   HomeAssistant,
   fireEvent,
@@ -10,6 +11,7 @@ import {
   LocalizeFunc,
 } from "custom-card-helpers";
 import {
+  WEATHER_EFFECTS,
   WeatherForecastCardConfig,
   WeatherForecastCardForecastActionConfig,
   WeatherForecastCardForecastConfig,
@@ -27,6 +29,7 @@ type HaFormSelector =
         mode?: "dropdown" | "list";
         options: Array<{ value: string; label: string }>;
         custom_value?: boolean;
+        multiple?: boolean;
       };
     };
 
@@ -145,6 +148,20 @@ export class WeatherForecastCardEditor
                 ),
               },
             ],
+          },
+        },
+      },
+      {
+        name: "show_condition_effects",
+        default: false,
+        optional: true,
+        selector: {
+          select: {
+            multiple: true,
+            options: WEATHER_EFFECTS.map((effect) => ({
+              value: effect,
+              label: capitalize(effect),
+            })),
           },
         },
       },
@@ -315,16 +332,7 @@ export class WeatherForecastCardEditor
 
     const schema = this._schema(this.hass.localize);
 
-    const data = {
-      ...flattenNestedKeys(this._config),
-    };
-
-    data.forecast_mode =
-      data.show_current && data.show_forecast
-        ? "show_both"
-        : data.show_current
-          ? "show_current"
-          : "show_forecast";
+    const data = denormalizeConfig(this._config);
 
     return html`
       <ha-form
@@ -394,6 +402,8 @@ export class WeatherForecastCardEditor
         return this.hass!.localize(
           "ui.dialogs.helper_settings.generic.advanced_settings"
         );
+      case "show_condition_effects":
+        return "Show condition effects";
       default:
         return this.hass!.localize(
           `ui.panel.lovelace.editor.card.generic.${name}`
@@ -423,6 +433,8 @@ export class WeatherForecastCardEditor
         return "Aggregate hourly forecast data into groups to reduce the number of forecast entries shown.";
       case "name":
         return "Overrides the friendly name of the entity.";
+      case "show_condition_effects":
+        return "Select which weather condition initiate visual effects and animations on the card.";
       default:
         return undefined;
     }
@@ -452,6 +464,16 @@ export class WeatherForecastCardEditor
       delete newConfig.forecast.extra_attribute;
     }
 
+    if (Array.isArray(newConfig.show_condition_effects)) {
+      const hasAll = WEATHER_EFFECTS.every((effect) =>
+        newConfig.show_condition_effects.includes(effect)
+      );
+
+      if (hasAll) {
+        newConfig.show_condition_effects = true;
+      }
+    }
+
     fireEvent(this, "config-changed", { config: newConfig });
   }
 }
@@ -475,6 +497,23 @@ const moveDottedKeysToNested = (obj: Record<string, any>) => {
 
     result[prefix][prop] = obj[key];
     delete result[key];
+  }
+
+  return result;
+};
+
+const denormalizeConfig = (obj: Record<string, any>) => {
+  const result = flattenNestedKeys(obj);
+
+  result.forecast_mode =
+    result.show_current && result.show_forecast
+      ? "show_both"
+      : result.show_current
+        ? "show_current"
+        : "show_forecast";
+
+  if (result.show_condition_effects === true) {
+    result.show_condition_effects = [...WEATHER_EFFECTS];
   }
 
   return result;
