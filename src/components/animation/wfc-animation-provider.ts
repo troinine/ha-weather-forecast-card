@@ -108,6 +108,22 @@ export class WeatherAnimationProvider extends LitElement {
     }
   }
 
+  /**
+   * Renders snowflake elements with realistic physics and depth perception.
+   *
+   * Depth System:
+   *   - depth value (0-1) controls visual appearance and behavior
+   *   - Far flakes (depth ~0): small (4px), slow, transparent, blurry
+   *   - Close flakes (depth ~1): large (12px), fast, opaque, sharp
+   *
+   * Snowflakes follow a sinusoidal horizontal oscillation pattern while falling with the following parameters:
+   *   - drift-amplitude: horizontal oscillation range (10-35px, depth-based for parallax)
+   *   - drift-frequency: number of wave cycles during fall (2-4, randomized per flake)
+   *
+   * The CSS animation uses these parameters to create smooth wave motion
+   * with 8 keyframes approximating a sine wave. Wind direction is applied via --fall-angle container rotation,
+   * preserving the smooth drift pattern while angling the entire fall trajectory.
+   */
   private renderSnow() {
     const intensity = this.computeIntensity();
 
@@ -115,7 +131,7 @@ export class WeatherAnimationProvider extends LitElement {
     this.style.setProperty("--fall-angle", `${this.computeFallingAngle()}deg`);
 
     const flakes = [];
-    let currentX = -15; // Slightly wider start for wind coverage
+    let currentX = -15;
     const safeIntensity = Math.max(1, intensity);
 
     while (currentX < 100) {
@@ -123,28 +139,21 @@ export class WeatherAnimationProvider extends LitElement {
       const actualSpacing = baseSpacing / safeIntensity;
       currentX += Math.round(actualSpacing);
 
-      // 0 = Far away (small, slow, blurry), 1 = Close (large, fast, sharp)
       const depth = Math.random();
-      // Flakes get larger the closer they are. 4px when far, 12px when close
       const flakeSize = depth * 8 + 4;
-      // Closer objects fall faster and drift more dramatically
       const duration = 4.5 / (depth + 0.5) + random(0, 0.8);
       const timingOffset = random(0, 5, true).toFixed(1);
-      // Distant flakes are more transparent and blurry
       const opacity = depth * 0.7 + 0.5;
       const blur = depth < 0.3 ? 1.5 - depth * 3 : depth > 0.9 ? 0.5 : 0;
-      // Closer flakes have a wider light scatter
       const shadowSpread = flakeSize * 0.9;
 
-      const driftStyles = Array.from({ length: 4 }).reduce<
-        Record<string, string>
-      >((acc, _, i) => {
-        // Parallax drift: Background flakes move less than foreground flakes
-        const driftRange = 20 + depth * 40;
-        acc[`--drift-${i + 1}`] =
-          `${random(-driftRange, driftRange).toFixed(0)}px`;
-        return acc;
-      }, {});
+      const driftAmplitude = (10 + depth * 25).toFixed(1);
+      const driftFrequency = (2 + Math.random() * 2).toFixed(2);
+
+      const driftStyles = {
+        "--drift-amplitude": `${driftAmplitude}px`,
+        "--drift-frequency": driftFrequency,
+      };
 
       flakes.push(html`
         <div

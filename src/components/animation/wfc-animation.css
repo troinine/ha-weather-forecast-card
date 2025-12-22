@@ -312,33 +312,54 @@
 
 @keyframes snowflake {
   0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0);
   }
-  20% {
+  12.5% {
     transform: translate3d(
-      var(--drift-1, 10px),
-      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.2),
+      calc(var(--drift-amplitude, 15px) * 0.707),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.125),
       0
     );
   }
-  40% {
+  25% {
     transform: translate3d(
-      var(--drift-2, -5px),
-      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.4),
+      var(--drift-amplitude, 15px),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.25),
       0
     );
   }
-  60% {
+  37.5% {
     transform: translate3d(
-      var(--drift-3, 8px),
-      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.6),
+      calc(var(--drift-amplitude, 15px) * 0.707),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.375),
       0
     );
   }
-  80% {
+  50% {
     transform: translate3d(
-      var(--drift-4, -10px),
-      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.8),
+      0,
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.5),
+      0
+    );
+  }
+  62.5% {
+    transform: translate3d(
+      calc(var(--drift-amplitude, 15px) * -0.707),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.625),
+      0
+    );
+  }
+  75% {
+    transform: translate3d(
+      calc(var(--drift-amplitude, 15px) * -1),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.75),
+      0
+    );
+  }
+  87.5% {
+    transform: translate3d(
+      calc(var(--drift-amplitude, 15px) * -0.707),
+      calc((var(--container-height) + var(--drop-start-pos-diff-y)) * 0.875),
       0
     );
   }
