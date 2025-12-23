@@ -20,6 +20,8 @@ import {
 const PRECIPITATION_INTENSITY_MAX = 10;
 const PRECIPITATION_INTENSITY_MEDIUM = 3;
 const WIND_SPEED_MS_MAX = 14;
+const SNOW_MAX_PARTICLES = 75;
+const RAIN_MAX_PARTICLES = 75;
 
 type BaseParticle = {
   x: string;
@@ -176,31 +178,42 @@ export class WeatherAnimationProvider extends LitElement {
   }
 
   /**
-   * Computes snowflake elements with realistic physics and depth perception.
+   * Computes snowflake elements with realistic physics, depth perception, and optimized distribution.
+   *
+   * Performance & Distribution Strategy:
+   *   - Capping: Particle count is scaled by intensity and capped at SNOW_MAX_PARTICLES to ensure
+   *     stable frame rates across all device tiers.
+   *   - Columnar Spread: The horizontal span (-15% to 100%) is divided into discrete columns based on
+   *     the calculated count, ensuring even coverage without the random "clumping" of traditional loops.
+   *   - Positioning: Each flake is placed within its assigned column with randomized jitter to
+   *     maintain a natural, non-grid appearance.
    *
    * Depth System:
-   *   - depth value (0-1) controls visual appearance and behavior
-   *   - Far flakes (depth ~0): small (~2px), slow, transparent, blurry
-   *   - Close flakes (depth ~1): larger (~7px), fast, opaque, sharp
+   *   - depth value (0-1) controls visual appearance and behavior.
+   *   - Far flakes (depth ~0): small (~2px), slow, transparent, blurry.
+   *   - Close flakes (depth ~1): larger (~7px), fast, opaque, sharp.
    *
-   * Snowflakes follow a sinusoidal horizontal oscillation pattern while falling with the following parameters:
-   *   - drift-amplitude: horizontal oscillation range (10-35px, depth-based for parallax)
-   *   - drift-frequency: number of wave cycles during fall (2-4, randomized per flake)
+   * Oscillation & Wind:
+   *   - drift-amplitude: horizontal oscillation range (10-35px, depth-based for parallax).
+   *   - drift-frequency: number of wave cycles during fall (2-4, randomized per flake).
+   *   - Wind integration: CSS uses these parameters for sinusoidal motion while the container
+   *     handles --fall-angle rotation to preserve the drift pattern during wind events.
    *
-   * The CSS animation uses these parameters to create smooth wave motion
-   * with 8 keyframes approximating a sine wave. Wind direction is applied via --fall-angle container rotation,
-   * preserving the smooth drift pattern while angling the entire fall trajectory.
+   * @returns {Snowflake[]} Array of stable particle data for rendering.
    */
   private computeSnowParticles(): Snowflake[] {
     const intensity = this.computeIntensity();
     const flakes: Snowflake[] = [];
-    let currentX = -15;
-    const safeIntensity = Math.max(1, intensity);
 
-    while (currentX < 100) {
-      const baseSpacing = random(2, 40);
-      const actualSpacing = baseSpacing / safeIntensity;
-      currentX += Math.max(1, Math.round(actualSpacing));
+    // Calculate count based on intensity, capped for performance
+    const count = Math.round(
+      (intensity / PRECIPITATION_INTENSITY_MAX) * SNOW_MAX_PARTICLES
+    );
+    const safeCount = Math.max(5, count);
+    const columnWidth = 115 / safeCount;
+
+    for (let i = 0; i < safeCount; i++) {
+      const currentX = -15 + i * columnWidth + random(0, columnWidth * 0.5);
 
       const depth = Math.random();
       const flakeSize = depth * 5 + 2;
@@ -215,7 +228,7 @@ export class WeatherAnimationProvider extends LitElement {
 
       flakes.push({
         type: "snow",
-        x: `${currentX}%`,
+        x: `${currentX.toFixed(1)}%`,
         delay: timingOffset,
         duration: duration.toFixed(1),
         size: flakeSize.toFixed(0),
@@ -230,16 +243,36 @@ export class WeatherAnimationProvider extends LitElement {
     return flakes;
   }
 
+  /**
+   * Computes a stable set of raindrop particles using a capped, column-based distribution.
+   *
+   * Performance & Distribution Strategy:
+   *   - Capping: The total number of particles is limited by RAIN_MAX_PARTICLES to ensure smooth
+   *     rendering and animation performance on low-end devices.
+   *   - Grid Distribution: Instead of purely random placement which can cause "clumping,"
+   *     the width (100%) is divided into equal columns based on the calculated count.
+   *   - Jitter: Each drop is placed within its assigned column with a randomized offset
+   *     (80% of column width) to maintain a natural, organic appearance.
+   *
+   * Depth & Physics:
+   *   - Timing: Randomized delays and durations prevent synchronized "sheet" falling.
+   *   - Splash logic: Calculates landingPosY based on container height with a 15%
+   *     variance to simulate depth/perspective of raindrops hitting the ground.
+   *
+   * @returns {Raindrop[]} Array of stable particle data for rendering.
+   */
   private computeRainParticles(): Raindrop[] {
     const intensity = this.computeIntensity();
     const drops: Raindrop[] = [];
-    let currentX = 0;
-    const safeIntensity = Math.max(1, intensity);
 
-    while (currentX < 100) {
-      const baseSpacing = random(2, 35);
-      const actualSpacing = baseSpacing / safeIntensity;
-      currentX += Math.max(1, Math.round(actualSpacing));
+    const count = Math.round(
+      (intensity / PRECIPITATION_INTENSITY_MAX) * RAIN_MAX_PARTICLES
+    );
+    const safeCount = Math.max(10, count);
+    const columnWidth = 100 / safeCount;
+
+    for (let i = 0; i < safeCount; i++) {
+      const currentX = i * columnWidth + random(0, columnWidth * 0.8);
 
       const timingOffset = random(0.2, 0.5, true);
       const duration = random(0.4, 0.7, true);
@@ -248,7 +281,7 @@ export class WeatherAnimationProvider extends LitElement {
 
       drops.push({
         type: "rain",
-        x: `${currentX.toFixed(0)}%`,
+        x: `${currentX.toFixed(1)}%`,
         delay: timingOffset.toFixed(2),
         duration: duration.toFixed(2),
         landingPosY: landingPos.toFixed(0),
@@ -481,9 +514,6 @@ export class WeatherAnimationProvider extends LitElement {
 
       if (maxPrecip > 0) {
         const intensity = (precip / maxPrecip) * PRECIPITATION_INTENSITY_MAX;
-
-        // Math.ceil ensures even light rain registers as at least 1
-        // Math.min clamps the value to 10 so we don't exceed the scale
         return Math.min(PRECIPITATION_INTENSITY_MAX, Math.ceil(intensity));
       }
     }
