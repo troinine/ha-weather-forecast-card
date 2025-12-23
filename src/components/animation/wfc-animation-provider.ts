@@ -17,8 +17,8 @@ import {
   WeatherEntity,
 } from "../../data/weather";
 
-const RAIN_INTENSITY_MAX = 10;
-const RAIN_INTENSITY_MEDIUM = 3;
+const PRECIPITATION_INTENSITY_MAX = 10;
+const PRECIPITATION_INTENSITY_MEDIUM = 3;
 const WIND_SPEED_MS_MAX = 14;
 
 type BaseParticle = {
@@ -480,17 +480,17 @@ export class WeatherAnimationProvider extends LitElement {
       const maxPrecip = getMaxPrecipitationForUnit(unit, "hourly");
 
       if (maxPrecip > 0) {
-        const intensity = (precip / maxPrecip) * RAIN_INTENSITY_MAX;
+        const intensity = (precip / maxPrecip) * PRECIPITATION_INTENSITY_MAX;
 
         // Math.ceil ensures even light rain registers as at least 1
         // Math.min clamps the value to 10 so we don't exceed the scale
-        return Math.min(RAIN_INTENSITY_MAX, Math.ceil(intensity));
+        return Math.min(PRECIPITATION_INTENSITY_MAX, Math.ceil(intensity));
       }
     }
 
     return this.weatherEntity?.state === "pouring"
-      ? RAIN_INTENSITY_MAX
-      : RAIN_INTENSITY_MEDIUM;
+      ? PRECIPITATION_INTENSITY_MAX
+      : PRECIPITATION_INTENSITY_MEDIUM;
   }
 
   private computeFallingAngle(isRain: boolean = false): number {
