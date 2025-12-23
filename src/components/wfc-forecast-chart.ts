@@ -152,6 +152,7 @@ export class WfcForecastChart extends LitElement {
               <div class="wfc-forecast-slot">
                 <wfc-forecast-info
                   .hass=${this.hass}
+                  .weatherEntity=${this.weatherEntity}
                   .forecast=${item}
                   .config=${this.config}
                   .hidePrecipitation=${true}
