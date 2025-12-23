@@ -170,8 +170,8 @@ export class WeatherAnimationProvider extends LitElement {
    *
    * Depth System:
    *   - depth value (0-1) controls visual appearance and behavior
-   *   - Far flakes (depth ~0): small (4px), slow, transparent, blurry
-   *   - Close flakes (depth ~1): large (12px), fast, opaque, sharp
+   *   - Far flakes (depth ~0): small (~2px), slow, transparent, blurry
+   *   - Close flakes (depth ~1): larger (~7px), fast, opaque, sharp
    *
    * Snowflakes follow a sinusoidal horizontal oscillation pattern while falling with the following parameters:
    *   - drift-amplitude: horizontal oscillation range (10-35px, depth-based for parallax)
