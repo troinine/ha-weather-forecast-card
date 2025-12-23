@@ -21,6 +21,36 @@ const RAIN_INTENSITY_MAX = 10;
 const RAIN_INTENSITY_MEDIUM = 3;
 const WIND_SPEED_MS_MAX = 14;
 
+type BaseParticle = {
+  x: string;
+  delay: string;
+  duration: string;
+};
+
+type Snowflake = BaseParticle & {
+  type: "snow";
+  size: string;
+  opacity: string;
+  blur: string;
+  shadowSpread: string;
+  driftAmplitude: string;
+  driftFrequency: string;
+};
+
+type Raindrop = BaseParticle & {
+  type: "rain";
+  landingPosY: string;
+};
+
+type Star = BaseParticle & {
+  type: "star";
+  y: string;
+  size: string;
+  opacity: string;
+};
+
+type WeatherParticle = Snowflake | Raindrop | Star;
+
 @customElement("wfc-animation-provider")
 export class WeatherAnimationProvider extends LitElement {
   @property({ attribute: false }) hass!: ExtendedHomeAssistant;
@@ -31,6 +61,7 @@ export class WeatherAnimationProvider extends LitElement {
   @state() _isDark: boolean = false;
   @state() _containerHeight: number = 0;
 
+  private _particles: WeatherParticle[] = [];
   private _resizeObserver?: ResizeObserver;
 
   static styles = styles;
@@ -42,7 +73,11 @@ export class WeatherAnimationProvider extends LitElement {
     this._resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0];
       const height = Math.round(entry?.contentRect.height || 0);
-      this._containerHeight = height;
+
+      if (this._containerHeight !== height) {
+        this._containerHeight = height;
+        this._particles = this.computeParticles();
+      }
     });
 
     this._resizeObserver.observe(this);
@@ -53,24 +88,36 @@ export class WeatherAnimationProvider extends LitElement {
     this._resizeObserver?.disconnect();
   }
 
+  protected willUpdate(changedProps: PropertyValues) {
+    if (changedProps.has("hass")) {
+      const oldHass = changedProps.get("hass") as
+        | ExtendedHomeAssistant
+        | undefined;
+      const currentDark = this.hass?.themes?.darkMode;
+
+      if (oldHass?.themes?.darkMode !== currentDark) {
+        this._isDark = currentDark ?? false;
+      }
+    }
+
+    if (
+      changedProps.has("config") ||
+      changedProps.has("weatherEntity") ||
+      changedProps.has("currentForecast")
+    ) {
+      this._particles = this.computeParticles();
+    }
+  }
+
   protected updated(changedProps: PropertyValues) {
-    if (!changedProps.has("hass")) return;
-
-    const oldHass = changedProps.get("hass") as
-      | ExtendedHomeAssistant
-      | undefined;
-
-    const prevDark = oldHass?.themes?.darkMode;
-    const currentDark = this.hass?.themes?.darkMode;
-
-    if (prevDark === currentDark) return;
-
-    this._isDark = currentDark;
-    this.onThemeChanged();
+    if (changedProps.has("hass")) {
+      this.onThemeChanged();
+    }
   }
 
   protected render() {
     const active = this.getActiveEffects();
+
     if (!active.length) return nothing;
 
     return html`
@@ -93,6 +140,155 @@ export class WeatherAnimationProvider extends LitElement {
         }
       })}
     `;
+  }
+
+  private computeParticles(): WeatherParticle[] {
+    const particles: WeatherParticle[] = [];
+    const active = this.getActiveEffects();
+
+    active.forEach((effect) => {
+      switch (effect) {
+        case "rain":
+          particles.push(...this.computeRainParticles());
+          break;
+        case "snow":
+          particles.push(...this.computeSnowParticles());
+          break;
+        case "moon":
+          particles.push(...this.computeStarParticles());
+          break;
+        default:
+          break;
+      }
+    });
+
+    return particles;
+  }
+
+  /**
+   * Computes snowflake elements with realistic physics and depth perception.
+   *
+   * Depth System:
+   *   - depth value (0-1) controls visual appearance and behavior
+   *   - Far flakes (depth ~0): small (4px), slow, transparent, blurry
+   *   - Close flakes (depth ~1): large (12px), fast, opaque, sharp
+   *
+   * Snowflakes follow a sinusoidal horizontal oscillation pattern while falling with the following parameters:
+   *   - drift-amplitude: horizontal oscillation range (10-35px, depth-based for parallax)
+   *   - drift-frequency: number of wave cycles during fall (2-4, randomized per flake)
+   *
+   * The CSS animation uses these parameters to create smooth wave motion
+   * with 8 keyframes approximating a sine wave. Wind direction is applied via --fall-angle container rotation,
+   * preserving the smooth drift pattern while angling the entire fall trajectory.
+   */
+  private computeSnowParticles(): Snowflake[] {
+    const intensity = this.computeIntensity();
+    const flakes: Snowflake[] = [];
+    let currentX = -15;
+    const safeIntensity = Math.max(1, intensity);
+
+    while (currentX < 100) {
+      const baseSpacing = random(2, 40);
+      const actualSpacing = baseSpacing / safeIntensity;
+      currentX += Math.round(actualSpacing);
+
+      const depth = Math.random();
+      const flakeSize = depth * 5 + 2;
+      const duration = 4.5 / (depth + 0.5) + random(0, 0.8);
+      const timingOffset = random(0, 5, true).toFixed(1);
+      const opacity = depth * 0.7 + 0.5;
+      const blur = depth < 0.3 ? 1.5 - depth * 3 : depth > 0.9 ? 0.5 : 0;
+      const shadowSpread = flakeSize * 0.9;
+
+      const driftAmplitude = (10 + depth * 25).toFixed(1);
+      const driftFrequency = (2 + Math.random() * 2).toFixed(2);
+
+      flakes.push({
+        type: "snow",
+        x: `${currentX}%`,
+        delay: timingOffset,
+        duration: duration.toFixed(1),
+        size: flakeSize.toFixed(1),
+        opacity: opacity.toFixed(2),
+        blur: blur.toFixed(1),
+        shadowSpread: shadowSpread.toFixed(1),
+        driftAmplitude,
+        driftFrequency,
+      });
+    }
+
+    return flakes;
+  }
+
+  private computeRainParticles(): Raindrop[] {
+    const intensity = this.computeIntensity();
+    const drops: Raindrop[] = [];
+    let currentX = 0;
+    const safeIntensity = Math.max(1, intensity);
+
+    while (currentX < 100) {
+      const baseSpacing = random(2, 35);
+      const actualSpacing = baseSpacing / safeIntensity;
+      currentX += actualSpacing;
+
+      const timingOffset = random(0.2, 0.5, true);
+      const duration = random(0.4, 0.7, true);
+      const depthVariance = random(0.85, 1, true);
+      const landingPos = this._containerHeight * depthVariance;
+
+      drops.push({
+        type: "rain",
+        x: `${currentX.toFixed(2)}%`,
+        delay: timingOffset.toFixed(2),
+        duration: duration.toFixed(2),
+        landingPosY: landingPos.toFixed(0),
+      });
+    }
+
+    return drops;
+  }
+
+  private computeStarParticles(): Star[] {
+    const stars: Star[] = [];
+    const starCount = 30;
+    const columns = 6;
+    const rows = 5;
+
+    for (let i = 0; i < starCount; i++) {
+      const col = i % columns;
+      const row = Math.floor(i / columns);
+
+      const cellWidth = 100 / columns;
+      const cellHeight = 30 / rows;
+
+      const x = random(
+        col * cellWidth + cellWidth * 0.15,
+        (col + 1) * cellWidth - cellWidth * 0.15,
+        true
+      );
+
+      const y = random(
+        row * cellHeight + cellHeight * 0.15,
+        (row + 1) * cellHeight - cellHeight * 0.15,
+        true
+      );
+
+      const size = random(1, 3, true);
+      const opacity = random(0.3, 1, true);
+      const twinkleDelay = random(0, 5, true);
+
+      stars.push({
+        type: "star",
+        x: x.toFixed(2),
+        y: y.toFixed(2),
+        size: size.toFixed(1),
+        opacity: opacity.toFixed(2),
+        delay: twinkleDelay.toFixed(2),
+        duration: "0",
+      });
+    }
+
+    return stars;
   }
 
   private getActiveEffects(): WeatherEffect[] {
@@ -124,10 +320,8 @@ export class WeatherAnimationProvider extends LitElement {
     if (isClearState) {
       if (isEnabled("sky")) effects.add("sky");
 
-      // Determine "Night" status based on config and state
       let isNight = state === "clear-night";
 
-      // Only check suntimes if the user explicitly enabled the feature
       if (this.config.forecast?.show_sun_times) {
         const suntimes = getSuntimesInfo(this.hass, new Date());
         if (suntimes?.isNightTime) {
@@ -177,117 +371,57 @@ export class WeatherAnimationProvider extends LitElement {
     `;
   }
 
-  /**
-   * Renders snowflake elements with realistic physics and depth perception.
-   *
-   * Depth System:
-   *   - depth value (0-1) controls visual appearance and behavior
-   *   - Far flakes (depth ~0): small (4px), slow, transparent, blurry
-   *   - Close flakes (depth ~1): large (12px), fast, opaque, sharp
-   *
-   * Snowflakes follow a sinusoidal horizontal oscillation pattern while falling with the following parameters:
-   *   - drift-amplitude: horizontal oscillation range (10-35px, depth-based for parallax)
-   *   - drift-frequency: number of wave cycles during fall (2-4, randomized per flake)
-   *
-   * The CSS animation uses these parameters to create smooth wave motion
-   * with 8 keyframes approximating a sine wave. Wind direction is applied via --fall-angle container rotation,
-   * preserving the smooth drift pattern while angling the entire fall trajectory.
-   */
   private renderSnow() {
-    const intensity = this.computeIntensity();
-
     this.style.setProperty("--container-height", `${this._containerHeight}px`);
     this.style.setProperty("--fall-angle", `${this.computeFallingAngle()}deg`);
 
-    const flakes = [];
-    let currentX = -15;
-    const safeIntensity = Math.max(1, intensity);
-
-    while (currentX < 100) {
-      const baseSpacing = random(2, 40);
-      const actualSpacing = baseSpacing / safeIntensity;
-      currentX += Math.round(actualSpacing);
-
-      const depth = Math.random();
-      const flakeSize = depth * 5 + 2;
-      const duration = 4.5 / (depth + 0.5) + random(0, 0.8);
-      const timingOffset = random(0, 5, true).toFixed(1);
-      const opacity = depth * 0.7 + 0.5;
-      const blur = depth < 0.3 ? 1.5 - depth * 3 : depth > 0.9 ? 0.5 : 0;
-      const shadowSpread = flakeSize * 0.9;
-
-      const driftAmplitude = (10 + depth * 25).toFixed(1);
-      const driftFrequency = (2 + Math.random() * 2).toFixed(2);
-
-      const driftStyles = {
-        "--drift-amplitude": `${driftAmplitude}px`,
-        "--drift-frequency": driftFrequency,
-      };
-
-      flakes.push(html`
+    return (
+      this._particles.filter((p) => p.type === "snow") as Snowflake[]
+    ).map(
+      (p) => html`
         <div
           class="snowflake-path"
           style="${styleMap({
-            "--duration": `${duration.toFixed(1)}s`,
-            "--delay": `${timingOffset}s`,
-            "--pos-x": `${currentX}%`,
-            "--flake-size": `${flakeSize.toFixed(1)}px`,
-            "--flake-opacity": `${opacity.toFixed(2)}`,
-            "--flake-blur": `${blur.toFixed(1)}px`,
-            "--flake-shadow-spread": `${shadowSpread.toFixed(1)}px`,
-            ...driftStyles,
+            "--duration": `${p.duration}s`,
+            "--delay": `${p.delay}s`,
+            "--pos-x": p.x,
+            "--flake-size": `${p.size}px`,
+            "--flake-opacity": p.opacity,
+            "--flake-blur": `${p.blur}px`,
+            "--flake-shadow-spread": `${p.shadowSpread}px`,
+            "--drift-amplitude": `${p.driftAmplitude}px`,
+            "--drift-frequency": p.driftFrequency,
           })}"
         >
           <div class="snowflake"></div>
         </div>
-      `);
-    }
-
-    return flakes;
+      `
+    );
   }
 
   private renderRain() {
-    const intensity = this.computeIntensity();
-
     this.style.setProperty("--container-height", `${this._containerHeight}px`);
     this.style.setProperty(
       "--fall-angle",
       `${this.computeFallingAngle(true)}deg`
     );
 
-    const drops = [];
-    let currentX = 0;
-
-    const safeIntensity = Math.max(1, intensity);
-
-    while (currentX < 100) {
-      const baseSpacing = random(2, 35);
-      const actualSpacing = baseSpacing / safeIntensity;
-
-      currentX += actualSpacing;
-
-      const timingOffset = random(0.2, 0.5, true);
-      const duration = random(0.4, 0.7, true);
-      const depthVariance = random(0.85, 1, true);
-      const landingPos = this._containerHeight * depthVariance;
-
-      drops.push(html`
+    return (this._particles.filter((p) => p.type === "rain") as Raindrop[]).map(
+      (p) => html`
         <div
           class="raindrop-path"
           style="${styleMap({
-            "--duration": `${duration}s`,
-            "--delay": `${timingOffset}s`,
-            "--pos-x": `${currentX}%`,
-            "--landing-pos-y": `${landingPos}px`,
+            "--duration": `${p.duration}s`,
+            "--delay": `${p.delay}s`,
+            "--pos-x": p.x,
+            "--landing-pos-y": `${p.landingPosY}px`,
           })}"
         >
           <div class="raindrop"></div>
           <div class="splat"></div>
         </div>
-      `);
-    }
-
-    return drops;
+      `
+    );
   }
 
   private renderLightning() {
@@ -295,47 +429,23 @@ export class WeatherAnimationProvider extends LitElement {
   }
 
   private renderMoon() {
-    const starCount = 30;
-    const columns = 6;
-    const rows = 5;
-
     return html`
       <div class="moon"></div>
-      ${Array.from({ length: starCount }).map((_, index) => {
-        const col = index % columns;
-        const row = Math.floor(index / columns);
-
-        const cellWidth = 100 / columns;
-        const cellHeight = 30 / rows; // Restricted to top 30% of card
-
-        const x = random(
-          col * cellWidth + cellWidth * 0.15,
-          (col + 1) * cellWidth - cellWidth * 0.15,
-          true
-        );
-
-        const y = random(
-          row * cellHeight + cellHeight * 0.15,
-          (row + 1) * cellHeight - cellHeight * 0.15,
-          true
-        );
-
-        const size = random(1, 3, true);
-        const opacity = random(0.3, 1, true);
-        const twinkleDelay = random(0, 5, true);
-
-        return html`<div
-          class="star"
-          style="${styleMap({
-            left: `${x}%`,
-            top: `${y}%`,
-            width: `${size}px`,
-            height: `${size}px`,
-            opacity: `${opacity}`,
-            animationDelay: `${twinkleDelay}s`,
-          })}"
-        ></div>`;
-      })}
+      ${(this._particles.filter((p) => p.type === "star") as Star[]).map(
+        (p) => html`
+          <div
+            class="star"
+            style="${styleMap({
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              opacity: p.opacity,
+              animationDelay: `${p.delay}s`,
+            })}"
+          ></div>
+        `
+      )}
     `;
   }
 
