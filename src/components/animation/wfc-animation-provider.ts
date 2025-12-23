@@ -49,7 +49,14 @@ type Star = BaseParticle & {
   opacity: string;
 };
 
-type WeatherParticle = Snowflake | Raindrop | Star;
+type SunRay = {
+  type: "sunray";
+  angle: string;
+  height: string;
+  width: string;
+};
+
+type WeatherParticle = Snowflake | Raindrop | Star | SunRay;
 
 @customElement("wfc-animation-provider")
 export class WeatherAnimationProvider extends LitElement {
@@ -156,6 +163,9 @@ export class WeatherAnimationProvider extends LitElement {
           break;
         case "moon":
           particles.push(...this.computeStarParticles());
+          break;
+        case "sun":
+          particles.push(...this.computeSunRayParticles());
           break;
         default:
           break;
@@ -347,25 +357,36 @@ export class WeatherAnimationProvider extends LitElement {
   }
 
   private renderSun() {
+    const rays = this._particles.filter(
+      (p): p is SunRay => p.type === "sunray"
+    );
+
     return html`
       <div class="sun">
         <div class="ray-box">
-          ${Array.from({ length: 30 }).map(() => {
-            const angle = random(0, 360);
-            const height = random(100, 200);
-            const width = random(5, 15);
-            return html`<div
-              class="sun-ray"
-              style="${styleMap({
-                transform: `translate(-50%, 0) rotate(${angle}deg)`,
-                height: `${height}px`,
-                width: `${width}px`,
-              })}"
-            ></div>`;
-          })}
+          ${rays.map(
+            (ray) =>
+              html`<div
+                class="sun-ray"
+                style="${styleMap({
+                  transform: `translate(-50%, 0) rotate(${ray.angle}deg)`,
+                  height: `${ray.height}px`,
+                  width: `${ray.width}px`,
+                })}"
+              ></div>`
+          )}
         </div>
       </div>
     `;
+  }
+
+  private computeSunRayParticles(): SunRay[] {
+    return Array.from({ length: 30 }).map(() => ({
+      type: "sunray" as const,
+      angle: `${random(0, 360)}`,
+      height: `${random(100, 200)}`,
+      width: `${random(5, 15)}`,
+    }));
   }
 
   private renderSnow() {
