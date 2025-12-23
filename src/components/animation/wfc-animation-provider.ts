@@ -24,7 +24,7 @@ const WIND_SPEED_MS_MAX = 14;
 type BaseParticle = {
   x: string;
   delay: string;
-  duration: string;
+  duration?: string;
 };
 
 type Snowflake = BaseParticle & {
@@ -200,7 +200,7 @@ export class WeatherAnimationProvider extends LitElement {
       const blur = depth < 0.3 ? 1.5 - depth * 3 : depth > 0.9 ? 0.5 : 0;
       const shadowSpread = flakeSize * 0.9;
 
-      const driftAmplitude = (10 + depth * 25).toFixed(1);
+      const driftAmplitude = (10 + depth * 25).toFixed(0);
       const driftFrequency = (2 + Math.random() * 2).toFixed(2);
 
       flakes.push({
@@ -208,8 +208,8 @@ export class WeatherAnimationProvider extends LitElement {
         x: `${currentX}%`,
         delay: timingOffset,
         duration: duration.toFixed(1),
-        size: flakeSize.toFixed(1),
-        opacity: opacity.toFixed(2),
+        size: flakeSize.toFixed(0),
+        opacity: opacity.toFixed(1),
         blur: blur.toFixed(1),
         shadowSpread: shadowSpread.toFixed(1),
         driftAmplitude,
@@ -238,7 +238,7 @@ export class WeatherAnimationProvider extends LitElement {
 
       drops.push({
         type: "rain",
-        x: `${currentX.toFixed(2)}%`,
+        x: `${currentX.toFixed(0)}%`,
         delay: timingOffset.toFixed(2),
         duration: duration.toFixed(2),
         landingPosY: landingPos.toFixed(0),
@@ -263,28 +263,25 @@ export class WeatherAnimationProvider extends LitElement {
 
       const x = random(
         col * cellWidth + cellWidth * 0.15,
-        (col + 1) * cellWidth - cellWidth * 0.15,
-        true
+        (col + 1) * cellWidth - cellWidth * 0.15
       );
 
       const y = random(
         row * cellHeight + cellHeight * 0.15,
-        (row + 1) * cellHeight - cellHeight * 0.15,
-        true
+        (row + 1) * cellHeight - cellHeight * 0.15
       );
 
-      const size = random(1, 3, true);
+      const size = random(1, 3);
       const opacity = random(0.3, 1, true);
       const twinkleDelay = random(0, 5, true);
 
       stars.push({
         type: "star",
-        x: x.toFixed(2),
-        y: y.toFixed(2),
-        size: size.toFixed(1),
+        x: `${x.toFixed(0)}`,
+        y: `${y.toFixed(0)}`,
+        size: `${size}`,
         opacity: opacity.toFixed(2),
-        delay: twinkleDelay.toFixed(2),
-        duration: "0",
+        delay: twinkleDelay.toFixed(1),
       });
     }
 
