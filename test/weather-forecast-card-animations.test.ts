@@ -77,6 +77,17 @@ describe("weather-forecast-card-animations", () => {
         queryAnimationAll(element, ".snowflake-path").length
       ).toBeGreaterThan(1);
     });
+
+    it("should render both snow and rain for snowy-rainy weather", async () => {
+      const element = await createFixture("snowy-rainy", true);
+
+      expect(
+        queryAnimationAll(element, ".snowflake-path").length
+      ).toBeGreaterThan(1);
+      expect(
+        queryAnimationAll(element, ".raindrop-path").length
+      ).toBeGreaterThan(1);
+    });
   });
 
   describe("show_condition_effects: array (selective)", () => {
@@ -139,6 +150,26 @@ describe("weather-forecast-card-animations", () => {
       expect(queryAnimationAll(element, ".star").length).toBeGreaterThan(1);
       expect(queryAnimation(element, ".sky")).toBeNull();
       expect(queryAnimation(element, ".night-sky")).toBeNull();
+    });
+
+    it("should render both snow and rain when both enabled for snowy-rainy", async () => {
+      const element = await createFixture("snowy-rainy", ["snow", "rain"]);
+
+      expect(
+        queryAnimationAll(element, ".snowflake-path").length
+      ).toBeGreaterThan(1);
+      expect(
+        queryAnimationAll(element, ".raindrop-path").length
+      ).toBeGreaterThan(1);
+    });
+
+    it("should render rain when only rain is enabled for snowy-rainy", async () => {
+      const element = await createFixture("snowy-rainy", ["rain"]);
+
+      expect(queryAnimationAll(element, ".snowflake-path").length).toBe(0);
+      expect(
+        queryAnimationAll(element, ".raindrop-path").length
+      ).toBeGreaterThan(1);
     });
   });
 
