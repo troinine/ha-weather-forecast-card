@@ -190,7 +190,7 @@ export class WeatherAnimationProvider extends LitElement {
     while (currentX < 100) {
       const baseSpacing = random(2, 40);
       const actualSpacing = baseSpacing / safeIntensity;
-      currentX += Math.round(actualSpacing);
+      currentX += Math.max(1, Math.round(actualSpacing));
 
       const depth = Math.random();
       const flakeSize = depth * 5 + 2;
@@ -229,7 +229,7 @@ export class WeatherAnimationProvider extends LitElement {
     while (currentX < 100) {
       const baseSpacing = random(2, 35);
       const actualSpacing = baseSpacing / safeIntensity;
-      currentX += actualSpacing;
+      currentX += Math.max(1, Math.round(actualSpacing));
 
       const timingOffset = random(0.2, 0.5, true);
       const duration = random(0.4, 0.7, true);
