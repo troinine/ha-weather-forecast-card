@@ -525,7 +525,12 @@ export class WeatherAnimationProvider extends LitElement {
 
   private computeFallingAngle(isRain: boolean = false): number {
     const forecast = this.currentForecast;
-    if (!forecast?.wind_bearing || !forecast?.wind_speed) return 0;
+    if (
+      forecast?.wind_bearing === undefined ||
+      forecast?.wind_speed === undefined
+    ) {
+      return 0;
+    }
 
     const speedMS =
       getNormalizedWindSpeed(this.hass, this.weatherEntity, forecast) || 0;
