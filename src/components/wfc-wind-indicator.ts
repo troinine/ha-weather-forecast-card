@@ -13,19 +13,19 @@ export class WfcWindIndicator extends LitElement {
   @property({ attribute: false }) weatherEntity!: WeatherEntity;
   @property({ attribute: false }) forecast!: ForecastAttribute;
   @property({ attribute: false }) size = 35;
-  @property({ attribute: false }) radius = 15;
+  @property({ attribute: false }) radius = 20;
   @property({ attribute: false }) type: "bearing" | "direction" = "bearing";
 
   static styles = css`
     :host {
       display: inline-block;
-      line-height: 0;
     }
     text {
-      font-size: calc(var(--ha-font-size-s, 12px) * 1.1);
+      font-size: calc(var(--ha-font-size-l, 16px) * 1.4);
       fill: var(--primary-text-color);
-      font-weight: 500;
-      dominant-baseline: central;
+      font-weight: 600;
+      text-anchor: middle;
+      dominant-baseline: middle;
     }
   `;
 
@@ -38,7 +38,7 @@ export class WfcWindIndicator extends LitElement {
     const windBearing = this.forecast.wind_bearing || 0;
 
     const R = this.radius;
-    const strokeWidth = 3;
+    const strokeWidth = 4;
     const padding = 10;
     const cx = R + padding;
     const cy = R + padding;
@@ -53,7 +53,7 @@ export class WfcWindIndicator extends LitElement {
     }
 
     const baseY = cy - R;
-    const tipY = baseY - 8;
+    const tipY = baseY - 10;
     const spreadX = 7;
 
     return html`
@@ -84,7 +84,7 @@ export class WfcWindIndicator extends LitElement {
           />
         </g>
 
-        <text x="${cx}" y="${cy}" text-anchor="middle">${speed}</text>
+        <text x="${cx}" y="${cy}" dy="2px">${speed}</text>
       </svg>
     `;
   }
@@ -104,5 +104,11 @@ export class WfcWindIndicator extends LitElement {
     }
 
     return "var(--wfc-wind-high)";
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "wfc-wind-indicator": WfcWindIndicator;
   }
 }
