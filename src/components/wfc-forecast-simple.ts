@@ -1,9 +1,12 @@
-import { HomeAssistant } from "custom-card-helpers";
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
 import { actionHandler } from "../hass";
-import { ForecastActionDetails, WeatherForecastCardConfig } from "../types";
+import {
+  ExtendedHomeAssistant,
+  ForecastActionDetails,
+  WeatherForecastCardConfig,
+} from "../types";
 import { formatDay } from "../helpers";
 import {
   ForecastAttribute,
@@ -19,7 +22,7 @@ import "./wfc-forecast-info";
 
 @customElement("wfc-forecast-simple")
 export class WfcForecastSimple extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
+  @property({ attribute: false }) hass!: ExtendedHomeAssistant;
   @property({ attribute: false }) weatherEntity!: WeatherEntity;
   @property({ attribute: false }) forecast: ForecastAttribute[] = [];
   @property({ attribute: false }) forecastType!: ForecastType;
@@ -83,6 +86,7 @@ export class WfcForecastSimple extends LitElement {
           ></wfc-forecast-details>
           <wfc-forecast-info
             .hass=${this.hass}
+            .weatherEntity=${this.weatherEntity}
             .forecast=${forecast}
             .config=${this.config}
           ></wfc-forecast-info>

@@ -1,6 +1,6 @@
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { ForecastAttribute } from "../data/weather";
+import { ForecastAttribute, WeatherEntity } from "../data/weather";
 import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../types";
 import { logger } from "../logger";
 import "./wfc-wind-indicator";
@@ -8,6 +8,7 @@ import "./wfc-wind-indicator";
 @customElement("wfc-forecast-info")
 export class WfcForecastInfo extends LitElement {
   @property({ attribute: false }) hass!: ExtendedHomeAssistant;
+  @property({ attribute: false }) weatherEntity!: WeatherEntity;
   @property({ attribute: false }) forecast!: ForecastAttribute;
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
@@ -46,17 +47,10 @@ export class WfcForecastInfo extends LitElement {
           `
         : null;
     } else if (attribute === "wind_bearing" || attribute === "wind_direction") {
-      const windSpeed = this.forecast.wind_speed || 0;
-      const windBearing = this.forecast.wind_bearing || 0;
-      const windUnit =
-        this.hass.states[this.config.entity]?.attributes?.wind_speed_unit ||
-        this.hass.config?.unit_system?.wind_speed ||
-        "m/s";
-
       return html`<wfc-wind-indicator
-        .windBearing="${windBearing}"
-        .windSpeed="${windSpeed}"
-        .windUnit="${windUnit}"
+        .hass=${this.hass}
+        .weatherEntity=${this.weatherEntity}
+        .forecast=${this.forecast}
         .type="${attribute === "wind_direction" ? "direction" : "bearing"}"
       ></wfc-wind-indicator>`;
     } else {
