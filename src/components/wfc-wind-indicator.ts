@@ -53,8 +53,9 @@ export class WfcWindIndicator extends LitElement {
     }
 
     const baseY = cy - R;
-    const tipY = baseY - 10;
-    const spreadX = 7;
+    const tipOffset = R * 0.55;
+    const tipY = baseY - tipOffset;
+    const spreadX = R * 0.45;
 
     return html`
       <svg
