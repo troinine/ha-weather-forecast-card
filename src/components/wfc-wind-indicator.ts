@@ -85,7 +85,7 @@ export class WfcWindIndicator extends LitElement {
           />
         </g>
 
-        <text x="${cx}" y="${cy}" dy="2px">${speed}</text>
+        <text x="${cx}" y="${cy}" dy="0.1em">${speed}</text>
       </svg>
     `;
   }
