@@ -381,25 +381,25 @@ describe("wfc-wind-indicator", () => {
       expect(svg?.getAttribute("height")).toBe("50");
     });
 
-    it("should use default radius of 15", async () => {
+    it("should use default radius of 20", async () => {
       const element = await createFixture({
         windSpeed: 10,
         windBearing: 0,
       });
 
       const circle = element.shadowRoot?.querySelector("circle");
-      expect(circle?.getAttribute("r")).toBe("15");
+      expect(circle?.getAttribute("r")).toBe("20");
     });
 
     it("should accept custom radius", async () => {
       const element = await createFixture({
         windSpeed: 10,
         windBearing: 0,
-        radius: 20,
+        radius: 25,
       });
 
       const circle = element.shadowRoot?.querySelector("circle");
-      expect(circle?.getAttribute("r")).toBe("20");
+      expect(circle?.getAttribute("r")).toBe("25");
     });
   });
 });
@@ -431,11 +431,13 @@ const createFixture = async (options: CreateFixtureOptions) => {
       .hass=${hass}
       .weatherEntity=${weatherEntity}
       .forecast=${forecast}
-      .size=${options.size ?? 35}
-      .radius=${options.radius ?? 15}
       .type=${options.type ?? "bearing"}
     ></wfc-wind-indicator>`
   );
+
+  // Only override defaults if explicitly provided
+  if (options.size !== undefined) element.size = options.size;
+  if (options.radius !== undefined) element.radius = options.radius;
 
   await element.updateComplete;
 
