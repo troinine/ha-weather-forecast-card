@@ -269,6 +269,47 @@ describe("wfc-wind-indicator", () => {
       // (270 + 180) % 360 = 90
       expect(transform).toContain("rotate(90");
     });
+
+    it('should use original bearing in aria-label when type is "bearing"', async () => {
+      const element = await createFixture({
+        windSpeed: 10,
+        windBearing: 45,
+        type: "bearing",
+      });
+
+      const svg = element.shadowRoot?.querySelector("svg");
+      expect(svg?.getAttribute("aria-label")).toBe(
+        "Wind speed: 10, bearing: 45 degrees"
+      );
+    });
+
+    it('should use computed bearing in aria-label when type is "direction"', async () => {
+      const element = await createFixture({
+        windSpeed: 10,
+        windBearing: 45,
+        type: "direction",
+      });
+
+      const svg = element.shadowRoot?.querySelector("svg");
+      // 45 + 180 = 225
+      expect(svg?.getAttribute("aria-label")).toBe(
+        "Wind speed: 10, bearing: 225 degrees"
+      );
+    });
+
+    it('should use wrapped bearing in aria-label when type is "direction" and wraps', async () => {
+      const element = await createFixture({
+        windSpeed: 10,
+        windBearing: 270,
+        type: "direction",
+      });
+
+      const svg = element.shadowRoot?.querySelector("svg");
+      // (270 + 180) % 360 = 90
+      expect(svg?.getAttribute("aria-label")).toBe(
+        "Wind speed: 10, bearing: 90 degrees"
+      );
+    });
   });
 
   describe("wind speed colors", () => {

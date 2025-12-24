@@ -62,7 +62,7 @@ export class WfcWindIndicator extends LitElement {
         height="${this.size}"
         viewBox="0 0 ${boxSize} ${boxSize}"
         role="img"
-        aria-label="Wind speed: ${speed}, bearing: ${windBearing} degrees"
+        aria-label="Wind speed: ${speed}, bearing: ${bearing} degrees"
       >
         <circle
           cx="${cx}"
