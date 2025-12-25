@@ -122,6 +122,42 @@ ha-card {
   white-space: nowrap;
 }
 
+.wfc-current-attributes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-1, 4px);
+  margin: var(--ha-space-3, 12px) 0;
+}
+
+.wfc-current-attribute {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ha-space-1, 4px);
+  font-size: var(--ha-font-size-m, 14px);
+  line-height: var(--ha-line-height-condensed);
+  color: var(--primary-text-color, #212121);
+  white-space: nowrap;
+}
+
+.wfc-current-attribute-icon {
+  color: var(--state-icon-color, #616161);
+  padding-left: var(--ha-space-2, 8px);
+}
+
+.wfc-current-attribute-value,
+.wfc-current-attribute-name {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.wfc-current-attribute-name {
+  text-overflow: ellipsis;
+  padding-left: var(--ha-space-4, 16px);
+  flex: 1;
+}
+
 .wfc-forecast-container {
   --mask: linear-gradient(
     to right,

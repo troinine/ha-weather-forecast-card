@@ -40,7 +40,7 @@ export interface ForecastAttribute {
   wind_bearing?: number;
 }
 
-interface WeatherEntityAttributes extends HassEntityAttributeBase {
+export interface WeatherEntityAttributes extends HassEntityAttributeBase {
   attribution?: string;
   humidity?: number;
   forecast?: ForecastAttribute[];
@@ -55,6 +55,10 @@ interface WeatherEntityAttributes extends HassEntityAttributeBase {
   temperature_unit: string;
   visibility_unit: string;
   wind_speed_unit: string;
+  wind_gust_speed?: number;
+  dew_point?: number;
+  uv_index?: number;
+  ozone?: number;
 }
 
 export interface ForecastEvent {
@@ -65,6 +69,70 @@ export interface ForecastEvent {
 export interface WeatherEntity extends HassEntityBase {
   attributes: WeatherEntityAttributes;
 }
+
+const cardinalDirections = [
+  "N",
+  "NNE",
+  "NE",
+  "ENE",
+  "E",
+  "ESE",
+  "SE",
+  "SSE",
+  "S",
+  "SSW",
+  "SW",
+  "WSW",
+  "W",
+  "WNW",
+  "NW",
+  "NNW",
+  "N",
+];
+
+const getWindBearingText = (degree: number | string): string | undefined => {
+  const degreenum = typeof degree === "number" ? degree : parseInt(degree, 10);
+  if (isFinite(degreenum)) {
+    return cardinalDirections[(((degreenum + 11.25) / 22.5) | 0) % 16];
+  }
+
+  return typeof degree === "number" ? degree.toString() : degree;
+};
+
+const getWindBearing = (bearing: number | string): string | undefined => {
+  if (bearing != null) {
+    return getWindBearingText(bearing);
+  }
+
+  return "";
+};
+
+export const getWind = (
+  hass: ExtendedHomeAssistant,
+  stateObj: WeatherEntity
+): string | undefined => {
+  const windSpeed = stateObj.attributes.wind_speed;
+  const windBearing = stateObj.attributes.wind_bearing;
+
+  if (windSpeed === null || windSpeed === undefined) {
+    return undefined;
+  }
+
+  const speedText = hass.formatEntityAttributeValue(stateObj, "wind_speed");
+
+  if (windBearing != null && windBearing !== undefined) {
+    const cardinalDirection = getWindBearing(windBearing);
+
+    if (cardinalDirection) {
+      return `${speedText} (${
+        hass.localize(
+          `ui.card.weather.cardinal_direction.${cardinalDirection.toLowerCase()}`
+        ) || cardinalDirection
+      })`;
+    }
+  }
+  return speedText;
+};
 
 export const getWeatherUnit = (
   hass: ExtendedHomeAssistant,
