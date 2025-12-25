@@ -323,6 +323,8 @@ export class MockHass {
             return `${value} hPa`;
           case "wind_speed":
             return `${value} m/s`;
+          case "wind_gust_speed":
+            return `${value} m/s`;
           case "wind_bearing":
             return `${value} °`;
           case "visibility":
