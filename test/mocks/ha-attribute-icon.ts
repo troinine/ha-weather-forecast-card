@@ -37,6 +37,8 @@ export class HaAttributeIcon extends LitElement {
     "mdi:molecule": mdiMolecule,
     "mdi:weather-sunny-alert": mdiWeatherSunnyAlert,
     "mdi:water-thermometer-outline": mdiWaterThermometerOutline,
+    "mdi:thermometer": mdiWaterThermometerOutline,
+    "mdi:cloud-outline": mdiCloudPercentOutline,
   };
 
   protected createRenderRoot() {
