@@ -152,6 +152,9 @@ forecast:
 
 The card supports animated visual effects that respond to current weather conditions, adding an immersive layer to your weather display. These effects are rendered as background animations behind the card content.
 
+> [!WARNING]
+> **Performance Note:** Weather animations utilize CSS processing, which can increase CPU usage. On low-powered devices, or when displaying multiple cards simultaneously, this may cause UI sluggishness. If performance drops, consider disabling animations or selecting only the most essential effects.
+
 ### Configuration
 
 Enable weather effects using the `show_condition_effects` option:
