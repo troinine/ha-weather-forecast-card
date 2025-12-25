@@ -1,11 +1,17 @@
 :host {
-  --sun-size: var(--wfc-effects-sun-size, 140px);
-  --sun-spin-duration: var(--wfc-effects-sun-spin-duration, 100s);
-  --moon-size: var(--wfc-effects-moon-size, 80px);
-  --sky-visibility: var(--wfc-effects-sky-visibility, visible);
+  --sun-size: var(--weather-forecast-card-effects-sun-size, 140px);
+  --sun-spin-duration: var(
+    --weather-forecast-card-effects-sun-spin-duration,
+    100s
+  );
+  --moon-size: var(--weather-forecast-card-effects-moon-size, 80px);
+  --sky-visibility: var(
+    --weather-forecast-card-effects-sky-visibility,
+    visible
+  );
   --drop-color-start: color-mix(in srgb, var(--rain-color), transparent 100%);
   --drop-color-end: color-mix(in srgb, var(--rain-color), transparent 40%);
-  --drop-height: var(--wfc-effects-drop-height, 20px);
+  --drop-height: var(--weather-forecast-card-effects-drop-height, 20px);
   --drop-start-pos-diff-y: 50px;
   --snow-glow-color: var(--snow-color);
   --container-height: 0px; /* Set dynamically in TS */
@@ -24,68 +30,83 @@
 }
 
 :host(.light) {
-  --sun-color: var(--wfc-effects-sun-color, #facc15);
-  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(253, 224, 71, 0.4));
+  --sun-color: var(--weather-forecast-card-effects-sun-color, #facc15);
+  --sun-ray-color: var(
+    --weather-forecast-card-effects-sun-ray-color,
+    rgba(253, 224, 71, 0.4)
+  );
   --sun-ray-opacity: 0.25;
-  --moon-color: var(--wfc-effects-moon-color, rgba(220, 220, 230, 1));
-  --star-color: var(--wfc-effects-star-color, #ffffff);
-  --snow-color: var(--wfc-effects-snow-color, #cbd5e1);
+  --moon-color: var(
+    --weather-forecast-card-effects-moon-color,
+    rgba(220, 220, 230, 1)
+  );
+  --star-color: var(--weather-forecast-card-effects-star-color, #ffffff);
+  --snow-color: var(--weather-forecast-card-effects-snow-color, #cbd5e1);
   --glow-intensity: 0.9;
-  --rain-color: var(--wfc-effects-rain-color, #2563eb);
+  --rain-color: var(--weather-forecast-card-effects-rain-color, #2563eb);
   --clear-sky-color: var(
-    --wfc-effects-clear-sky-color,
+    --weather-forecast-card-effects-clear-sky-color,
     rgba(30, 130, 230, 0.6)
   );
   --clear-sky-accent: var(
-    --wfc-effects-clear-sky-accent,
+    --weather-forecast-card-effects-clear-sky-accent,
     rgba(100, 180, 240, 0.45)
   );
   --clear-sky-horizon: var(
-    --wfc-effects-clear-sky-horizon,
+    --weather-forecast-card-effects-clear-sky-horizon,
     rgba(210, 235, 255, 0.3)
   );
   --clear-night-sky-color: var(
-    --wfc-effects-clear-night-sky-color,
+    --weather-forecast-card-effects-clear-night-sky-color,
     rgba(49, 46, 129, 0.7)
   );
   --clear-night-sky-accent: var(
-    --wfc-effects-clear-night-sky-accent,
+    --weather-forecast-card-effects-clear-night-sky-accent,
     rgba(88, 28, 135, 0.55)
   );
   --clear-night-horizon: var(
-    --wfc-effects-clear-night-horizon,
+    --weather-forecast-card-effects-clear-night-horizon,
     rgba(236, 72, 153, 0.4)
   );
 }
 
 :host(.dark) {
-  --sun-color: var(--wfc-effects-sun-color, #fbbf24);
-  --sun-ray-color: var(--wfc-effects-sun-ray-color, rgba(251, 191, 36, 0.5));
+  --sun-color: var(--weather-forecast-card-effects-sun-color, #fbbf24);
+  --sun-ray-color: var(
+    --weather-forecast-card-effects-sun-ray-color,
+    rgba(251, 191, 36, 0.5)
+  );
   --sun-ray-opacity: 0.15;
-  --moon-color: var(--wfc-effects-moon-color, rgba(220, 220, 230, 1));
-  --star-color: var(--wfc-effects-star-color, #ffffff);
-  --snow-color: var(--wfc-effects-snow-color, #ffffff);
+  --moon-color: var(
+    --weather-forecast-card-effects-moon-color,
+    rgba(220, 220, 230, 1)
+  );
+  --star-color: var(--weather-forecast-card-effects-star-color, #ffffff);
+  --snow-color: var(--weather-forecast-card-effects-snow-color, #ffffff);
   --glow-intensity: 0.6;
-  --rain-color: var(--wfc-effects-rain-color, #6cb4ee);
-  --clear-sky-color: var(--wfc-effects-clear-sky-color, rgba(3, 105, 161, 0.8));
+  --rain-color: var(--weather-forecast-card-effects-rain-color, #6cb4ee);
+  --clear-sky-color: var(
+    --weather-forecast-card-effects-clear-sky-color,
+    rgba(3, 105, 161, 0.8)
+  );
   --clear-sky-accent: var(
-    --wfc-effects-clear-sky-accent,
+    --weather-forecast-card-effects-clear-sky-accent,
     rgba(7, 89, 133, 0.6)
   );
   --clear-sky-horizon: var(
-    --wfc-effects-clear-sky-horizon,
+    --weather-forecast-card-effects-clear-sky-horizon,
     rgba(12, 74, 110, 0.4)
   );
   --clear-night-sky-color: var(
-    --wfc-effects-clear-night-sky-color,
+    --weather-forecast-card-effects-clear-night-sky-color,
     rgba(10, 15, 40, 0.85)
   );
   --clear-night-sky-accent: var(
-    --wfc-effects-clear-night-sky-accent,
+    --weather-forecast-card-effects-clear-night-sky-accent,
     rgba(20, 30, 80, 0.6)
   );
   --clear-night-horizon: var(
-    --wfc-effects-clear-night-horizon,
+    --weather-forecast-card-effects-clear-night-horizon,
     rgba(40, 25, 100, 0.4)
   );
 }
