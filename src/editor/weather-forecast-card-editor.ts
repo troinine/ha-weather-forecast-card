@@ -506,14 +506,13 @@ export class WeatherForecastCardEditor
       }
     }
 
-    if (newConfig?.current?.show_attributes) {
-      const hasAll = CURRENT_WEATHER_ATTRIBUTES.every((attribute) =>
+    if (
+      Array.isArray(newConfig?.current?.show_attributes) &&
+      CURRENT_WEATHER_ATTRIBUTES.every((attribute) =>
         newConfig.current.show_attributes.includes(attribute)
-      );
-
-      if (hasAll) {
-        newConfig.current.show_attributes = true;
-      }
+      )
+    ) {
+      newConfig.current.show_attributes = true;
     }
 
     fireEvent(this, "config-changed", { config: newConfig });
