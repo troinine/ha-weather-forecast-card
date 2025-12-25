@@ -523,11 +523,7 @@ export class WeatherForecastCardEditor
     let result: string | undefined;
 
     if (this._config?.entity && key.startsWith("ui.card.weather.attributes")) {
-      console.log("localize attribute", key);
       const entity = this.hass.states[this._config.entity];
-
-      console.log("entity", entity);
-      console.log("key", key.replace("ui.card.weather.attributes.", ""));
 
       if (entity) {
         result = this.hass.formatEntityAttributeName(
