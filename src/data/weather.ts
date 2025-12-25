@@ -72,7 +72,7 @@ export interface WeatherEntity extends HassEntityBase {
   attributes: WeatherEntityAttributes;
 }
 
-const cardinalDirections = [
+const CARDINAL_DIRECTIONS = [
   "N",
   "NNE",
   "NE",
@@ -89,51 +89,60 @@ const cardinalDirections = [
   "WNW",
   "NW",
   "NNW",
-  "N",
-];
+] as const;
 
-const getWindBearingText = (degree: number | string): string | undefined => {
-  const degreenum = typeof degree === "number" ? degree : parseInt(degree, 10);
-  if (isFinite(degreenum)) {
-    return cardinalDirections[(((degreenum + 11.25) / 22.5) | 0) % 16];
+export const getWindBearing = (
+  degree: number | string | undefined | null
+): string | undefined => {
+  if (degree == null) {
+    return undefined;
   }
 
-  return typeof degree === "number" ? degree.toString() : degree;
-};
+  let degreenum = typeof degree === "number" ? degree : parseFloat(degree);
 
-const getWindBearing = (bearing: number | string): string | undefined => {
-  if (bearing != null) {
-    return getWindBearingText(bearing);
+  if (isNaN(degreenum) || !isFinite(degreenum)) {
+    return undefined;
   }
 
-  return "";
+  degreenum %= 360;
+  if (degreenum < 0) {
+    degreenum += 360;
+  }
+
+  const index = Math.floor(degreenum / 22.5 + 0.5) % 16;
+
+  return CARDINAL_DIRECTIONS[index];
 };
 
 export const getWind = (
   hass: ExtendedHomeAssistant,
   stateObj: WeatherEntity
 ): string | undefined => {
-  const windSpeed = stateObj.attributes.wind_speed;
-  const windBearing = stateObj.attributes.wind_bearing;
+  const speed = stateObj.attributes.wind_speed;
+  const bearing = stateObj.attributes.wind_bearing;
 
-  if (windSpeed === null || windSpeed === undefined) {
+  if (speed === null || speed === undefined) {
     return undefined;
   }
 
   const speedText = hass.formatEntityAttributeValue(stateObj, "wind_speed");
 
-  if (windBearing != null && windBearing !== undefined) {
-    const cardinalDirection = getWindBearing(windBearing);
-
-    if (cardinalDirection) {
-      return `${speedText} (${
-        hass.localize(
-          `ui.card.weather.cardinal_direction.${cardinalDirection.toLowerCase()}`
-        ) || cardinalDirection
-      })`;
-    }
+  if (bearing == null) {
+    return speedText;
   }
-  return speedText;
+
+  const cardinalDirection = getWindBearing(bearing);
+
+  if (!cardinalDirection) {
+    return speedText;
+  }
+
+  const localizedDirection =
+    hass.localize(
+      `ui.card.weather.cardinal_direction.${cardinalDirection.toLowerCase()}`
+    ) || cardinalDirection;
+
+  return `${speedText} (${localizedDirection})`;
 };
 
 export const getWeatherUnit = (
