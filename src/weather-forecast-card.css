@@ -54,7 +54,7 @@ ha-card {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--ha-space-3, 12px);
+  gap: var(--ha-space-4, 16px);
   container-type: inline-size;
   container-name: wfc-container;
 }
@@ -66,16 +66,13 @@ ha-card {
 .wfc-current-weather {
   display: flex;
   flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--ha-space-3, 12px);
+  flex-direction: column;
+  gap: var(--ha-space-4, 16px);
   user-select: none;
   -webkit-user-select: none;
   cursor: pointer;
-  width: 100%;
-  max-width: 100%;
   min-width: 0;
+  width: 100%;
 }
 
 .wfc-current-conditions {
@@ -83,6 +80,7 @@ ha-card {
   flex-direction: row;
   align-items: center;
   min-width: 0;
+  width: 100%;
 }
 
 .wfc-name,
@@ -92,6 +90,10 @@ ha-card {
   white-space: nowrap;
   text-overflow: ellipsis;
   min-width: 0;
+}
+
+.wfc-name-state {
+  flex: 1;
 }
 
 .wfc-current-temperature-high-low {
@@ -126,7 +128,8 @@ ha-card {
   display: flex;
   flex-direction: column;
   gap: var(--ha-space-1, 4px);
-  margin: var(--ha-space-3, 12px) 0;
+  min-width: 0;
+  width: 100%;
 }
 
 .wfc-current-attribute {
@@ -397,6 +400,7 @@ ha-card {
 
 wfc-wind-indicator,
 wfc-current-weather,
+wfc-current-weather-attributes,
 wfc-forecast-header-items,
 wfc-weather-condition-icon-provider {
   display: contents;

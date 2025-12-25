@@ -346,10 +346,7 @@ export class MockHass {
             return value.toString();
         }
       },
-      formatEntityAttributeName: (
-        stateObj: HassEntity,
-        attribute: string
-      ) => {
+      formatEntityAttributeName: (stateObj: HassEntity, attribute: string) => {
         // Return undefined to let the component use fallback localization
         return undefined;
       },

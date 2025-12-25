@@ -67,15 +67,11 @@ export class WfcCurrentWeather extends LitElement {
             <div class="wfc-current-state">
               ${this.hass?.formatEntityState?.(this.weatherEntity)}
             </div>
-            ${
-              name
-                ? html`<div class="wfc-name wfc-secondary">${name}</div>`
-                : nothing
-            }
+            ${name
+              ? html`<div class="wfc-name wfc-secondary">${name}</div>`
+              : nothing}
           </div>
-        </div>
-        ${
-          tempInfo !== null
+          ${tempInfo !== null
             ? html`
                 <div class="wfc-current-temperatures">
                   <div
@@ -106,19 +102,16 @@ export class WfcCurrentWeather extends LitElement {
                     : nothing}
                 </div>
               `
-            : nothing
-        }
+            : nothing}
         </div>
-          ${
-            attributes.length > 0
-              ? html`<wfc-current-weather-attributes
-                  .hass=${this.hass}
-                  .weatherEntity=${this.weatherEntity}
-                  .config=${this.config}
-                  .weatherAttributes=${attributes}
-                ></wfc-current-weather-attributes>`
-              : nothing
-          }
+        ${attributes.length > 0
+          ? html`<wfc-current-weather-attributes
+              .hass=${this.hass}
+              .weatherEntity=${this.weatherEntity}
+              .config=${this.config}
+              .weatherAttributes=${attributes}
+            ></wfc-current-weather-attributes>`
+          : nothing}
       </div>
     `;
   }

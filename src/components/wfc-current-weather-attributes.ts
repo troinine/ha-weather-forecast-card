@@ -43,29 +43,41 @@ export class WfcCurrentWeatherAttributes extends LitElement {
       return nothing;
     }
 
+    const attributeTemplates = this.weatherAttributes
+      .map((attr) => this._renderAttribute(attr))
+      .filter((template) => template !== nothing);
+
+    if (attributeTemplates.length === 0) {
+      return nothing;
+    }
+
     return html`
-      <div class="wfc-current-attributes">
-        ${this.weatherAttributes.map((attribute) => {
-          const value = this.computeAttributeValue(attribute);
+      <div class="wfc-current-attributes">${attributeTemplates}</div>
+    `;
+  }
 
-          if (!value) return nothing;
+  private _renderAttribute(
+    attribute: CurrentWeatherAttributes
+  ): TemplateResult | typeof nothing {
+    const value = this.computeAttributeValue(attribute);
 
-          return html`
-            <div class="wfc-current-attribute">
-              <ha-attribute-icon
-                class="wfc-current-attribute-icon"
-                .hass=${this.hass}
-                .stateObj=${this.weatherEntity}
-                .attribute=${attribute}
-                .icon=${ATTRIBUTE_ICON_MAP[attribute]}
-              ></ha-attribute-icon>
-              <span class="wfc-current-attribute-name">
-                ${this.localize(attribute)}
-              </span>
-              <span class="wfc-current-attribute-value">${value}</span>
-            </div>
-          `;
-        })}
+    if (!value) {
+      return nothing;
+    }
+
+    return html`
+      <div class="wfc-current-attribute">
+        <ha-attribute-icon
+          class="wfc-current-attribute-icon"
+          .hass=${this.hass}
+          .stateObj=${this.weatherEntity}
+          .attribute=${attribute}
+          .icon=${ATTRIBUTE_ICON_MAP[attribute]}
+        ></ha-attribute-icon>
+        <span class="wfc-current-attribute-name">
+          ${this.localize(attribute)}
+        </span>
+        <span class="wfc-current-attribute-value">${value}</span>
       </div>
     `;
   }
