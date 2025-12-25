@@ -59,6 +59,8 @@ export interface WeatherEntityAttributes extends HassEntityAttributeBase {
   dew_point?: number;
   uv_index?: number;
   ozone?: number;
+  cloud_coverage?: number;
+  apparent_temperature?: number;
 }
 
 export interface ForecastEvent {
@@ -162,6 +164,8 @@ export const getWeatherUnit = (
         stateObj.attributes.temperature_unit || config.unit_system.temperature
       );
     case "wind_speed":
+      return stateObj.attributes.wind_speed_unit || `${lengthUnit}/h`;
+    case "wind_gust_speed":
       return stateObj.attributes.wind_speed_unit || `${lengthUnit}/h`;
     case "cloud_coverage":
     case "humidity":

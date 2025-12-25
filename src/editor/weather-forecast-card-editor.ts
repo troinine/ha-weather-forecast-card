@@ -5,14 +5,16 @@ import { customElement, property, state } from "lit/decorators.js";
 import memoizeOne from "memoize-one";
 import { capitalize } from "lodash-es";
 import {
-  HomeAssistant,
   fireEvent,
   LovelaceCardEditor,
   LocalizeFunc,
 } from "custom-card-helpers";
 import {
+  CURRENT_WEATHER_ATTRIBUTES,
+  ExtendedHomeAssistant,
   WEATHER_EFFECTS,
   WeatherForecastCardConfig,
+  WeatherForecastCardCurrentConfig,
   WeatherForecastCardForecastActionConfig,
   WeatherForecastCardForecastConfig,
 } from "../types";
@@ -37,6 +39,7 @@ type HaFormSchema = {
   name:
     | keyof WeatherForecastCardEditorConfig
     | `forecast.${keyof WeatherForecastCardForecastConfig}`
+    | `current.${keyof WeatherForecastCardCurrentConfig}`
     | `forecast_action.${keyof WeatherForecastCardForecastActionConfig}`
     | "";
   type?: string;
@@ -63,7 +66,7 @@ export class WeatherForecastCardEditor
   extends LitElement
   implements LovelaceCardEditor
 {
-  @property({ attribute: false }) public hass!: HomeAssistant;
+  @property({ attribute: false }) public hass!: ExtendedHomeAssistant;
   @state() private _config!: WeatherForecastCardEditorConfig;
 
   public setConfig(config: WeatherForecastCardEditorConfig): void {
@@ -74,6 +77,7 @@ export class WeatherForecastCardEditor
     (localize: LocalizeFunc): HaFormSchema[] =>
       [
         ...this._genericSchema(localize),
+        ...this._currentWeatherSchema(localize),
         ...this._forecastSchema(localize),
         ...this._interactionsSchema(),
         ...this._advancedSchema(),
@@ -161,6 +165,26 @@ export class WeatherForecastCardEditor
             options: WEATHER_EFFECTS.map((effect) => ({
               value: effect,
               label: capitalize(effect),
+            })),
+          },
+        },
+      },
+    ] as const;
+
+  private _currentWeatherSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+    [
+      {
+        name: "current.show_attributes",
+        default: false,
+        optional: true,
+        selector: {
+          select: {
+            multiple: true,
+            options: CURRENT_WEATHER_ATTRIBUTES.map((attribute) => ({
+              value: attribute,
+              label:
+                localize(`ui.card.weather.attributes.${attribute}`) ||
+                capitalize(attribute).replace(/_/g, " "),
             })),
           },
         },
@@ -330,7 +354,7 @@ export class WeatherForecastCardEditor
       return nothing;
     }
 
-    const schema = this._schema(this.hass.localize);
+    const schema = this._schema(this.localize.bind(this));
 
     const data = denormalizeConfig(this._config);
 
@@ -376,6 +400,12 @@ export class WeatherForecastCardEditor
         );
       case "icons_path":
         return "Path to custom icons";
+      case "current.show_attributes":
+        return (
+          this.hass!.localize(
+            "ui.panel.lovelace.editor.card.generic.attribute"
+          ) || "attribute"
+        );
       case "forecast.extra_attribute":
         return `Extra ${(
           this.hass!.localize("ui.card.weather.forecast") || "forecast"
@@ -417,6 +447,8 @@ export class WeatherForecastCardEditor
         return "Optional temperature sensor entity to override the weather entity's temperature.";
       case "default_forecast":
         return "Select the default forecast type to show when forecasts are enabled. Users can still toggle between hourly and daily forecasts if both are available.";
+      case "current.show_attributes":
+        return "Select which weather attributes to display in the current weather section.";
       case "forecast.extra_attribute":
         return "Select an extra attribute to display below each forecast.";
       case "forecast_interactions":
@@ -474,15 +506,54 @@ export class WeatherForecastCardEditor
       }
     }
 
+    if (newConfig?.current?.show_attributes) {
+      const hasAll = CURRENT_WEATHER_ATTRIBUTES.every((attribute) =>
+        newConfig.current.show_attributes.includes(attribute)
+      );
+
+      if (hasAll) {
+        newConfig.current.show_attributes = true;
+      }
+    }
+
     fireEvent(this, "config-changed", { config: newConfig });
   }
+
+  private localize = (key: string): string => {
+    let result: string | undefined;
+
+    if (this._config?.entity && key.startsWith("ui.card.weather.attributes")) {
+      console.log("localize attribute", key);
+      const entity = this.hass.states[this._config.entity];
+
+      console.log("entity", entity);
+      console.log("key", key.replace("ui.card.weather.attributes.", ""));
+
+      if (entity) {
+        result = this.hass.formatEntityAttributeName(
+          entity,
+          key.replace("ui.card.weather.attributes.", "")
+        );
+      }
+    }
+
+    if (!result) {
+      result = this.hass.localize(key);
+    }
+
+    return result;
+  };
 }
 
 const moveDottedKeysToNested = (obj: Record<string, any>) => {
   const result: Record<string, any> = { ...obj };
 
   for (const key of Object.keys(obj)) {
-    if (!key.startsWith("forecast.") && !key.startsWith("forecast_action."))
+    if (
+      !key.startsWith("forecast.") &&
+      !key.startsWith("forecast_action.") &&
+      !key.startsWith("current.")
+    )
       continue;
 
     const parts = key.split(".");
@@ -516,6 +587,10 @@ const denormalizeConfig = (obj: Record<string, any>) => {
     result.show_condition_effects = [...WEATHER_EFFECTS];
   }
 
+  if (result["current.show_attributes"] === true) {
+    result["current.show_attributes"] = [...CURRENT_WEATHER_ATTRIBUTES];
+  }
+
   return result;
 };
 
@@ -533,6 +608,18 @@ const flattenNestedKeys = (obj: Record<string, any>) => {
     ) {
       for (const innerKey in value) {
         result[`forecast.${innerKey}`] = value[innerKey];
+      }
+      continue;
+    }
+
+    if (
+      key === "current" &&
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value)
+    ) {
+      for (const innerKey in value) {
+        result[`current.${innerKey}`] = value[innerKey];
       }
       continue;
     }

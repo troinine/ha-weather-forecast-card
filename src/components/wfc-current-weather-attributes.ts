@@ -5,7 +5,7 @@ import {
   ExtendedHomeAssistant,
   WeatherForecastCardConfig,
 } from "../types";
-import { getWind, WeatherEntity } from "../data/weather";
+import { getWeatherUnit, getWind, WeatherEntity } from "../data/weather";
 import { capitalize } from "lodash-es";
 import memoizeOne from "memoize-one";
 
@@ -18,6 +18,8 @@ const ATTRIBUTE_ICON_MAP: { [key in CurrentWeatherAttributes]: string } = {
   ozone: "mdi:molecule",
   uv_index: "mdi:weather-sunny-alert",
   dew_point: "mdi:water-thermometer-outline",
+  apparent_temperature: "mdi:thermometer",
+  cloud_coverage: "mdi:cloud-outline",
 };
 
 @customElement("wfc-current-weather-attributes")
@@ -81,14 +83,22 @@ export class WfcCurrentWeatherAttributes extends LitElement {
       return getWind(this.hass, stateObj);
     }
 
-    return this.hass.formatEntityAttributeValue?.(
-      this.weatherEntity,
-      attribute
-    );
+    // hass.formatEntityAttributeValue does not support wind_gust_speed yet
+    if (
+      attribute === "wind_gust_speed" &&
+      stateObj.attributes.wind_gust_speed !== undefined
+    ) {
+      const unit = getWeatherUnit(this.hass, stateObj, "wind_gust_speed");
+
+      return `${stateObj.attributes.wind_gust_speed} ${unit}`;
+    }
+
+    return this.hass.formatEntityAttributeValue(this.weatherEntity, attribute);
   };
 
   private localize = (attribute: string): string => {
     return (
+      this.hass.formatEntityAttributeName(this.weatherEntity, attribute) ||
       this.hass.localize(getLocalizationKey(attribute)) ||
       capitalize(attribute).replace(/_/g, " ")
     );

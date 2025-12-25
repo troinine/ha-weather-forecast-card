@@ -26,6 +26,8 @@ export const CURRENT_WEATHER_ATTRIBUTES = [
   "ozone",
   "uv_index",
   "dew_point",
+  "apparent_temperature",
+  "cloud_coverage",
 ] as const;
 
 export const WEATHER_EFFECTS = [
@@ -92,6 +94,10 @@ export type ForecastActionConfig = ForecastToggleActionConfig | ActionConfig;
 export type ExtendedHomeAssistant = HomeAssistant & {
   formatEntityState: (stateObj: HassEntity) => string | undefined;
   formatEntityAttributeValue: (
+    stateObj: HassEntity,
+    attribute: string
+  ) => string | undefined;
+  formatEntityAttributeName: (
     stateObj: HassEntity,
     attribute: string
   ) => string | undefined;
