@@ -52,7 +52,7 @@ export class WfcCurrentWeather extends LitElement {
       this.config.forecast?.show_sun_times && suntimesInfo
         ? suntimesInfo.isNightTime
         : false;
-    const attributes = this.getConiguredAttributes();
+    const attributes = this.getConfiguredAttributes();
 
     return html`
       <div class="wfc-current-weather">
@@ -116,7 +116,7 @@ export class WfcCurrentWeather extends LitElement {
     `;
   }
 
-  private getConiguredAttributes(): CurrentWeatherAttributes[] {
+  private getConfiguredAttributes(): CurrentWeatherAttributes[] {
     const showAttr = this.config.current?.show_attributes;
 
     if (showAttr === undefined || showAttr === null) {
