@@ -256,6 +256,9 @@ export class MockHass {
           "ui.card.weather.attributes.ozone": "Ozone",
           "ui.card.weather.attributes.uv_index": "UV Index",
           "ui.card.weather.attributes.dew_point": "Dew Point",
+          "ui.card.weather.attributes.apparent_temperature":
+            "Apparent Temperature",
+          "ui.card.weather.attributes.cloud_coverage": "Cloud Coverage",
           "ui.card.weather.cardinal_direction.n": "N",
           "ui.card.weather.cardinal_direction.nne": "NNE",
           "ui.card.weather.cardinal_direction.ne": "NE",
@@ -335,9 +338,20 @@ export class MockHass {
             return value.toString();
           case "dew_point":
             return `${value} °C`;
+          case "apparent_temperature":
+            return `${value} °C`;
+          case "cloud_coverage":
+            return `${value} %`;
           default:
             return value.toString();
         }
+      },
+      formatEntityAttributeName: (
+        stateObj: HassEntity,
+        attribute: string
+      ) => {
+        // Return undefined to let the component use fallback localization
+        return undefined;
       },
       language: "en",
       locale: {

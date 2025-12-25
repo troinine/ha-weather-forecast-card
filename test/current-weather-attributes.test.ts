@@ -35,6 +35,8 @@ describe("wfc-current-weather attributes", () => {
         ozone: 200,
         uv_index: 3,
         dew_point: 1,
+        apparent_temperature: 2,
+        cloud_coverage: 50,
       },
     } as WeatherEntity;
 
@@ -73,7 +75,7 @@ describe("wfc-current-weather attributes", () => {
     expect(attrEl).not.toBeNull();
 
     const items = attrEl?.querySelectorAll(".wfc-current-attribute");
-    expect(items?.length).toBe(8);
+    expect(items?.length).toBe(10);
 
     const labels = Array.from(
       attrEl!.querySelectorAll(".wfc-current-attribute-name")
@@ -88,6 +90,8 @@ describe("wfc-current-weather attributes", () => {
       "Ozone",
       "UV Index",
       "Dew Point",
+      "Apparent Temperature",
+      "Cloud Coverage",
     ]);
 
     const values = Array.from(
@@ -103,6 +107,8 @@ describe("wfc-current-weather attributes", () => {
       "200 DU",
       "3",
       "1 °C",
+      "2 °C",
+      "50 %",
     ]);
   });
 
