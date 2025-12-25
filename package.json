@@ -1,6 +1,6 @@
 {
   "name": "weather-forecast-card",
-  "version": "0.5.0-devel",
+  "version": "0.5.0",
   "description": "A TypeScript weather forecast card built with Parcel",
   "type": "module",
   "module": "dist/weather-forecast-card.js",
