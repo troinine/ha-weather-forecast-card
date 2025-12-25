@@ -99,6 +99,27 @@ describe("weather-forecast-card theme variables", () => {
       );
     });
 
+    it("should support weather-forecast-card-chart-temp-high-label-color", () => {
+      testThemeVariableInCSS(
+        "weather-forecast-card-chart-temp-high-label-color",
+        "wfc-chart-temp-high-label-color"
+      );
+    });
+
+    it("should support weather-forecast-card-chart-temp-low-label-color", () => {
+      testThemeVariableInCSS(
+        "weather-forecast-card-chart-temp-low-label-color",
+        "wfc-chart-temp-low-label-color"
+      );
+    });
+
+    it("should support weather-forecast-card-chart-precipitation-label-color", () => {
+      testThemeVariableInCSS(
+        "weather-forecast-card-chart-precipitation-label-color",
+        "wfc-chart-precipitation-label-color"
+      );
+    });
+
     it("should support weather-forecast-card-chart-grid-color", () => {
       testThemeVariableInCSS(
         "weather-forecast-card-chart-grid-color",
@@ -284,14 +305,17 @@ describe("weather-forecast-card theme variables", () => {
   });
 
   describe("all theme variables coverage", () => {
-    it("should test all 14 main theme variables in CSS file", () => {
-      const allMainThemeVariables = [
+    it("should test all 17 main theme variables in CSS file", () => {
+      const allMainVariables = [
         "weather-forecast-card-wind-low-color",
         "weather-forecast-card-wind-medium-color",
         "weather-forecast-card-wind-high-color",
         "weather-forecast-card-chart-temp-low-line-color",
         "weather-forecast-card-chart-temp-high-line-color",
         "weather-forecast-card-chart-label-color",
+        "weather-forecast-card-chart-temp-high-label-color",
+        "weather-forecast-card-chart-temp-low-label-color",
+        "weather-forecast-card-chart-precipitation-label-color",
         "weather-forecast-card-chart-grid-color",
         "weather-forecast-card-precipitation-bar-color",
         "weather-forecast-card-sunrise-color",
@@ -303,9 +327,9 @@ describe("weather-forecast-card theme variables", () => {
       ];
 
       expect(
-        allMainThemeVariables.length,
-        "Should have 14 main theme variables in CSS file"
-      ).toBe(14);
+        allMainVariables.length,
+        "Should have 17 main theme variables in CSS file"
+      ).toBe(17);
     });
 
     it("should test all 17 effects theme variables in animation CSS file", () => {
