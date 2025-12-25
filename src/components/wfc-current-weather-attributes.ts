@@ -93,6 +93,13 @@ export class WfcCurrentWeatherAttributes extends LitElement {
       return `${stateObj.attributes.wind_gust_speed} ${unit}`;
     }
 
+    // hass.formatEntityAttributeValue does not support ozone yet
+    if (attribute === "ozone" && stateObj.attributes.ozone !== undefined) {
+      const unit = getWeatherUnit(this.hass, stateObj, "ozone");
+
+      return `${stateObj.attributes.ozone} ${unit}`;
+    }
+
     return this.hass.formatEntityAttributeValue(this.weatherEntity, attribute);
   };
 

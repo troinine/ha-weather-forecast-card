@@ -167,6 +167,8 @@ export const getWeatherUnit = (
       return stateObj.attributes.wind_speed_unit || `${lengthUnit}/h`;
     case "wind_gust_speed":
       return stateObj.attributes.wind_speed_unit || `${lengthUnit}/h`;
+    case "ozone":
+      return "DU";
     case "cloud_coverage":
     case "humidity":
     case "precipitation_probability":
