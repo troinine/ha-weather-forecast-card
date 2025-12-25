@@ -62,7 +62,7 @@ export interface WeatherForecastCardForecastConfig {
 }
 
 export interface WeatherForecastCardCurrentConfig {
-  show_attributes?: CurrentWeatherAttributes | CurrentWeatherAttributes[];
+  show_attributes?: boolean | CurrentWeatherAttributes | CurrentWeatherAttributes[];
 }
 
 export interface WeatherForecastCardForecastActionConfig {
