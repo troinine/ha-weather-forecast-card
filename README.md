@@ -80,11 +80,36 @@ resources:
 | `default_forecast`       | `string`          | `daily`      | Default forecast to view (`daily` or `hourly`).                                                                                                                                   |
 | `icons_path`             | `string`          | optional     | Path to custom icons. For example, `/local/img/my-custom-weather-icons`. See [Custom Weather Icons](#custom-weather-icons) for more details.                                      |
 | `show_condition_effects` | `boolean`/`array` | optional     | Enable animated weather condition effects. Set to `true` for all conditions or provide an array of specific effects. See [Weather Condition Effects](#weather-condition-effects). |
+| `current`                | `object`          | optional     | Current weather configuration options. See [Current Object](#current-object).                                                                                                     |
 | `forecast`               | `object`          | optional     | Forecast configuration options. See [Forecast Object](#forecast-object).                                                                                                          |
 | `forecast_action`        | `object`          | optional     | Actions for the forecast area. See [Forecast Actions](#forecast-actions).                                                                                                         |
 | `tap_action`             | `object`          | optional     | Defines the type of action to perform on tap for the main card. Action defaults to `more-info`. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).  |
 | `hold_action`            | `object`          | optional     | Defines the type of action to perform on hold for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                                 |
 | `double_tap_action`      | `object`          | optional     | Defines the type of action to perform on double click for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                         |
+
+### Current Object
+
+The `current` object controls the display of current weather information and attributes.
+
+| Name              | Type                       | Default  | Description                                                                                                                                                                                                                                |
+| :---------------- | :------------------------- | :------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `show_attributes` | `boolean`/`string`/`array` | optional | Display weather attributes below current conditions. Set to `true` to show all available attributes, `false` to hide all, a single attribute name (e.g., `"humidity"`), or an array of attribute names (e.g., `["humidity", "pressure"]`). |
+
+**Available attributes:**
+
+- `humidity` - Relative humidity percentage
+- `pressure` - Atmospheric pressure
+- `wind_speed` - Wind speed with direction (if available)
+- `wind_gust_speed` - Wind gust speed
+- `visibility` - Visibility distance
+- `ozone` - Ozone level
+- `uv_index` - UV index
+- `dew_point` - Dew point temperature
+- `apparent_temperature` - Feels like temperature
+- `cloud_coverage` - Cloud coverage percentage
+
+> [!NOTE]
+> Attributes are only rendered if the data is available from your weather entity. If an attribute is not provided by your weather integration, it will not be displayed even if configured.
 
 ### Forecast Object
 
@@ -113,6 +138,11 @@ Forecast actions have the following options
 ```yaml
 type: custom:weather-forecast-card
 entity: weather.home
+current:
+  show_attributes:
+    - humidity
+    - pressure
+    - wind_speed
 forecast:
   mode: chart
   extra_attribute: wind_direction

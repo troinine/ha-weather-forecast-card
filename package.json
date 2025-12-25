@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@mdi/js": "^7.4.47",
     "@open-wc/testing": "^4.0.0",
     "@parcel/transformer-inline-string": "^2.16.3",
     "@types/lodash-es": "^4.17.12",

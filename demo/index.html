@@ -23,6 +23,7 @@
         font-family: "Roboto", "Noto", sans-serif;
         color: var(--primary-text-color);
         --card-padding: 24px;
+        --state-icon-color: #44739e;
       }
       .light-theme {
         --primary-text-color: #141414;
@@ -324,7 +325,7 @@
     </div>
     <script type="module" src="../src/index.ts"></script>
     <script type="module">
-      import { MockHass } from "../test/mocks/hass.ts";
+      import { MockHass } from "../test/mocks/index.ts";
 
       const mockHass = new MockHass();
       let theme = "dark";

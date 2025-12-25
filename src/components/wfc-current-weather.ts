@@ -10,6 +10,8 @@ import {
   hasAction,
 } from "custom-card-helpers";
 import {
+  CURRENT_WEATHER_ATTRIBUTES,
+  CurrentWeatherAttributes,
   ExtendedHomeAssistant,
   TemperatureHighLow,
   TemperatureInfo,
@@ -22,6 +24,7 @@ import {
 } from "../data/weather";
 
 import "./wfc-weather-condition-icon-provider";
+import "./wfc-current-weather-attributes";
 
 @customElement("wfc-current-weather")
 export class WfcCurrentWeather extends LitElement {
@@ -35,7 +38,7 @@ export class WfcCurrentWeather extends LitElement {
   }
 
   render(): TemplateResult | typeof nothing {
-    if (!this.weatherEntity) {
+    if (!this.hass || !this.weatherEntity) {
       return nothing;
     }
 
@@ -49,6 +52,7 @@ export class WfcCurrentWeather extends LitElement {
       this.config.forecast?.show_sun_times && suntimesInfo
         ? suntimesInfo.isNightTime
         : false;
+    const attributes = this.getConfiguredAttributes();
 
     return html`
       <div class="wfc-current-weather">
@@ -67,39 +71,71 @@ export class WfcCurrentWeather extends LitElement {
               ? html`<div class="wfc-name wfc-secondary">${name}</div>`
               : nothing}
           </div>
-        </div>
-        ${tempInfo !== null
-          ? html`
-              <div class="wfc-current-temperatures">
-                <div
-                  class="wfc-current-temperature"
-                  .actionHandler=${actionHandler({
-                    stopPropagation: true,
-                    hasHold: hasAction(this.config.hold_action as ActionConfig),
-                    hasDoubleClick: hasAction(
-                      this.config.double_tap_action as ActionConfig
-                    ),
-                  })}
-                  @action=${this.onAction}
-                >
-                  ${tempInfo.temperature}${tempInfo.temperatureUnit}
+          ${tempInfo !== null
+            ? html`
+                <div class="wfc-current-temperatures">
+                  <div
+                    class="wfc-current-temperature"
+                    .actionHandler=${actionHandler({
+                      stopPropagation: true,
+                      hasHold: hasAction(
+                        this.config.hold_action as ActionConfig
+                      ),
+                      hasDoubleClick: hasAction(
+                        this.config.double_tap_action as ActionConfig
+                      ),
+                    })}
+                    @action=${this.onAction}
+                  >
+                    ${tempInfo.temperature}${tempInfo.temperatureUnit}
+                  </div>
+                  ${tempHighLowInfo
+                    ? html`
+                        <div
+                          class="wfc-current-temperature-high-low wfc-secondary"
+                        >
+                          ${tempHighLowInfo.temperatureHigh}${tempHighLowInfo.temperatureHighLowUnit}
+                          /
+                          ${tempHighLowInfo.temperatureLow}${tempHighLowInfo.temperatureHighLowUnit}
+                        </div>
+                      `
+                    : nothing}
                 </div>
-                ${tempHighLowInfo
-                  ? html`
-                      <div
-                        class="wfc-current-temperature-high-low wfc-secondary"
-                      >
-                        ${tempHighLowInfo.temperatureHigh}${tempHighLowInfo.temperatureHighLowUnit}
-                        /
-                        ${tempHighLowInfo.temperatureLow}${tempHighLowInfo.temperatureHighLowUnit}
-                      </div>
-                    `
-                  : nothing}
-              </div>
-            `
+              `
+            : nothing}
+        </div>
+        ${attributes.length > 0
+          ? html`<wfc-current-weather-attributes
+              .hass=${this.hass}
+              .weatherEntity=${this.weatherEntity}
+              .config=${this.config}
+              .weatherAttributes=${attributes}
+            ></wfc-current-weather-attributes>`
           : nothing}
       </div>
     `;
+  }
+
+  private getConfiguredAttributes(): CurrentWeatherAttributes[] {
+    const showAttr = this.config.current?.show_attributes;
+
+    if (showAttr === undefined || showAttr === null) {
+      return [];
+    }
+
+    if (Array.isArray(showAttr)) {
+      return showAttr;
+    }
+
+    if (typeof showAttr === "boolean") {
+      return showAttr ? [...CURRENT_WEATHER_ATTRIBUTES] : [];
+    }
+
+    if (typeof showAttr === "string") {
+      return [showAttr as CurrentWeatherAttributes];
+    }
+
+    return [];
   }
 
   private onAction = (event: ActionHandlerEvent): void => {
