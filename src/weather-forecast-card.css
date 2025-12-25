@@ -66,10 +66,13 @@
   );
   --fade-width: 15px;
   --forecast-conditions-icon-size: var(
-    --wfc-forecast-conditions-icon-size,
+    --weather-forecast-card-forecast-conditions-icon-size,
     28px
   );
-  --current-conditions-icon-size: var(--wfc-current-conditions-icon-size, 64px);
+  --current-conditions-icon-size: var(
+    --weather-forecast-card-current-conditions-icon-size,
+    64px
+  );
   --indicator-width: 20px;
 }
 

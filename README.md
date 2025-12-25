@@ -241,6 +241,77 @@ icons_path: /local/img/weather-icons
 
 This will load icons from `/local/img/weather-icons/sunny.svg`, `/local/img/weather-icons/rainy.svg`, etc.
 
+## Styling
+
+The card can be customized using Home Assistant theme variables. Most colors, sizes, and visual elements can be overridden by defining CSS variables in your theme configuration.
+
+### Theme Variables
+
+Add these variables to your Home Assistant theme to customize the card's appearance:
+
+| Variable Name                                           | Description                                 |
+| :------------------------------------------------------ | :------------------------------------------ |
+| `weather-forecast-card-wind-low-color`                  | Wind indicator color for low wind speeds    |
+| `weather-forecast-card-wind-medium-color`               | Wind indicator color for medium wind speeds |
+| `weather-forecast-card-wind-high-color`                 | Wind indicator color for high wind speeds   |
+| `weather-forecast-card-chart-temp-low-line-color`       | Chart line color for low temperature        |
+| `weather-forecast-card-chart-temp-high-line-color`      | Chart line color for high temperature       |
+| `weather-forecast-card-chart-label-color`               | Default color for chart labels              |
+| `weather-forecast-card-chart-temp-high-label-color`     | Chart label color for high temperature      |
+| `weather-forecast-card-chart-temp-low-label-color`      | Chart label color for low temperature       |
+| `weather-forecast-card-chart-precipitation-label-color` | Chart label color for precipitation         |
+| `weather-forecast-card-chart-grid-color`                | Chart grid line color                       |
+| `weather-forecast-card-precipitation-bar-color`         | Precipitation bar color                     |
+| `weather-forecast-card-sunrise-color`                   | Sunrise time indicator color                |
+| `weather-forecast-card-sunset-color`                    | Sunset time indicator color                 |
+| `weather-forecast-card-day-indicator-color`             | Background color for day indicator badge    |
+| `weather-forecast-card-day-indicator-text-color`        | Text color for day indicator badge          |
+| `weather-forecast-card-current-conditions-icon-size`    | Size of the current weather condition icon  |
+| `weather-forecast-card-forecast-conditions-icon-size`   | Size of forecast weather condition icons    |
+
+### Weather Effects Variables
+
+Customize the appearance of animated weather effects when `show_condition_effects` is enabled:
+
+| Variable Name                                          | Description                                            |
+| :----------------------------------------------------- | :----------------------------------------------------- |
+| `weather-forecast-card-effects-sun-size`               | Size of the animated sun                               |
+| `weather-forecast-card-effects-sun-spin-duration`      | Duration of the sun ray rotation animation             |
+| `weather-forecast-card-effects-sun-color`              | Color of the sun                                       |
+| `weather-forecast-card-effects-sun-ray-color`          | Color of the sun rays                                  |
+| `weather-forecast-card-effects-moon-size`              | Size of the moon                                       |
+| `weather-forecast-card-effects-moon-color`             | Color of the moon                                      |
+| `weather-forecast-card-effects-star-color`             | Color of the stars in night sky                        |
+| `weather-forecast-card-effects-snow-color`             | Color of snowflakes                                    |
+| `weather-forecast-card-effects-rain-color`             | Color of rain drops                                    |
+| `weather-forecast-card-effects-drop-height`            | Height of individual rain drops                        |
+| `weather-forecast-card-effects-sky-visibility`         | Visibility of sky gradient background (visible/hidden) |
+| `weather-forecast-card-effects-clear-sky-color`        | Day clear sky gradient primary color                   |
+| `weather-forecast-card-effects-clear-sky-accent`       | Day clear sky gradient accent color                    |
+| `weather-forecast-card-effects-clear-sky-horizon`      | Day clear sky gradient horizon color                   |
+| `weather-forecast-card-effects-clear-night-sky-color`  | Night clear sky gradient primary color                 |
+| `weather-forecast-card-effects-clear-night-sky-accent` | Night clear sky gradient accent color                  |
+| `weather-forecast-card-effects-clear-night-horizon`    | Night clear sky gradient horizon color                 |
+
+> [!NOTE]
+> Weather effects variables support both light and dark themes. Colors automatically adjust based on your theme's dark mode setting, with separate default values optimized for each mode.
+
+### Example Theme Configuration
+
+Add any of the variables to your themes to customize the card:
+
+```yaml
+my-custom-theme:
+  # Weather Forecast Card customization
+  weather-forecast-card-chart-temp-high-line-color: "#ff5722"
+
+  # Weather Forecast Card effects customization
+  weather-forecast-card-effects-sun-color: "#fbbf24"
+```
+
+> [!NOTE]
+> These variables are applied through Home Assistant's theme system. Make sure to reload your theme after making changes.
+
 ## License
 
 This repo is [MIT Licensed](LICENSE)
