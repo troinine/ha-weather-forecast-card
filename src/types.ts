@@ -17,6 +17,17 @@ export type ForecastActionEvent = HASSDomEvent<ForecastActionDetails>;
 
 export type ForecastActionHandler = (event: ForecastActionEvent) => void;
 
+export const CURRENT_WEATHER_ATTRIBUTES = [
+  "humidity",
+  "pressure",
+  "wind_speed",
+  "wind_gust_speed",
+  "visibility",
+  "ozone",
+  "uv_index",
+  "dew_point",
+] as const;
+
 export const WEATHER_EFFECTS = [
   "rain",
   "snow",
@@ -25,6 +36,9 @@ export const WEATHER_EFFECTS = [
   "moon",
   "sun",
 ] as const;
+
+export type CurrentWeatherAttributes =
+  (typeof CURRENT_WEATHER_ATTRIBUTES)[number];
 
 export type WeatherEffect = (typeof WEATHER_EFFECTS)[number];
 
@@ -45,6 +59,10 @@ export interface WeatherForecastCardForecastConfig {
   scroll_to_selected?: boolean;
 }
 
+export interface WeatherForecastCardCurrentConfig {
+  show_attributes?: CurrentWeatherAttributes | CurrentWeatherAttributes[];
+}
+
 export interface WeatherForecastCardForecastActionConfig {
   tap_action?: ForecastActionConfig;
   hold_action?: ForecastActionConfig;
@@ -61,6 +79,7 @@ export interface WeatherForecastCardConfig {
   default_forecast?: "hourly" | "daily";
   icons_path?: string;
   show_condition_effects?: boolean | WeatherEffect[];
+  current?: WeatherForecastCardCurrentConfig;
   forecast?: WeatherForecastCardForecastConfig;
   forecast_action?: WeatherForecastCardForecastActionConfig;
   tap_action?: ActionConfig | undefined;
@@ -71,11 +90,11 @@ export interface WeatherForecastCardConfig {
 export type ForecastActionConfig = ForecastToggleActionConfig | ActionConfig;
 
 export type ExtendedHomeAssistant = HomeAssistant & {
-  formatEntityState?: (stateObj: HassEntity) => string | undefined;
-  formatEntityAttributeValue?: (
+  formatEntityState: (stateObj: HassEntity) => string | undefined;
+  formatEntityAttributeValue: (
     stateObj: HassEntity,
     attribute: string
-  ) => unknown;
+  ) => string | undefined;
   themes?: {
     darkMode: boolean;
   };
