@@ -105,7 +105,6 @@
       } from "../mocks/index.ts";
 
       const initializeCard = (cardId, config, hass) => {
-        console.log(`Initializing card with id ${cardId}`);
         const card = document.getElementById(cardId);
         if (card) {
           card.setConfig(config);
