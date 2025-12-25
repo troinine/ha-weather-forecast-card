@@ -79,6 +79,10 @@
       <div class="test-card dark">
         <weather-forecast-card id="test-card-8"></weather-forecast-card>
       </div>
+      <h3>Weather attributes</h3>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-9"></weather-forecast-card>
+      </div>
       <h2>Bug fixes</h2>
       <h3>#14</h3>
       <div class="test-card">
@@ -94,13 +98,14 @@
     </div>
     <script type="module" src="../../src/index.ts"></script>
     <script type="module">
-      import { MockHass } from "../mocks/hass.ts";
       import {
+        MockHass,
         ISSUE_14_DAILY_FORECAST,
         ISSUE_14_DAILY_FORECAST_2,
-      } from "../mocks/test-data.ts";
+      } from "../mocks/index.ts";
 
       const initializeCard = (cardId, config, hass) => {
+        console.log(`Initializing card with id ${cardId}`);
         const card = document.getElementById(cardId);
         if (card) {
           card.setConfig(config);
@@ -115,6 +120,7 @@
       };
 
       customElements.whenDefined("weather-forecast-card").then(() => {
+        console.log("defined");
         const mockHass = new MockHass();
         const hass = mockHass.getHass();
 
@@ -191,6 +197,16 @@
           {
             entity: "weather.demo",
             show_condition_effects: true,
+          },
+          hass
+        );
+        initializeCard(
+          "test-card-9",
+          {
+            entity: "weather.demo",
+            current: {
+              show_attributes: true,
+            },
           },
           hass
         );

@@ -227,7 +227,6 @@ export class MockHass {
         currency: "",
       },
       localize: (key: string) => {
-        // Finnish weather state localizations
         const translations: Record<string, string> = {
           "component.weather.entity_component._.state.clear-night":
             "Clear night",
@@ -248,6 +247,31 @@ export class MockHass {
           "component.weather.entity_component._.state.sunny": "Sunny",
           "component.weather.entity_component._.state.windy": "Windy",
           "component.weather.entity_component._.state.windy-variant": "Windy",
+          "ui.card.weather.attributes.humidity": "Humidity",
+          "ui.card.weather.attributes.air_pressure": "Pressure",
+          "ui.card.weather.attributes.wind_speed": "Wind Speed",
+          "ui.card.weather.attributes.wind_bearing": "Wind Bearing",
+          "ui.card.weather.attributes.wind_gust_speed": "Wind Gust Speed",
+          "ui.card.weather.attributes.visibility": "Visibility",
+          "ui.card.weather.attributes.ozone": "Ozone",
+          "ui.card.weather.attributes.uv_index": "UV Index",
+          "ui.card.weather.attributes.dew_point": "Dew Point",
+          "ui.card.weather.cardinal_direction.n": "N",
+          "ui.card.weather.cardinal_direction.nne": "NNE",
+          "ui.card.weather.cardinal_direction.ne": "NE",
+          "ui.card.weather.cardinal_direction.ene": "ENE",
+          "ui.card.weather.cardinal_direction.e": "E",
+          "ui.card.weather.cardinal_direction.ese": "ESE",
+          "ui.card.weather.cardinal_direction.se": "SE",
+          "ui.card.weather.cardinal_direction.sse": "SSE",
+          "ui.card.weather.cardinal_direction.s": "S",
+          "ui.card.weather.cardinal_direction.ssw": "SSW",
+          "ui.card.weather.cardinal_direction.sw": "SW",
+          "ui.card.weather.cardinal_direction.wsw": "WSW",
+          "ui.card.weather.cardinal_direction.w": "W",
+          "ui.card.weather.cardinal_direction.wnw": "WNW",
+          "ui.card.weather.cardinal_direction.nw": "NW",
+          "ui.card.weather.cardinal_direction.nnw": "NNW",
         };
 
         return translations[key] || key;
@@ -255,7 +279,6 @@ export class MockHass {
       formatEntityState: (stateObj: HassEntity) => {
         if (!stateObj) return "";
 
-        // For weather entities, return localized state
         if (stateObj.entity_id?.startsWith("weather.")) {
           const stateKey = `component.weather.entity_component._.state.${stateObj.state}`;
           const translations: Record<string, string> = {
@@ -283,6 +306,36 @@ export class MockHass {
         }
 
         return stateObj.state;
+      },
+      formatEntityAttributeValue: (stateObj: HassEntity, attribute: string) => {
+        if (!stateObj || !attribute) return "";
+
+        const value = stateObj.attributes[attribute];
+        if (value === undefined || value === null) {
+          return "";
+        }
+
+        // Simple formatting based on attribute type
+        switch (attribute) {
+          case "humidity":
+            return `${value} %`;
+          case "pressure":
+            return `${value} hPa`;
+          case "wind_speed":
+            return `${value} m/s`;
+          case "wind_bearing":
+            return `${value} °`;
+          case "visibility":
+            return `${value} km`;
+          case "ozone":
+            return `${value} DU`;
+          case "uv_index":
+            return value.toString();
+          case "dew_point":
+            return `${value} °C`;
+          default:
+            return value.toString();
+        }
       },
       language: "en",
       locale: {
