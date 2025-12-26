@@ -29,16 +29,6 @@ export class WfcForecastSimple extends LitElement {
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
   private _selectedForecastIndex: number | null = null;
-  private maxPrecipitation: number = 0;
-
-  public connectedCallback(): void {
-    super.connectedCallback();
-
-    this.maxPrecipitation = getMaxPrecipitationForUnit(
-      getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
-      this.forecastType
-    );
-  }
 
   protected createRenderRoot() {
     return this;
@@ -50,6 +40,10 @@ export class WfcForecastSimple extends LitElement {
     }
 
     const forecastTemplates: TemplateResult[] = [];
+    const maxPrecipitation = getMaxPrecipitationForUnit(
+      getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
+      this.forecastType
+    );
 
     let currentDay: string | undefined;
 
@@ -81,7 +75,7 @@ export class WfcForecastSimple extends LitElement {
           <wfc-forecast-details
             .hass=${this.hass}
             .forecast=${forecast}
-            .maxPrecipitation=${this.maxPrecipitation}
+            .maxPrecipitation=${maxPrecipitation}
             .config=${this.config}
           ></wfc-forecast-details>
           <wfc-forecast-info
