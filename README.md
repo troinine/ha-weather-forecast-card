@@ -155,6 +155,10 @@ The card supports animated visual effects that respond to current weather condit
 > [!WARNING]
 > **Performance Note:** Weather animations utilize CSS processing, which can increase CPU usage. On low-powered devices, or when displaying multiple cards simultaneously, this may cause UI sluggishness. If performance drops, consider disabling animations or selecting only the most essential effects.
 
+<div align="center">
+  <img src="https://raw.githubusercontent.com/troinine/ha-weather-forecast-card/refs/heads/main/docs/weather-forecast-card-effects.gif" alt="Weather Forecast Card Effects" width="600" style="border-radius: 12px;">
+</div>
+
 ### Configuration
 
 Enable weather effects using the `show_condition_effects` option:
