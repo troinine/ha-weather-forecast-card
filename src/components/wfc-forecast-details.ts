@@ -2,6 +2,7 @@ import { html, LitElement, nothing, TemplateResult } from "lit";
 import { ForecastAttribute, hasPrecipitation } from "../data/weather";
 import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../types";
 import { customElement, property } from "lit/decorators.js";
+import { classMap } from "lit/directives/class-map.js";
 
 @customElement("wfc-forecast-details")
 export class WfcForecastDetails extends LitElement {
@@ -35,13 +36,14 @@ export class WfcForecastDetails extends LitElement {
           : nothing}
       </div>
       <div
-        class="wfc-forecast-precip-amount-container${!precipitationAvailable
-          ? " wfc-not-available"
-          : ""}"
+        class=${classMap({
+          "wfc-forecast-precip-amount-container": true,
+          "wfc-not-available": !precipitationAvailable,
+        })}
       >
         <div
           class="wfc-forecast-precip-amount-bar"
-          style="--forecast-precipitation-bar-height-pct: ${barHeightPct};"
+          style="--forecast-precipitation-bar-height-pct: ${barHeightPct}%;"
         ></div>
         <span class="wfc-forecast-precip-amount">
           ${precipitation.toFixed(1)}
@@ -57,7 +59,7 @@ export class WfcForecastDetails extends LitElement {
    * precipitation values result in very small or zero-height bars.
    *
    * @param precipitation The precipitation amount.
-   * @returns The height of the precipitation bar in pixels.
+   * @returns The height of the precipitation bar in percent.
    */
   private computePrecipitationBarHeight(precipitation: number): number {
     if (precipitation < 0.1) {

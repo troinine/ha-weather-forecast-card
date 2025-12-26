@@ -384,6 +384,7 @@ ha-card {
 
 .wfc-forecast-precip-amount-container {
   position: relative;
+  pointer-events: none;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -396,11 +397,9 @@ ha-card {
 
 .wfc-forecast-precip-amount-bar {
   position: absolute;
+  pointer-events: none;
   width: 30px;
-  height: calc(
-    var(--forecast-precipitation-bar-max-height) *
-      var(--forecast-precipitation-bar-height-pct, 0) / 100
-  );
+  height: var(--forecast-precipitation-bar-height-pct);
   background: var(--wfc-precipitation-bar-color);
   border-radius: 4px;
   overflow: hidden;
@@ -412,11 +411,12 @@ ha-card {
 
 .wfc-forecast-precip-amount {
   position: relative;
+  pointer-events: none;
   z-index: 2;
   font-size: var(--ha-font-size-s, 12px);
+  line-height: var(--forecast-precipitation-bar-max-height);
   font-weight: 500;
   color: var(--blue-color, #2196f3);
-  line-height: 1;
 }
 
 .wfc-forecast-precip-probability {

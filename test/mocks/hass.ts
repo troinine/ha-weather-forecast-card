@@ -19,7 +19,7 @@ interface MockHomeAssistant extends Omit<HomeAssistant, "auth" | "themes"> {
 const FORECAST_DAYS = 9;
 const FORECAST_HOURS = 24 * FORECAST_DAYS;
 
-const generateRandomHourlyForecast = (startDate: Date) => {
+const generateRandomHourlyForecast = (startDate: Date): ForecastAttribute[] => {
   const forecast = [];
   // Round to the current even hour
   const currentHour = new Date(startDate);
@@ -78,7 +78,7 @@ const generateRandomHourlyForecast = (startDate: Date) => {
   return forecast;
 };
 
-const generateRandomDailyForecast = (startDate: Date) => {
+const generateRandomDailyForecast = (startDate: Date): ForecastAttribute[] => {
   const forecast = [];
   // Start from today at noon
   const currentDay = new Date(startDate);
@@ -173,7 +173,8 @@ export class MockHass {
         },
         "weather.demo": {
           entity_id: "weather.demo",
-          state: this.currentCondition ?? currentForecast.condition,
+          state:
+            (this.currentCondition ?? currentForecast.condition) || "sunny",
           attributes: {
             friendly_name: "Weather Demo",
             temperature: currentForecast.temperature,
