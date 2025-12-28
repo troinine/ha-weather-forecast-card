@@ -33,6 +33,9 @@ import {
   BarController,
   BarElement,
   ChartConfiguration,
+  ScriptableContext,
+  Color,
+  ChartDataset,
 } from "chart.js";
 
 import "./wfc-forecast-header-items";
@@ -48,6 +51,17 @@ Chart.register(
   ChartDataLabels
 );
 
+type ForecastLineType = "temperature" | "templow";
+
+type ForecastLineStyle = Pick<
+  ChartDataset<"line">,
+  | "borderColor"
+  | "pointBackgroundColor"
+  | "pointBorderColor"
+  | "fill"
+  | "borderDash"
+>;
+
 @customElement("wfc-forecast-chart")
 export class WfcForecastChart extends LitElement {
   @property({ attribute: false }) hass!: ExtendedHomeAssistant;
@@ -60,6 +74,7 @@ export class WfcForecastChart extends LitElement {
 
   private _lastChartEvent: PointerEvent | null = null;
   private _chart: Chart | null = null;
+  private _temperatureColors: Record<string, string> | null = null;
 
   protected createRenderRoot() {
     return this;
@@ -214,10 +229,6 @@ export class WfcForecastChart extends LitElement {
     const precipLabelColor = style.getPropertyValue(
       "--wfc-chart-precipitation-label-color"
     );
-    const highColor = style.getPropertyValue(
-      "--wfc-chart-temp-high-line-color"
-    );
-    const lowColor = style.getPropertyValue("--wfc-chart-temp-low-line-color");
     const precipColor = style.getPropertyValue("--wfc-precipitation-bar-color");
 
     const { minTemp, maxTemp } = this.computeScaleLimits();
@@ -227,6 +238,9 @@ export class WfcForecastChart extends LitElement {
       this.forecastType
     );
 
+    const tempLineStyle = this.getTemperatureLineStyle(style, "temperature");
+    const templowLineStyle = this.getTemperatureLineStyle(style, "templow");
+
     return {
       type: "line",
       data: {
@@ -234,8 +248,6 @@ export class WfcForecastChart extends LitElement {
         datasets: [
           {
             data: this.forecast.map((f) => f.temperature),
-            borderColor: highColor,
-            fill: false,
             yAxisID: "yTemp",
             datalabels: {
               anchor: "end",
@@ -246,10 +258,10 @@ export class WfcForecastChart extends LitElement {
                   ? `${formatNumber(value, this.hass.locale)}°`
                   : null,
             },
+            ...tempLineStyle,
           },
           {
             data: this.forecast.map((f) => f.templow ?? null),
-            borderColor: lowColor,
             fill: false,
             yAxisID: "yTemp",
             datalabels: {
@@ -261,6 +273,7 @@ export class WfcForecastChart extends LitElement {
                   ? `${formatNumber(value, this.hass.locale)}°`
                   : null,
             },
+            ...templowLineStyle,
           },
           {
             data: this.forecast.map((f) =>
@@ -356,6 +369,101 @@ export class WfcForecastChart extends LitElement {
         },
       },
     };
+  }
+
+  private getTemperatureLineStyle(
+    componentStyle: CSSStyleDeclaration,
+    type: ForecastLineType
+  ): ForecastLineStyle {
+    const colorVarName =
+      type === "temperature"
+        ? "--wfc-chart-temp-high-line-color"
+        : "--wfc-chart-temp-low-line-color";
+
+    const defaultColor = componentStyle.getPropertyValue(colorVarName);
+
+    const lineColor = (context: ScriptableContext<"line">) =>
+      this.computeTemperatureLineColor(context, defaultColor);
+
+    return {
+      borderColor: lineColor,
+      pointBorderColor: lineColor,
+      pointBackgroundColor: lineColor,
+      borderDash:
+        this.config.forecast?.use_color_thresholds && type === "templow"
+          ? [4, 4]
+          : undefined,
+      fill: false,
+    };
+  }
+
+  /**
+   * Computes a CanvasGradient or Color for the temperature line based on the current chart context and configuration.
+   *
+   * If the `use_color_thresholds` option is enabled in the forecast configuration, this method generates gradient
+   * transitions through predefined color stops corresponding to temperature ranges. The method caches the computed
+   * colors for performance optimization. Othwerise just returns the default color for this temperature line.
+   *
+   * @param context - The chart context used to create the gradient.
+   * @returns A CanvasGradient object representing the temperature gradient, or null if chart area is not available.
+   */
+  private computeTemperatureLineColor(
+    context: ScriptableContext<"line">,
+    defaultColor: string
+  ): CanvasGradient | Color {
+    if (!this.config.forecast?.use_color_thresholds) {
+      return defaultColor;
+    }
+
+    const chart = context.chart;
+    const { ctx, chartArea, scales } = chart;
+
+    if (!chartArea || !scales.yTemp) {
+      return defaultColor;
+    }
+
+    if (this._temperatureColors === null) {
+      const style = getComputedStyle(this);
+      const getVar = (name: string, fallback: string) =>
+        style.getPropertyValue(name) || fallback;
+
+      this._temperatureColors = {
+        cold: getVar("--wfc-temp-cold", "#2196f3"),
+        freezing: getVar("--wfc-temp-freezing", "#4fb3ff"),
+        chilly: getVar("--wfc-temp-chilly", "#ffeb3b"),
+        mild: getVar("--wfc-temp-mild", "#4caf50"),
+        warm: getVar("--wfc-temp-warm", "#ff9800"),
+        hot: getVar("--wfc-temp-hot", "#f44336"),
+      };
+    }
+
+    const yTemp = scales.yTemp;
+    const { min, max } = yTemp;
+
+    const gradient = ctx.createLinearGradient(
+      0,
+      chartArea.bottom,
+      0,
+      chartArea.top
+    );
+
+    const getPos = (temp: number) =>
+      Math.max(0, Math.min(1, (temp - min) / (max - min)));
+
+    const stops = [
+      { pos: getPos(-10), color: this._temperatureColors.cold },
+      { pos: getPos(0), color: this._temperatureColors.freezing },
+      { pos: getPos(8), color: this._temperatureColors.chilly },
+      { pos: getPos(18), color: this._temperatureColors.mild },
+      { pos: getPos(26), color: this._temperatureColors.warm },
+      { pos: getPos(34), color: this._temperatureColors.hot },
+    ].sort((a, b) => a.pos - b.pos);
+
+    for (const stop of stops) {
+      gradient.addColorStop(stop.pos, stop.color!);
+    }
+
+    return gradient;
   }
 
   /**
