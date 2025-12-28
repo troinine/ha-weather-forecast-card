@@ -189,6 +189,7 @@ export class MockHass {
             visibility_unit: "km",
             precipitation: currentForecast.precipitation,
             precipitation_unit: "mm",
+            apparent_temperature: this.calculateApparentTemperature(),
             supported_features: 3, // FORECAST_DAILY | FORECAST_HOURLY
           },
           last_changed: "2025-11-20T10:30:00.000Z",
@@ -347,6 +348,7 @@ export class MockHass {
             return value.toString();
         }
       },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       formatEntityAttributeName: (stateObj: HassEntity, attribute: string) => {
         // Return undefined to let the component use fallback localization
         return undefined;
@@ -389,6 +391,28 @@ export class MockHass {
         },
       },
     };
+  }
+
+  private calculateApparentTemperature(): number | undefined {
+    const currentForecast = this.hourlyForecast[0];
+
+    if (!currentForecast) {
+      return undefined;
+    }
+
+    const T = currentForecast.temperature;
+    const rh = currentForecast.humidity;
+    const ws = currentForecast.wind_speed;
+
+    if (T === undefined || rh === undefined || ws === undefined) {
+      return undefined;
+    }
+
+    const e = (rh / 100) * 6.105 * Math.exp((17.27 * T) / (237.7 + T));
+
+    const at = T + 0.33 * e - 0.7 * ws - 4.0;
+
+    return at.toFixed(1);
   }
 
   // Update forecast data for all subscriptions

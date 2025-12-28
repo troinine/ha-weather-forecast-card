@@ -362,11 +362,15 @@
           entity: "weather.demo",
           name: "Home",
           show_condition_effects: demoMode === "condition_effects",
+          current: {
+            show_attributes: ["visibility", "apparent_temperature"],
+          },
           forecast: {
             mode: "chart",
             extra_attribute: "wind_direction",
             hourly_group_size: 2,
             show_sun_times: demoMode !== "condition_effects",
+            use_color_thresholds: true,
           },
         });
 
