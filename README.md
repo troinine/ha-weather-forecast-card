@@ -113,14 +113,14 @@ The `current` object controls the display of current weather information and att
 
 ### Forecast Object
 
-| Name                   | Type    | Default  | Description                                                                                                                                                      |
-| :--------------------- | :------ | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `extra_attribute`      | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing`                     |
-| `hourly_group_size`    | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                                      |
-| `mode`                 | string  | `simple` | Forecast display mode. `simple`: Horizontal scrollable list of forecast entries. `chart`: Visualize temperature and precipitation trends on a line/bar chart.    |
-| `scroll_to_selected`   | boolean | `false`  | Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back. |
-| `show_sun_times`       | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                           |
-| `use_color_thresholds` | boolean | `false`  | Applies a vertical temperature gradient. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot).   |
+| Name                   | Type    | Default  | Description                                                                                                                                                                                                                   |
+| :--------------------- | :------ | :------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extra_attribute`      | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing`                                                                                  |
+| `hourly_group_size`    | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                                                                                                   |
+| `mode`                 | string  | `simple` | Forecast display mode. `simple`: Horizontal scrollable list of forecast entries. `chart`: Visualize temperature and precipitation trends on a line/bar chart.                                                                 |
+| `scroll_to_selected`   | boolean | `false`  | Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back.                                                              |
+| `show_sun_times`       | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                                                                                        |
+| `use_color_thresholds` | boolean | `false`  | Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot). |
 
 ### Forecast Actions
 

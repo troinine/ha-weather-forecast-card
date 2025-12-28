@@ -262,6 +262,12 @@ export class WeatherForecastCardEditor
         optional: true,
       },
       {
+        name: "forecast.use_color_thresholds",
+        selector: { boolean: {} },
+        default: false,
+        optional: true,
+      },
+      {
         name: "forecast.hourly_group_size",
         optional: true,
         selector: { number: { min: 1, max: 4 } },
@@ -420,6 +426,8 @@ export class WeatherForecastCardEditor
         return "Scroll to selected forecast";
       case "forecast.show_sun_times":
         return "Show sunrise and sunset times";
+      case "forecast.use_color_thresholds":
+        return "Use color thresholds";
       case "forecast.hourly_group_size":
         return "Hourly forecast group size";
       case "forecast_interactions":
@@ -461,6 +469,8 @@ export class WeatherForecastCardEditor
         return "Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back.";
       case "forecast.show_sun_times":
         return "Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.";
+      case "forecast.use_color_thresholds":
+        return "Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode.";
       case "forecast.hourly_group_size":
         return "Aggregate hourly forecast data into groups to reduce the number of forecast entries shown.";
       case "name":
