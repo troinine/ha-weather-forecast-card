@@ -162,7 +162,7 @@ export class WfcCurrentWeather extends LitElement {
       }
     }
 
-    if (this.weatherEntity.attributes.temperature) {
+    if (this.weatherEntity.attributes.temperature != null) {
       return {
         temperature: formatNumber(
           this.weatherEntity.attributes.temperature,
@@ -187,7 +187,7 @@ export class WfcCurrentWeather extends LitElement {
     const high = this.dailyForecast[0]?.temperature;
     const low = this.dailyForecast[0]?.templow;
 
-    if (high && low) {
+    if (high != null && low != null) {
       return {
         temperatureHigh: formatNumber(high, this.hass.locale),
         temperatureLow: formatNumber(low, this.hass.locale),

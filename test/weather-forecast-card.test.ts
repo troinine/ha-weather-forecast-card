@@ -133,4 +133,36 @@ describe("weather-forecast-card", () => {
     expect(newWidth).toBeDefined();
     expect(newWidth).toBeGreaterThan(initialWidth);
   });
+
+  it("should render 0°C temperature", async () => {
+    const zeroHourly = [...TEST_FORECAST_HOURLY];
+    zeroHourly[0] = { ...zeroHourly[0], temperature: 0 };
+
+    const zeroDaily = [...TEST_FORECAST_DAILY];
+    zeroDaily[0] = { ...zeroDaily[0], temperature: 0, templow: 0 };
+
+    mockHassInstance.hourlyForecast = zeroHourly;
+    mockHassInstance.dailyForecast = zeroDaily;
+
+    mockHassInstance.updateForecasts("hourly");
+    mockHassInstance.updateForecasts("daily");
+
+    card.hass = mockHassInstance.getHass() as ExtendedHomeAssistant;
+
+    await card.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const el = card.shadowRoot!.querySelector(".wfc-current-weather-container");
+    expect(el).not.toBeNull();
+
+    const elTemperatureCurrent = el?.querySelector(".wfc-current-temperature");
+    expect(elTemperatureCurrent?.textContent.trim()).toBe("0°C");
+
+    const elTemperatureHighLow = el?.querySelector(
+      ".wfc-current-temperature-high-low"
+    );
+    expect(elTemperatureHighLow?.textContent?.replace(/\s+/g, " ").trim()).toBe(
+      "0°C / 0°C"
+    );
+  });
 });
