@@ -113,13 +113,14 @@ The `current` object controls the display of current weather information and att
 
 ### Forecast Object
 
-| Name                 | Type    | Default  | Description                                                                                                                                                      |
-| :------------------- | :------ | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`               | string  | `simple` | Forecast display mode (`simple` or `chart`).                                                                                                                     |
-| `scroll_to_selected` | boolean | `false`  | Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back. |
-| `show_sun_times`     | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                           |
-| `hourly_group_size`  | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                                      |
-| `extra_attribute`    | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing`                     |
+| Name                   | Type    | Default  | Description                                                                                                                                                      |
+| :--------------------- | :------ | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extra_attribute`      | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing`                     |
+| `hourly_group_size`    | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                                      |
+| `mode`                 | string  | `simple` | Forecast display mode. `simple`: Horizontal scrollable list of forecast entries. `chart`: Visualize temperature and precipitation trends on a line/bar chart.    |
+| `scroll_to_selected`   | boolean | `false`  | Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back. |
+| `show_sun_times`       | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                           |
+| `use_color_thresholds` | boolean | `false`  | Applies a vertical temperature gradient. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot).   |
 
 ### Forecast Actions
 
@@ -256,49 +257,55 @@ The card can be customized using Home Assistant theme variables. Most colors, si
 
 Add these variables to your Home Assistant theme to customize the card's appearance:
 
-| Variable Name                                           | Description                                 |
-| :------------------------------------------------------ | :------------------------------------------ |
-| `weather-forecast-card-wind-low-color`                  | Wind indicator color for low wind speeds    |
-| `weather-forecast-card-wind-medium-color`               | Wind indicator color for medium wind speeds |
-| `weather-forecast-card-wind-high-color`                 | Wind indicator color for high wind speeds   |
-| `weather-forecast-card-chart-temp-low-line-color`       | Chart line color for low temperature        |
-| `weather-forecast-card-chart-temp-high-line-color`      | Chart line color for high temperature       |
-| `weather-forecast-card-chart-label-color`               | Default color for chart labels              |
-| `weather-forecast-card-chart-temp-high-label-color`     | Chart label color for high temperature      |
-| `weather-forecast-card-chart-temp-low-label-color`      | Chart label color for low temperature       |
-| `weather-forecast-card-chart-precipitation-label-color` | Chart label color for precipitation         |
-| `weather-forecast-card-chart-grid-color`                | Chart grid line color                       |
-| `weather-forecast-card-precipitation-bar-color`         | Precipitation bar color                     |
-| `weather-forecast-card-sunrise-color`                   | Sunrise time indicator color                |
-| `weather-forecast-card-sunset-color`                    | Sunset time indicator color                 |
-| `weather-forecast-card-day-indicator-color`             | Background color for day indicator badge    |
-| `weather-forecast-card-day-indicator-text-color`        | Text color for day indicator badge          |
-| `weather-forecast-card-current-conditions-icon-size`    | Size of the current weather condition icon  |
-| `weather-forecast-card-forecast-conditions-icon-size`   | Size of forecast weather condition icons    |
+| Variable Name                                           | Default                                | Description                                                                           |
+| :------------------------------------------------------ | :------------------------------------- | :------------------------------------------------------------------------------------ |
+| `weather-forecast-card-wind-low-color`                  | `var(--success-color, #43a047)`        | Wind indicator color for low wind speeds                                              |
+| `weather-forecast-card-wind-medium-color`               | `var(--warning-color, #ffa600)`        | Wind indicator color for medium wind speeds                                           |
+| `weather-forecast-card-wind-high-color`                 | `var(--error-color, #db4437)`          | Wind indicator color for high wind speeds                                             |
+| `weather-forecast-card-temp-cold-color`                 | `#2196f3`                              | Temperature color for cold conditions. Used when `use_color_thresholds` is `true`     |
+| `weather-forecast-card-temp-freezing-color`             | `#4fb3ff`                              | Temperature color for freezing conditions. Used when `use_color_thresholds` is `true` |
+| `weather-forecast-card-temp-chilly-color`               | `#ffeb3b`                              | Temperature color for chilly conditions. Used when `use_color_thresholds` is `true`   |
+| `weather-forecast-card-temp-mild-color`                 | `#4caf50`                              | Temperature color for mild conditions. Used when `use_color_thresholds` is `true`     |
+| `weather-forecast-card-temp-warm-color`                 | `#ff9800`                              | Temperature color for warm conditions. Used when `use_color_thresholds` is `true`     |
+| `weather-forecast-card-temp-hot-color`                  | `#f44336`                              | Temperature color for hot conditions. Used when `use_color_thresholds` is `true`      |
+| `weather-forecast-card-chart-temp-low-line-color`       | `var(--secondary-color, #ffa600)`      | Default chart line color for low temperature.                                         |
+| `weather-forecast-card-chart-temp-high-line-color`      | `var(--primary-color, #009ac7)`        | Default chart line color for high temperature                                         |
+| `weather-forecast-card-chart-label-color`               | `var(--primary-text-color, #000)`      | Default color for chart labels                                                        |
+| `weather-forecast-card-chart-temp-high-label-color`     | `var(--chart-label-color)`             | Chart label color for high temperature                                                |
+| `weather-forecast-card-chart-temp-low-label-color`      | `var(--secondary-text-color, #9b9b9b)` | Chart label color for low temperature                                                 |
+| `weather-forecast-card-chart-precipitation-label-color` | `var(--chart-label-color)`             | Chart label color for precipitation                                                   |
+| `weather-forecast-card-chart-grid-color`                | Color mix 15% opaque text              | Chart grid line color                                                                 |
+| `weather-forecast-card-precipitation-bar-color`         | Color mix 40% blue                     | Precipitation bar color                                                               |
+| `weather-forecast-card-sunrise-color`                   | `var(--orange-color, #ff9800)`         | Sunrise time indicator color                                                          |
+| `weather-forecast-card-sunset-color`                    | `var(--purple-color, #926bc7)`         | Sunset time indicator color                                                           |
+| `weather-forecast-card-day-indicator-color`             | `#056bb8`                              | Background color for day indicator badge                                              |
+| `weather-forecast-card-day-indicator-text-color`        | `#ffffff`                              | Text color for day indicator badge                                                    |
+| `weather-forecast-card-current-conditions-icon-size`    | `64px`                                 | Size of the current weather condition icon                                            |
+| `weather-forecast-card-forecast-conditions-icon-size`   | `28px`                                 | Size of forecast weather condition icons                                              |
 
 ### Weather Effects Variables
 
 Customize the appearance of animated weather effects when `show_condition_effects` is enabled:
 
-| Variable Name                                          | Description                                            |
-| :----------------------------------------------------- | :----------------------------------------------------- |
-| `weather-forecast-card-effects-sun-size`               | Size of the animated sun                               |
-| `weather-forecast-card-effects-sun-spin-duration`      | Duration of the sun ray rotation animation             |
-| `weather-forecast-card-effects-sun-color`              | Color of the sun                                       |
-| `weather-forecast-card-effects-sun-ray-color`          | Color of the sun rays                                  |
-| `weather-forecast-card-effects-moon-size`              | Size of the moon                                       |
-| `weather-forecast-card-effects-moon-color`             | Color of the moon                                      |
-| `weather-forecast-card-effects-star-color`             | Color of the stars in night sky                        |
-| `weather-forecast-card-effects-snow-color`             | Color of snowflakes                                    |
-| `weather-forecast-card-effects-rain-color`             | Color of rain drops                                    |
-| `weather-forecast-card-effects-drop-height`            | Height of individual rain drops                        |
-| `weather-forecast-card-effects-sky-visibility`         | Visibility of sky gradient background (visible/hidden) |
-| `weather-forecast-card-effects-clear-sky-color`        | Day clear sky gradient primary color                   |
-| `weather-forecast-card-effects-clear-sky-accent`       | Day clear sky gradient accent color                    |
-| `weather-forecast-card-effects-clear-sky-horizon`      | Day clear sky gradient horizon color                   |
-| `weather-forecast-card-effects-clear-night-sky-color`  | Night clear sky gradient primary color                 |
-| `weather-forecast-card-effects-clear-night-sky-accent` | Night clear sky gradient accent color                  |
-| `weather-forecast-card-effects-clear-night-horizon`    | Night clear sky gradient horizon color                 |
+| Variable Name                                          | Default                                                            | Description                                            |
+| :----------------------------------------------------- | :----------------------------------------------------------------- | :----------------------------------------------------- |
+| `weather-forecast-card-effects-sun-size`               | `140px`                                                            | Size of the animated sun                               |
+| `weather-forecast-card-effects-sun-spin-duration`      | `100s`                                                             | Duration of the sun ray rotation animation             |
+| `weather-forecast-card-effects-sun-color`              | Light: `#facc15` / Dark: `#fbbf24`                                 | Color of the sun                                       |
+| `weather-forecast-card-effects-sun-ray-color`          | Light: `rgba(253, 224, 71, 0.4)` / Dark: `rgba(251, 191, 36, 0.5)` | Color of the sun rays                                  |
+| `weather-forecast-card-effects-moon-size`              | `80px`                                                             | Size of the moon                                       |
+| `weather-forecast-card-effects-moon-color`             | `rgba(220, 220, 230, 1)`                                           | Color of the moon                                      |
+| `weather-forecast-card-effects-star-color`             | `#ffffff`                                                          | Color of the stars in night sky                        |
+| `weather-forecast-card-effects-snow-color`             | Light: `#cbd5e1` / Dark: `#ffffff`                                 | Color of snowflakes                                    |
+| `weather-forecast-card-effects-rain-color`             | Light: `#2563eb` / Dark: `#6cb4ee`                                 | Color of rain drops                                    |
+| `weather-forecast-card-effects-drop-height`            | `20px`                                                             | Height of individual rain drops                        |
+| `weather-forecast-card-effects-sky-visibility`         | `visible`                                                          | Visibility of sky gradient background (visible/hidden) |
+| `weather-forecast-card-effects-clear-sky-color`        | Light: `rgba(30, 130, 230, 0.6)` / Dark: `rgba(3, 105, 161, 0.8)`  | Day clear sky gradient primary color                   |
+| `weather-forecast-card-effects-clear-sky-accent`       | Light: `rgba(100, 180, 240, 0.45)` / Dark: `rgba(7, 89, 133, 0.6)` | Day clear sky gradient accent color                    |
+| `weather-forecast-card-effects-clear-sky-horizon`      | Light: `rgba(210, 235, 255, 0.3)` / Dark: `rgba(12, 74, 110, 0.4)` | Day clear sky gradient horizon color                   |
+| `weather-forecast-card-effects-clear-night-sky-color`  | Light: `rgba(49, 46, 129, 0.7)` / Dark: `rgba(10, 15, 40, 0.85)`   | Night clear sky gradient primary color                 |
+| `weather-forecast-card-effects-clear-night-sky-accent` | Light: `rgba(88, 28, 135, 0.55)` / Dark: `rgba(20, 30, 80, 0.6)`   | Night clear sky gradient accent color                  |
+| `weather-forecast-card-effects-clear-night-horizon`    | Light: `rgba(236, 72, 153, 0.4)` / Dark: `rgba(40, 25, 100, 0.4)`  | Night clear sky gradient horizon color                 |
 
 > [!NOTE]
 > Weather effects variables support both light and dark themes. Colors automatically adjust based on your theme's dark mode setting, with separate default values optimized for each mode.
