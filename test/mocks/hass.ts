@@ -143,6 +143,7 @@ export class MockHass {
   private subscriptions = new Map<string, ForecastSubscriptionCallback>();
   public hourlyForecast = generateRandomHourlyForecast(new Date());
   public dailyForecast = generateRandomDailyForecast(new Date());
+  public unitOfMeasurement: "°C" | "°F" = "°C";
   public darkMode = true;
   public currentCondition: string | null = null;
 
@@ -161,7 +162,7 @@ export class MockHass {
           state: currentForecast.temperature.toString(),
           attributes: {
             friendly_name: "Outdoor Temperature",
-            unit_of_measurement: "°C",
+            unit_of_measurement: this.unitOfMeasurement,
           },
           last_changed: "2025-11-20T10:30:00.000Z",
           last_updated: "2025-11-20T10:30:00.000Z",
@@ -178,7 +179,7 @@ export class MockHass {
           attributes: {
             friendly_name: "Weather Demo",
             temperature: currentForecast.temperature,
-            temperature_unit: "°C",
+            temperature_unit: this.unitOfMeasurement,
             humidity: currentForecast.humidity,
             pressure: 1013.2,
             pressure_unit: "hPa",
