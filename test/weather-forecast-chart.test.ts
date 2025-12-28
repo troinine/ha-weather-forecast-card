@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fixture } from "@open-wc/testing";
 import { html } from "lit";
 import { MockHass } from "./mocks/hass";
@@ -10,44 +10,127 @@ import {
 } from "../src/types";
 import { formatDay, formatHour } from "../src/helpers";
 import { TEST_FORECAST_DAILY, TEST_FORECAST_HOURLY } from "./mocks/test-data";
+import { WfcForecastChart } from "../src/components/wfc-forecast-chart";
+import { merge } from "lodash-es";
+import { Chart } from "chart.js";
 
 import "../src/index";
-import { WfcForecastChart } from "../src/components/wfc-forecast-chart";
 
 describe("weather-forecast-card chart", () => {
   const mockHassInstance = new MockHass();
   mockHassInstance.dailyForecast = TEST_FORECAST_DAILY;
   mockHassInstance.hourlyForecast = TEST_FORECAST_HOURLY;
-
   const hass = mockHassInstance.getHass() as ExtendedHomeAssistant;
 
-  const testConfig: WeatherForecastCardConfig = {
-    type: "custom:weather-forecast-card",
-    entity: "weather.demo",
-    forecast: {
-      mode: ForecastMode.Chart,
-      show_sun_times: false,
-    },
+  const mockGradient = {
+    addColorStop: vi.fn(),
   };
 
-  let card: WeatherForecastCard;
-
-  beforeEach(async () => {
-    card = await fixture<WeatherForecastCard>(
-      html`<weather-forecast-card
-        .hass=${hass}
-        .config=${testConfig}
-      ></weather-forecast-card>`
+  /**
+   * Factory function to create a testable card instance.
+   */
+  const createCardFixture = async (
+    configOverrides?: Partial<WeatherForecastCardConfig>,
+    styleOverrides?: Record<string, string>
+  ): Promise<{ card: WeatherForecastCard; chart: Chart }> => {
+    const config: WeatherForecastCardConfig = merge(
+      {},
+      {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        forecast: {
+          mode: ForecastMode.Chart,
+          show_sun_times: false,
+        },
+      },
+      configOverrides
     );
+
+    const styles = merge(
+      {},
+      {
+        "--wfc-chart-grid-color": "rgb(200, 200, 200)",
+        "--wfc-chart-temp-high-label-color": "rgb(255, 134, 224)",
+        "--wfc-chart-temp-low-label-color": "rgb(44, 33, 235)",
+        "--wfc-chart-precipitation-label-color": "rgb(0, 128, 0)",
+        "--wfc-chart-temp-high-line-color": "rgb(255, 100, 100)",
+        "--wfc-chart-temp-low-line-color": "rgb(100, 100, 255)",
+        "--wfc-precipitation-bar-color": "rgb(100, 255, 100)",
+      },
+      styleOverrides
+    );
+
+    const card = await fixture<WeatherForecastCard>(html`
+      <weather-forecast-card
+        .hass=${hass}
+        .config=${config}
+      ></weather-forecast-card>
+    `);
 
     expect(card).not.toBeNull();
     expect(card).toBeInstanceOf(WeatherForecastCard);
 
-    card.setConfig(testConfig);
-
+    card.setConfig(config);
     await card.updateComplete;
 
     await new Promise((resolve) => setTimeout(resolve, 150));
+
+    const chartElement = card.shadowRoot!.querySelector(
+      "wfc-forecast-chart"
+    ) as WfcForecastChart;
+
+    expect(chartElement).not.toBeNull();
+
+    Object.entries(styles).forEach(([key, value]) => {
+      chartElement.style.setProperty(key, value);
+    });
+
+    // Force chart initialization
+    chartElement.itemWidth = 100;
+    await chartElement.updateComplete;
+
+    // @ts-expect-error: _chart is private
+    chartElement.initChart();
+
+    // @ts-expect-error: _chart is private
+    const chart = chartElement._chart as Chart;
+
+    // HappyDOM doesn't do layout, so we need to mock some chart methods
+    chart.resize = vi.fn();
+    chart.update = vi.fn();
+
+    expect(chart).not.toBeNull();
+    expect(chart).toBeDefined();
+
+    // @ts-expect-error mock
+    chart.chartArea = vi.mockObject({
+      left: 0,
+      right: 300,
+      top: 0,
+      bottom: 150,
+      width: 300,
+      height: 150,
+    });
+
+    // @ts-expect-error mock
+    chart.scales.yTemp = vi.mockObject({
+      min: 0,
+      max: 100,
+    });
+
+    // @ts-expect-error mock
+    chart.ctx = {
+      createLinearGradient: vi.fn().mockReturnValue(mockGradient),
+    };
+
+    return { card, chart: chart! };
+  };
+
+  let card: WeatherForecastCard;
+  let chart: Chart;
+
+  beforeEach(async () => {
+    ({ card, chart } = await createCardFixture());
   });
 
   it("should render chart container and canvas", async () => {
@@ -178,11 +261,6 @@ describe("weather-forecast-card chart", () => {
   });
 
   it("should respect styles configured in CSS", async () => {
-    const chartElement = card.shadowRoot!.querySelector(
-      "wfc-forecast-chart"
-    ) as WfcForecastChart;
-    expect(chartElement).not.toBeNull();
-
     const testColors = {
       grid: "rgb(1, 1, 1)",
       highTempLabel: "rgb(2, 2, 2)",
@@ -193,55 +271,172 @@ describe("weather-forecast-card chart", () => {
       precipBar: "rgb(7, 7, 7)",
     };
 
-    chartElement.style.setProperty("--wfc-chart-grid-color", testColors.grid);
-    chartElement.style.setProperty(
-      "--wfc-chart-temp-high-label-color",
-      testColors.highTempLabel
-    );
-    chartElement.style.setProperty(
-      "--wfc-chart-temp-low-label-color",
-      testColors.lowTempLabel
-    );
-    chartElement.style.setProperty(
-      "--wfc-chart-precipitation-label-color",
-      testColors.precipLabel
-    );
-    chartElement.style.setProperty(
-      "--wfc-chart-temp-high-line-color",
-      testColors.highLine
-    );
-    chartElement.style.setProperty(
-      "--wfc-chart-temp-low-line-color",
-      testColors.lowLine
-    );
-    chartElement.style.setProperty(
-      "--wfc-precipitation-bar-color",
-      testColors.precipBar
-    );
+    const styles = {
+      "--wfc-chart-grid-color": testColors.grid,
+      "--wfc-chart-temp-high-label-color": testColors.highTempLabel,
+      "--wfc-chart-temp-low-label-color": testColors.lowTempLabel,
+      "--wfc-chart-precipitation-label-color": testColors.precipLabel,
+      "--wfc-chart-temp-high-line-color": testColors.highLine,
+      "--wfc-chart-temp-low-line-color": testColors.lowLine,
+      "--wfc-precipitation-bar-color": testColors.precipBar,
+    };
 
-    // Manually set itemWidth to trigger rendering
-    chartElement.itemWidth = 100;
-    await chartElement.updateComplete;
+    const { chart } = await createCardFixture({}, styles);
 
-    // @ts-expect-error: _chart is private
-    const chartInstance = chartElement._chart;
-    expect(chartInstance).toBeDefined();
+    const datasets = chart.data.datasets;
 
-    const datasets = chartInstance!.data.datasets;
+    // @ts-expect-error: borderColor is a function
+    expect(datasets[0].borderColor({ chart })).toBe(testColors.highLine);
 
-    expect(datasets[0].borderColor).toBe(testColors.highLine);
+    expect(
+      // @ts-expect-error: borderColor is a function
+      datasets[1].borderColor({ chart, datasetIndex: 1 })
+    ).toBe(testColors.lowLine);
+
+    // borderColor is now a function (for gradient support), not a direct color
+    expect(typeof datasets[0].borderColor).toBe("function");
     // @ts-expect-error: datalabels type def missing in chartjs types
     expect(datasets[0].datalabels.color).toBe(testColors.highTempLabel);
-    expect(datasets[1].borderColor).toBe(testColors.lowLine);
+    expect(typeof datasets[1].borderColor).toBe("function");
     // @ts-expect-error: datalabels type def missing in chartjs types
     expect(datasets[1].datalabels.color).toBe(testColors.lowTempLabel);
     expect(datasets[2].backgroundColor).toBe(testColors.precipBar);
     // @ts-expect-error: datalabels type def missing in chartjs types
     expect(datasets[2].datalabels.color).toBe(testColors.precipLabel);
-    const options = chartInstance!.options;
+    const options = chart.options;
     // @ts-expect-error: deep access
     expect(options.scales.x.border.color).toBe(testColors.grid);
     // @ts-expect-error: deep access
     expect(options.scales.x.grid.color).toBe(testColors.grid);
+  });
+
+  it("should use non-dashed line for low temperature when use_color_thresholds is disabled", async () => {
+    const datasets = chart.data.datasets;
+    // @ts-expect-error: borderDash is defined
+    expect(datasets[0].borderDash).toBeUndefined();
+    // @ts-expect-error: borderDash is defined
+    expect(datasets[1].borderDash).toBeUndefined();
+  });
+
+  describe("temperature color thresholds", () => {
+    it("should use default colors when use_color_thresholds is disabled", async () => {
+      const styles = {
+        "--wfc-chart-temp-high-line-color": "rgb(255, 0, 0)",
+        "--wfc-chart-temp-low-line-color": "rgb(0, 0, 255)",
+      };
+
+      const { chart } = await createCardFixture(
+        {
+          forecast: { mode: ForecastMode.Chart, use_color_thresholds: false },
+        },
+        styles
+      );
+
+      const datasets = chart.data.datasets;
+      const mockContext = { chart };
+
+      // @ts-expect-error: borderColor is a function
+      const highColor = datasets[0].borderColor(mockContext);
+
+      // @ts-expect-error: borderColor is a function
+      const lowColor = datasets[1].borderColor({
+        ...mockContext,
+        datasetIndex: 1,
+      });
+
+      expect(highColor).toBe("rgb(255, 0, 0)");
+      expect(lowColor).toBe("rgb(0, 0, 255)");
+    });
+
+    it("should apply gradient when use_color_thresholds is enabled", async () => {
+      const { chart } = await createCardFixture({
+        forecast: { mode: ForecastMode.Chart, use_color_thresholds: true },
+      });
+
+      const datasets = chart.data.datasets;
+
+      // @ts-expect-error: borderColor is a function
+      const gradient = datasets[0].borderColor({ chart });
+
+      expect(gradient).toBeTruthy();
+
+      expect(mockGradient.addColorStop).toHaveBeenCalled();
+
+      expect(mockGradient.addColorStop).toHaveBeenCalledWith(
+        expect.any(Number),
+        expect.stringContaining("ff")
+      );
+
+      expect(gradient).toBe(mockGradient);
+    });
+
+    it("should respect custom temperature color CSS variables", async () => {
+      const customThresholdStyles = {
+        "--wfc-temp-cold-color": "#0000ff",
+        "--wfc-temp-freezing-color": "#00ffff",
+        "--wfc-temp-chilly-color": "#ffff00",
+        "--wfc-temp-mild-color": "#00ff00",
+        "--wfc-temp-warm-color": "#ff9900",
+        "--wfc-temp-hot-color": "#ff0000",
+      };
+
+      const { chart } = await createCardFixture(
+        {
+          forecast: { mode: ForecastMode.Chart, use_color_thresholds: true },
+        },
+        customThresholdStyles
+      );
+
+      const datasets = chart.data.datasets;
+
+      // @ts-expect-error: borderColor is a function
+      const gradient = datasets[0].borderColor({ chart });
+
+      expect(gradient).toBeTruthy();
+
+      expect(mockGradient.addColorStop).toHaveBeenCalled();
+
+      expect(mockGradient.addColorStop).toHaveBeenCalledWith(
+        expect.any(Number),
+        expect.stringContaining("ff")
+      );
+
+      expect(gradient).toBe(mockGradient);
+    });
+
+    it("should apply gradient to both temperature lines when enabled", async () => {
+      const { chart } = await createCardFixture({
+        forecast: { mode: ForecastMode.Chart, use_color_thresholds: true },
+      });
+
+      const datasets = chart.data.datasets;
+      const mockContext = { chart };
+
+      // Check high temp line
+      // @ts-expect-error: borderColor is a function
+      expect(datasets[0].borderColor(mockContext)).toBeTruthy();
+      // @ts-expect-error: pointBackgroundColor is a function
+      expect(datasets[0].pointBackgroundColor(mockContext)).toBeTruthy();
+
+      // Check low temp line
+      const lowContext = { ...mockContext, datasetIndex: 1 };
+      // @ts-expect-error: borderColor is a function
+      expect(datasets[1].borderColor(lowContext)).toBeTruthy();
+      // @ts-expect-error: pointBackgroundColor is a function
+      expect(datasets[1].pointBackgroundColor(lowContext)).toBeTruthy();
+    });
+
+    it("should use dashed line for low temperature", async () => {
+      const { chart } = await createCardFixture({
+        forecast: { mode: ForecastMode.Chart, use_color_thresholds: true },
+      });
+
+      const datasets = chart.data.datasets;
+
+      // @ts-expect-error: borderDash is defined
+      expect(datasets[0].borderDash).toBeUndefined();
+      // @ts-expect-error: borderDash is defined
+      expect(datasets[1].borderDash).toEqual([4, 4]);
+    });
   });
 });
