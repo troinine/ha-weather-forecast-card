@@ -388,7 +388,7 @@ export class WfcForecastChart extends LitElement {
     const defaultColor = componentStyle.getPropertyValue(colorVarName);
 
     const lineColor = (context: ScriptableContext<"line">) =>
-      this.computeTemperatureLineColor(context, defaultColor);
+      this.computeTemperatureLineColor(context, componentStyle, defaultColor);
 
     return {
       borderColor: lineColor,
@@ -414,6 +414,7 @@ export class WfcForecastChart extends LitElement {
    */
   private computeTemperatureLineColor(
     context: ScriptableContext<"line">,
+    componentStyle: CSSStyleDeclaration,
     defaultColor: string
   ): CanvasGradient | Color {
     if (!this.config.forecast?.use_color_thresholds) {
@@ -428,17 +429,15 @@ export class WfcForecastChart extends LitElement {
     }
 
     if (this._temperatureColors === null) {
-      const style = getComputedStyle(this);
-      const getVar = (name: string, fallback: string) =>
-        style.getPropertyValue(name) || fallback;
+      const style = componentStyle;
 
       this._temperatureColors = {
-        cold: getVar("--wfc-temp-cold", "#2196f3"),
-        freezing: getVar("--wfc-temp-freezing", "#4fb3ff"),
-        chilly: getVar("--wfc-temp-chilly", "#ffeb3b"),
-        mild: getVar("--wfc-temp-mild", "#4caf50"),
-        warm: getVar("--wfc-temp-warm", "#ff9800"),
-        hot: getVar("--wfc-temp-hot", "#f44336"),
+        cold: style.getPropertyValue("--wfc-temp-cold") || "#2196f3",
+        freezing: style.getPropertyValue("--wfc-temp-freezing") || "#4fb3ff",
+        chilly: style.getPropertyValue("--wfc-temp-chilly") || "#ffeb3b",
+        mild: style.getPropertyValue("--wfc-temp-mild") || "#4caf50",
+        warm: style.getPropertyValue("--wfc-temp-warm") || "#ff9800",
+        hot: style.getPropertyValue("--wfc-temp-hot") || "#f44336",
       };
     }
 

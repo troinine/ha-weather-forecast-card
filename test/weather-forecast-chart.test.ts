@@ -374,7 +374,7 @@ describe("weather-forecast-card chart", () => {
     expect(scrollContainer.scrollLeft).toBeGreaterThan(0);
   });
 
-  it("should use non-dashed line for low temperature when use_color_thresholds is disabled", async () => {
+  it("should use non-dashed line for low temperature by default", async () => {
     const datasets = chart.data.datasets;
     // @ts-expect-error: borderDash is defined
     expect(datasets[0].borderDash).toBeUndefined();
@@ -418,9 +418,10 @@ describe("weather-forecast-card chart", () => {
       });
 
       const datasets = chart.data.datasets;
+      const mockContext = { chart };
 
       // @ts-expect-error: borderColor is a function
-      const gradient = datasets[0].borderColor({ chart });
+      const gradient = datasets[0].borderColor(mockContext);
 
       expect(gradient).toBeTruthy();
 
@@ -436,12 +437,12 @@ describe("weather-forecast-card chart", () => {
 
     it("should respect custom temperature color CSS variables", async () => {
       const customThresholdStyles = {
-        "--wfc-temp-cold-color": "#0000ff",
-        "--wfc-temp-freezing-color": "#00ffff",
-        "--wfc-temp-chilly-color": "#ffff00",
-        "--wfc-temp-mild-color": "#00ff00",
-        "--wfc-temp-warm-color": "#ff9900",
-        "--wfc-temp-hot-color": "#ff0000",
+        "--wfc-temp-cold": "#0000ff",
+        "--wfc-temp-freezing": "#00ffff",
+        "--wfc-temp-chilly": "#ffff00",
+        "--wfc-temp-mild": "#00ff00",
+        "--wfc-temp-warm": "#ff9900",
+        "--wfc-temp-hot": "#ff0000",
       };
 
       const { chart } = await createCardFixture(
@@ -452,18 +453,21 @@ describe("weather-forecast-card chart", () => {
       );
 
       const datasets = chart.data.datasets;
+      const mockContext = { chart };
 
       // @ts-expect-error: borderColor is a function
-      const gradient = datasets[0].borderColor({ chart });
+      const gradient = datasets[0].borderColor(mockContext);
 
       expect(gradient).toBeTruthy();
 
       expect(mockGradient.addColorStop).toHaveBeenCalled();
 
-      expect(mockGradient.addColorStop).toHaveBeenCalledWith(
-        expect.any(Number),
-        expect.stringContaining("ff")
-      );
+      Object.values(customThresholdStyles).forEach((element) => {
+        expect(mockGradient.addColorStop).toHaveBeenCalledWith(
+          expect.any(Number),
+          expect.stringContaining(element)
+        );
+      });
 
       expect(gradient).toBe(mockGradient);
     });
