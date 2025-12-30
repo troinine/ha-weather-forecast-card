@@ -160,15 +160,18 @@ export class DragScrollController implements ReactiveController {
    */
   private _finalize = () => {
     if (!this._container || !this._childSelector) {
-      this._container?.classList.remove("no-snap");
-      this._scrolling = false;
+      this._completeFinalize();
       return;
     }
 
     const item = this._container.querySelector(
       this._childSelector
     ) as HTMLElement;
-    if (!item) return;
+
+    if (!item) {
+      this._completeFinalize();
+      return;
+    }
 
     const itemWidth = item.getBoundingClientRect().width;
     const startLeft = this._container.scrollLeft;
