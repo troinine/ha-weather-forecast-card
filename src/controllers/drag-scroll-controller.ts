@@ -166,7 +166,15 @@ export class DragScrollController implements ReactiveController {
     }
 
     if (this._scrolled) {
-      this._container.scrollLeft = this._state.startLeft - walk;
+      const container = this._container;
+      const targetScrollLeft = this._state.startLeft - walk;
+
+      requestAnimationFrame(() => {
+        if (!container) {
+          return;
+        }
+        container.scrollLeft = targetScrollLeft;
+      });
     }
   };
 
