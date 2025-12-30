@@ -78,6 +78,14 @@ export class DragScrollController implements ReactiveController {
     this._detach();
   }
 
+  /**
+   * Indicates whether a drag-based scroll interaction is currently in progress
+   * or has occurred during the current mouse interaction.
+   *
+   * Returns `true` while the container is actively being scrolled due to
+   * dragging or momentum, or if a drag gesture in the current interaction
+   * has produced any horizontal scrolling.
+   */
   public isScrolling(): boolean {
     return this._scrolled || this._scrolling;
   }
