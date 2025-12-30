@@ -407,7 +407,7 @@ export class WfcForecastChart extends LitElement {
    *
    * If the `use_color_thresholds` option is enabled in the forecast configuration, this method generates gradient
    * transitions through predefined color stops corresponding to temperature ranges. The method caches the computed
-   * colors for performance optimization. Othwerise just returns the default color for this temperature line.
+   * colors for performance optimization. Otherwise just returns the default color for this temperature line.
    *
    * @param context - The chart context used to create the gradient.
    * @returns A CanvasGradient object representing the temperature gradient, or null if chart area is not available.
