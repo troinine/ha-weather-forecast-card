@@ -237,6 +237,7 @@ export class DragScrollController implements ReactiveController {
   private _cleanup() {
     this._mouseDown = false;
     window.removeEventListener("mousemove", this._onMouseMove);
+    window.removeEventListener("mouseup", this._onMouseUp);
     cancelAnimationFrame(this._state.momentumId);
   }
 }
