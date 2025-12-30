@@ -156,7 +156,7 @@ export class DragScrollController implements ReactiveController {
    * Finalizes the scrolling by snapping to the nearest item.
    *
    * If the user flicked the scroll, this method ensures a smooth deceleration
-   * and snapping to the nearest item in the scroll container using linear interpolation.
+   * and snapping to the nearest item in the scroll container using an ease-out quadratic easing function.
    */
   private _finalize = () => {
     if (!this._container || !this._childSelector) {
