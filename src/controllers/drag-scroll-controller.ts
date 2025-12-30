@@ -70,6 +70,7 @@ export class DragScrollController implements ReactiveController {
   private _selector: string;
   private _childSelector?: string;
   private _container?: HTMLElement | null;
+  private _finalizeId?: number;
   private _state: DragScrollState = {
     startX: 0,
     startLeft: 0,
@@ -266,7 +267,8 @@ export class DragScrollController implements ReactiveController {
     this._scrolling = false;
     this._container?.classList.remove("no-snap");
 
-    setTimeout(() => {
+    clearTimeout(this._finalizeId);
+    this._finalizeId = window.setTimeout(() => {
       this._scrolled = false;
       this._host.requestUpdate();
     }, 50);
@@ -277,5 +279,6 @@ export class DragScrollController implements ReactiveController {
     window.removeEventListener("mousemove", this._onMouseMove);
     window.removeEventListener("mouseup", this._onMouseUp);
     cancelAnimationFrame(this._state.momentumId);
+    clearTimeout(this._finalizeId);
   }
 }
