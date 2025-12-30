@@ -197,6 +197,7 @@ describe("weather-forecast-card simple", () => {
 
     window.dispatchEvent(mouseUpEvent);
 
+    await new Promise((resolve) => setTimeout(resolve, 150));
     expect(scrollContainer.classList.contains("is-dragging")).toBe(false);
 
     expect(scrollContainer.scrollLeft).toBeGreaterThan(0);
