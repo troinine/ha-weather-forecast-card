@@ -4,8 +4,28 @@ import type {
   LitElement,
 } from "lit";
 
+/**
+ * Configuration options for {@link DragScrollController}.
+ *
+ * Used to locate the scrollable container within the host element and,
+ * optionally, the child elements that should be used for snap-to-element
+ * behavior.
+ */
 export interface DragScrollControllerConfig {
+  /**
+   * CSS selector used to find the scrollable container element inside the host.
+   * The first element matching this selector will be used as the drag/scroll
+   * container.
+   */
   selector: string;
+  /**
+   * Optional CSS selector used to locate child elements within the scroll
+   * container for snap-to-element behavior.
+   *
+   * When provided, the controller will attempt to snap the scroll position to
+   * the nearest matching child element after a drag/scroll interaction ends.
+   * If omitted, no snap-to-element behavior is applied.
+   */
   childSelector?: string;
 }
 
