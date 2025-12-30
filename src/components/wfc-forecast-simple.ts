@@ -2,6 +2,7 @@ import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
 import { actionHandler } from "../hass";
+import { DragScrollController } from "../controllers/drag-scroll-controller";
 import {
   ExtendedHomeAssistant,
   ForecastActionDetails,
@@ -29,6 +30,10 @@ export class WfcForecastSimple extends LitElement {
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
   private _selectedForecastIndex: number | null = null;
+  private _scrollController = new DragScrollController(this, {
+    selector: ".wfc-scroll-container",
+    childSelector: ".wfc-forecast-slot",
+  });
 
   protected createRenderRoot() {
     return this;
@@ -115,6 +120,10 @@ export class WfcForecastSimple extends LitElement {
   };
 
   private _onForecastAction = (event: ActionHandlerEvent): void => {
+    if (this._scrollController.isScrolling()) {
+      return;
+    }
+
     if (this._selectedForecastIndex === null) return;
 
     event.preventDefault();
