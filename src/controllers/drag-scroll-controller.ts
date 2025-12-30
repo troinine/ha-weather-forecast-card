@@ -209,14 +209,13 @@ export class DragScrollController implements ReactiveController {
    * and snapping to the nearest item in the scroll container using an ease-out quadratic easing function.
    */
   private _finalize = () => {
-    if (!this._container || !this._childSelector) {
+    const container = this._container;
+    if (!container || !this._childSelector) {
       this._completeFinalize();
       return;
     }
 
-    const item = this._container.querySelector(
-      this._childSelector
-    ) as HTMLElement;
+    const item = container.querySelector(this._childSelector) as HTMLElement;
 
     if (!item) {
       this._completeFinalize();
@@ -230,7 +229,7 @@ export class DragScrollController implements ReactiveController {
       this._completeFinalize();
       return;
     }
-    const startLeft = this._container.scrollLeft;
+    const startLeft = container.scrollLeft;
     const targetLeft = Math.round(startLeft / itemWidth) * itemWidth;
 
     const duration = SNAP_ANIMATION_DURATION_MS;
@@ -240,14 +239,18 @@ export class DragScrollController implements ReactiveController {
     const easeOutQuad = (t: number) => t * (2 - t);
 
     const animateSnap = (currentTime: number) => {
+      const container = this._container;
+      if (!container) {
+        this._completeFinalize();
+        return;
+      }
+
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const easedProgress = easeOutQuad(progress);
 
-      if (this._container) {
-        this._container.scrollLeft =
-          startLeft + (targetLeft - startLeft) * easedProgress;
-      }
+      container.scrollLeft =
+        startLeft + (targetLeft - startLeft) * easedProgress;
 
       if (progress < 1) {
         this._state.momentumId = requestAnimationFrame(animateSnap);
