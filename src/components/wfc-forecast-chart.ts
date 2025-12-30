@@ -267,7 +267,6 @@ export class WfcForecastChart extends LitElement {
           },
           {
             data: this.forecast.map((f) => f.templow ?? null),
-            fill: false,
             yAxisID: "yTemp",
             datalabels: {
               anchor: "start",
