@@ -130,6 +130,7 @@ describe("weather-forecast-card chart", () => {
   let chart: Chart;
 
   beforeEach(async () => {
+    vi.clearAllMocks();
     ({ card, chart } = await createCardFixture());
   });
 
