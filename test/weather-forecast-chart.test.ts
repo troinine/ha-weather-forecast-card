@@ -244,4 +244,49 @@ describe("weather-forecast-card chart", () => {
     // @ts-expect-error: deep access
     expect(options.scales.x.grid.color).toBe(testColors.grid);
   });
+
+  it("should support drag-to-scroll when dragging", async () => {
+    const chartComponent = card.shadowRoot!.querySelector("wfc-forecast-chart");
+    expect(chartComponent).not.toBeNull();
+
+    const scrollContainer = chartComponent!.querySelector(
+      ".wfc-scroll-container"
+    ) as HTMLElement;
+    expect(scrollContainer).not.toBeNull();
+
+    expect(scrollContainer.classList.contains("is-dragging")).toBe(false);
+
+    const mouseDownEvent = new MouseEvent("mousedown", {
+      bubbles: true,
+      cancelable: true,
+      clientX: 100,
+    });
+
+    Object.defineProperty(mouseDownEvent, "pageX", { value: 100 });
+
+    scrollContainer.dispatchEvent(mouseDownEvent);
+
+    const mouseMoveEvent = new MouseEvent("mousemove", {
+      bubbles: true,
+      cancelable: true,
+      clientX: 50,
+    });
+
+    Object.defineProperty(mouseMoveEvent, "pageX", { value: 50 });
+
+    window.dispatchEvent(mouseMoveEvent);
+
+    expect(scrollContainer.classList.contains("is-dragging")).toBe(true);
+    expect(scrollContainer.classList.contains("no-snap")).toBe(true);
+
+    const mouseUpEvent = new MouseEvent("mouseup", {
+      bubbles: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(mouseUpEvent);
+
+    expect(scrollContainer.classList.contains("is-dragging")).toBe(false);
+
+    expect(scrollContainer.scrollLeft).toBeGreaterThan(0);
+  });
 });
