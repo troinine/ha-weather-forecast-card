@@ -1,5 +1,11 @@
 import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
+import { DragScrollController } from "../controllers/drag-scroll-controller";
+import { formatDay } from "../helpers";
+import { styleMap } from "lit/directives/style-map.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
+import { getRelativePosition } from "chart.js/helpers";
+import { actionHandler } from "../hass";
 import {
   ExtendedHomeAssistant,
   ForecastActionDetails,
@@ -10,11 +16,6 @@ import {
   fireEvent,
   formatNumber,
 } from "custom-card-helpers";
-import { formatDay } from "../helpers";
-import { styleMap } from "lit/directives/style-map.js";
-import ChartDataLabels from "chartjs-plugin-datalabels";
-import { getRelativePosition } from "chart.js/helpers";
-import { actionHandler } from "../hass";
 import {
   ForecastAttribute,
   ForecastType,
@@ -75,6 +76,10 @@ export class WfcForecastChart extends LitElement {
   private _lastChartEvent: PointerEvent | null = null;
   private _chart: Chart | null = null;
   private _temperatureColors: Record<string, string> | null = null;
+  private _scrollController = new DragScrollController(this, {
+    selector: ".wfc-scroll-container",
+    childSelector: ".wfc-forecast-slot",
+  });
 
   protected createRenderRoot() {
     return this;
@@ -557,6 +562,10 @@ export class WfcForecastChart extends LitElement {
   }
 
   private _onForecastAction = (event: ActionHandlerEvent): void => {
+    if (this._scrollController.isScrolling()) {
+      return;
+    }
+
     if (!this._chart || !this._lastChartEvent) {
       return;
     }
