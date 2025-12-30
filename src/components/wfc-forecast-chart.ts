@@ -410,7 +410,7 @@ export class WfcForecastChart extends LitElement {
    * colors for performance optimization. Otherwise just returns the default color for this temperature line.
    *
    * @param context - The chart context used to create the gradient.
-   * @returns A CanvasGradient object representing the temperature gradient, or null if chart area is not available.
+   * @returns A CanvasGradient object representing the temperature gradient, or default color if thresholds are not used.
    */
   private computeTemperatureLineColor(
     context: ScriptableContext<"line">,
