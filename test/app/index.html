@@ -235,16 +235,12 @@
           hass
         );
 
-        const hassFahrenheit = new MockHass();
-        hassFahrenheit.dailyForecast = TEST_FORECAST_DAILY_FAHRENHEIT;
-        hassFahrenheit.hourlyForecast = TEST_FORECAST_HOURLY_FAHRENHEIT;
-        hassFahrenheit.unitOfMeasurement = "°F";
+        const hassFahrenheit = new MockHass({ unitOfMeasurement: "°F" });
 
         initializeCard(
           "test-card-color-thresholds-fahrenheit",
           {
             entity: "weather.demo",
-            temperature_unit: "°F",
             forecast: {
               mode: "chart",
               use_color_thresholds: true,

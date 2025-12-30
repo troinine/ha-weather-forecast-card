@@ -199,8 +199,7 @@ const createFixture = async (
   condition: string,
   showConditionEffects: boolean | WeatherEffect[] = true
 ) => {
-  const mockHass = new MockHass();
-  mockHass.currentCondition = condition;
+  const mockHass = new MockHass({ currentCondition: condition });
   const hass = mockHass.getHass() as ExtendedHomeAssistant;
   const config: WeatherForecastCardConfig = {
     type: "custom:weather-forecast-card",

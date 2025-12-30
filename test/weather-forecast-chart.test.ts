@@ -20,7 +20,7 @@ describe("weather-forecast-card chart", () => {
   const mockHassInstance = new MockHass();
   mockHassInstance.dailyForecast = TEST_FORECAST_DAILY;
   mockHassInstance.hourlyForecast = TEST_FORECAST_HOURLY;
-  const hass = mockHassInstance.getHass() as ExtendedHomeAssistant;
+  let hass = mockHassInstance.getHass() as ExtendedHomeAssistant;
 
   const mockGradient = {
     addColorStop: vi.fn(),
@@ -506,6 +506,44 @@ describe("weather-forecast-card chart", () => {
       expect(datasets[0].borderDash).toBeUndefined();
       // @ts-expect-error: borderDash is defined
       expect(datasets[1].borderDash).toEqual([4, 4]);
+    });
+
+    it("should convert thresholds to Fahrenheit when unit is Fahrenheit", async () => {
+      const mockHassFahrenheit = new MockHass({ unitOfMeasurement: "°F" });
+      hass = mockHassFahrenheit.getHass() as ExtendedHomeAssistant;
+
+      const { chart } = await createCardFixture({
+        forecast: { mode: ForecastMode.Chart, use_color_thresholds: true },
+      });
+
+      // @ts-expect-error mock readonly
+      chart.chartArea = { bottom: 100, top: 0 };
+      // @ts-expect-error mock readonly
+      chart.scales = {
+        yTemp: { min: 0, max: 100 },
+      };
+      // @ts-expect-error mock readonly
+      chart.ctx = {
+        createLinearGradient: vi.fn().mockReturnValue(mockGradient),
+      };
+
+      const datasets = chart.data.datasets;
+      // @ts-expect-error borderColor is a function
+      datasets[0].borderColor({ chart });
+
+      // 0°C should be converted to 32°F.
+      // With min=0, max=100, pos should be (32-0)/100 = 0.32
+      expect(mockGradient.addColorStop).toHaveBeenCalledWith(
+        0.32,
+        expect.any(String)
+      );
+
+      // 18°C should be converted to 64.4°F.
+      // With min=0, max=100, pos should be (64.4-0)/100 = 0.644
+      expect(mockGradient.addColorStop).toHaveBeenCalledWith(
+        0.644,
+        expect.any(String)
+      );
     });
   });
 });

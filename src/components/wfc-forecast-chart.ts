@@ -454,13 +454,37 @@ export class WfcForecastChart extends LitElement {
     const getPos = (temp: number) =>
       Math.max(0, Math.min(1, (temp - min) / (max - min)));
 
+    const unit = getWeatherUnit(this.hass, this.weatherEntity, "temperature");
+    const isFahrenheit = unit === "°F";
+
+    const normalize = (celsius: number) =>
+      isFahrenheit ? (celsius * 9) / 5 + 32 : celsius;
+
     const stops = [
-      { pos: getPos(-10), color: this._temperatureColors.cold },
-      { pos: getPos(0), color: this._temperatureColors.freezing },
-      { pos: getPos(8), color: this._temperatureColors.chilly },
-      { pos: getPos(18), color: this._temperatureColors.mild },
-      { pos: getPos(26), color: this._temperatureColors.warm },
-      { pos: getPos(34), color: this._temperatureColors.hot },
+      {
+        pos: getPos(normalize(-10)),
+        color: this._temperatureColors.cold,
+      },
+      {
+        pos: getPos(normalize(0)),
+        color: this._temperatureColors.freezing,
+      },
+      {
+        pos: getPos(normalize(8)),
+        color: this._temperatureColors.chilly,
+      },
+      {
+        pos: getPos(normalize(18)),
+        color: this._temperatureColors.mild,
+      },
+      {
+        pos: getPos(normalize(26)),
+        color: this._temperatureColors.warm,
+      },
+      {
+        pos: getPos(normalize(34)),
+        color: this._temperatureColors.hot,
+      },
     ].sort((a, b) => a.pos - b.pos);
 
     for (const stop of stops) {

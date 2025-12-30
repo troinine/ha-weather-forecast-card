@@ -5,6 +5,7 @@ import {
 } from "custom-card-helpers";
 import type { ForecastAttribute, ForecastEvent } from "../../src/data/weather";
 import { HassEntity } from "home-assistant-js-websocket";
+import { merge, round } from "lodash-es";
 
 export type ForecastSubscriptionCallback = (
   forecastevent: ForecastEvent
@@ -19,7 +20,12 @@ interface MockHomeAssistant extends Omit<HomeAssistant, "auth" | "themes"> {
 const FORECAST_DAYS = 9;
 const FORECAST_HOURS = 24 * FORECAST_DAYS;
 
-const generateRandomHourlyForecast = (startDate: Date): ForecastAttribute[] => {
+const celsiusToFahrenheit = (celsius: number) => (celsius * 9) / 5 + 32;
+
+const generateRandomHourlyForecast = (
+  startDate: Date,
+  unit: "°C" | "°F" = "°C"
+): ForecastAttribute[] => {
   const forecast = [];
   // Round to the current even hour
   const currentHour = new Date(startDate);
@@ -32,15 +38,19 @@ const generateRandomHourlyForecast = (startDate: Date): ForecastAttribute[] => {
     const forecastTime = new Date(currentHour.getTime() + i * 60 * 60 * 1000); // Add i hours
     const baseTemp = 2.5 + Math.sin((i / 24) * Math.PI * 2) * 7.5; // Temperature curve throughout the day
     const randomVariation = (Math.random() - 0.5) * 4; // ±2°C variation
-    const temperature = Math.round((baseTemp + randomVariation) * 10) / 10;
+    const tempCelsius = Math.round((baseTemp + randomVariation) * 10) / 10;
+    const temperature =
+      unit === "°F"
+        ? Math.round(celsiusToFahrenheit(tempCelsius) * 10) / 10
+        : tempCelsius;
 
-    // Choose weather condition based on temperature
+    // Choose weather condition based on temperature (using Celsius for logic)
     let condition: string;
     const rand = Math.random();
 
-    if (temperature < -3) {
+    if (tempCelsius < -3) {
       condition = rand < 0.4 ? "snowy" : rand < 0.7 ? "cloudy" : "clear-night";
-    } else if (temperature < 2) {
+    } else if (tempCelsius < 2) {
       condition = rand < 0.3 ? "snowy" : rand < 0.5 ? "cloudy" : "partlycloudy";
     } else {
       condition =
@@ -78,7 +88,10 @@ const generateRandomHourlyForecast = (startDate: Date): ForecastAttribute[] => {
   return forecast;
 };
 
-const generateRandomDailyForecast = (startDate: Date): ForecastAttribute[] => {
+const generateRandomDailyForecast = (
+  startDate: Date,
+  unit: "°C" | "°F" = "°C"
+): ForecastAttribute[] => {
   const forecast = [];
   // Start from today at noon
   const currentDay = new Date(startDate);
@@ -90,16 +103,27 @@ const generateRandomDailyForecast = (startDate: Date): ForecastAttribute[] => {
     ); // Add i days
     const baseHighTemp = 2.5 + Math.sin((i / 7) * Math.PI) * 7.5; // Vary temperature over the week
     const tempVariation = (Math.random() - 0.5) * 6; // ±3°C variation
-    const highTemp = Math.round((baseHighTemp + tempVariation) * 10) / 10;
-    const lowTemp = Math.round((highTemp - 5 - Math.random() * 8) * 10) / 10; // 5-13°C lower than high
+    const highTempCelsius =
+      Math.round((baseHighTemp + tempVariation) * 10) / 10;
+    const lowTempCelsius =
+      Math.round((highTempCelsius - 5 - Math.random() * 8) * 10) / 10; // 5-13°C lower than high
 
-    // Choose weather condition based on temperature
+    const highTemp =
+      unit === "°F"
+        ? Math.round(celsiusToFahrenheit(highTempCelsius) * 10) / 10
+        : highTempCelsius;
+    const lowTemp =
+      unit === "°F"
+        ? Math.round(celsiusToFahrenheit(lowTempCelsius) * 10) / 10
+        : lowTempCelsius;
+
+    // Choose weather condition based on temperature (using Celsius for logic)
     let condition: string;
     const rand = Math.random();
 
-    if (highTemp < -3) {
+    if (highTempCelsius < -3) {
       condition = rand < 0.5 ? "snowy" : rand < 0.8 ? "cloudy" : "clear-night";
-    } else if (highTemp < 2) {
+    } else if (highTempCelsius < 2) {
       condition = rand < 0.4 ? "snowy" : rand < 0.6 ? "cloudy" : "partlycloudy";
     } else {
       condition =
@@ -139,22 +163,52 @@ const generateRandomDailyForecast = (startDate: Date): ForecastAttribute[] => {
   return forecast;
 };
 
+export interface MockHassOptions {
+  unitOfMeasurement?: "°C" | "°F";
+  darkMode?: boolean;
+  currentCondition?: string | null;
+}
+
 export class MockHass {
   private subscriptions = new Map<string, ForecastSubscriptionCallback>();
-  public hourlyForecast = generateRandomHourlyForecast(new Date());
-  public dailyForecast = generateRandomDailyForecast(new Date());
-  public unitOfMeasurement: "°C" | "°F" = "°C";
-  public darkMode = true;
-  public currentCondition: string | null = null;
+  public hourlyForecast: ForecastAttribute[] = [];
+  public dailyForecast: ForecastAttribute[] = [];
 
-  constructor() {}
+  private options: MockHassOptions;
+
+  constructor(options: MockHassOptions = {}) {
+    this.options = merge(
+      {
+        unitOfMeasurement: "°C",
+        darkMode: true,
+      },
+      options
+    );
+
+    this.hourlyForecast = generateRandomHourlyForecast(
+      new Date(),
+      this.options.unitOfMeasurement
+    );
+    this.dailyForecast = generateRandomDailyForecast(
+      new Date(),
+      this.options.unitOfMeasurement
+    );
+  }
+
+  setDarkMode(darkMode: boolean) {
+    this.options.darkMode = darkMode;
+  }
+
+  setCurrentConditions(condition: string) {
+    this.options.currentCondition = condition;
+  }
 
   getHass(): MockHomeAssistant {
     const currentForecast = this.hourlyForecast[0];
 
     return {
       themes: {
-        darkMode: this.darkMode,
+        darkMode: this.options.darkMode || true,
       },
       states: {
         "sensor.temperature_outdoor": {
@@ -162,7 +216,7 @@ export class MockHass {
           state: currentForecast.temperature.toString(),
           attributes: {
             friendly_name: "Outdoor Temperature",
-            unit_of_measurement: this.unitOfMeasurement,
+            unit_of_measurement: this.options.unitOfMeasurement,
           },
           last_changed: "2025-11-20T10:30:00.000Z",
           last_updated: "2025-11-20T10:30:00.000Z",
@@ -175,11 +229,12 @@ export class MockHass {
         "weather.demo": {
           entity_id: "weather.demo",
           state:
-            (this.currentCondition ?? currentForecast.condition) || "sunny",
+            (this.options.currentCondition ?? currentForecast.condition) ||
+            "sunny",
           attributes: {
             friendly_name: "Weather Demo",
             temperature: currentForecast.temperature,
-            temperature_unit: this.unitOfMeasurement,
+            temperature_unit: this.options.unitOfMeasurement,
             humidity: currentForecast.humidity,
             pressure: 1013.2,
             pressure_unit: "hPa",
@@ -207,13 +262,14 @@ export class MockHass {
         longitude: 24.9384,
         elevation: 26,
         unit_system: {
-          length: "km",
-          mass: "kg",
-          temperature: "°C",
-          volume: "L",
-          pressure: "hPa",
-          wind_speed: "m/s",
-          accumulated_precipitation: "mm",
+          length: this.options.unitOfMeasurement === "°F" ? "mi" : "km",
+          mass: this.options.unitOfMeasurement === "°F" ? "lb" : "kg",
+          temperature: this.options.unitOfMeasurement || "°C",
+          volume: this.options.unitOfMeasurement === "°F" ? "gal" : "L",
+          pressure: this.options.unitOfMeasurement === "°F" ? "psi" : "hPa",
+          wind_speed: this.options.unitOfMeasurement === "°F" ? "mph" : "m/s",
+          accumulated_precipitation:
+            this.options.unitOfMeasurement === "°F" ? "in" : "mm",
         },
         location_name: "Helsinki",
         time_zone: "Europe/Helsinki",
@@ -401,7 +457,7 @@ export class MockHass {
       return undefined;
     }
 
-    const T = currentForecast.temperature;
+    let T = currentForecast.temperature;
     const rh = currentForecast.humidity;
     const ws = currentForecast.wind_speed;
 
@@ -409,11 +465,20 @@ export class MockHass {
       return undefined;
     }
 
+    // Convert to Celsius for the formula if needed
+    const isFahrenheit = this.options.unitOfMeasurement === "°F";
+    if (isFahrenheit) {
+      T = ((T - 32) * 5) / 9; // Fahrenheit to Celsius
+    }
+
     const e = (rh / 100) * 6.105 * Math.exp((17.27 * T) / (237.7 + T));
 
     const at = T + 0.33 * e - 0.7 * ws - 4.0;
 
-    return at.toFixed(1);
+    // Convert back to Fahrenheit if needed
+    const result = isFahrenheit ? celsiusToFahrenheit(at) : at;
+
+    return round(result, 1);
   }
 
   // Update forecast data for all subscriptions
