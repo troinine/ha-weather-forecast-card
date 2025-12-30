@@ -83,6 +83,18 @@
       <div class="test-card">
         <weather-forecast-card id="test-card-9"></weather-forecast-card>
       </div>
+      <h3>Color thresholds</h3>
+      <div class="test-card">
+        <weather-forecast-card
+          id="test-card-color-thresholds"
+        ></weather-forecast-card>
+      </div>
+      <h3>Color thresholds (Fahrenheit)</h3>
+      <div class="test-card">
+        <weather-forecast-card
+          id="test-card-color-thresholds-fahrenheit"
+        ></weather-forecast-card>
+      </div>
       <h2>Bug fixes</h2>
       <h3>#14</h3>
       <div class="test-card">
@@ -207,6 +219,32 @@
             },
           },
           hass
+        );
+
+        initializeCard(
+          "test-card-color-thresholds",
+          {
+            entity: "weather.demo",
+            forecast: {
+              mode: "chart",
+              use_color_thresholds: true,
+            },
+          },
+          hass
+        );
+
+        const hassFahrenheit = new MockHass({ unitOfMeasurement: "°F" });
+
+        initializeCard(
+          "test-card-color-thresholds-fahrenheit",
+          {
+            entity: "weather.demo",
+            forecast: {
+              mode: "chart",
+              use_color_thresholds: true,
+            },
+          },
+          hassFahrenheit.getHass()
         );
 
         const hassIssue14 = new MockHass();

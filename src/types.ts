@@ -59,10 +59,14 @@ export interface WeatherForecastCardForecastConfig {
   show_sun_times?: boolean;
   hourly_group_size?: number;
   scroll_to_selected?: boolean;
+  use_color_thresholds?: boolean;
 }
 
 export interface WeatherForecastCardCurrentConfig {
-  show_attributes?: boolean | CurrentWeatherAttributes | CurrentWeatherAttributes[];
+  show_attributes?:
+    | boolean
+    | CurrentWeatherAttributes
+    | CurrentWeatherAttributes[];
 }
 
 export interface WeatherForecastCardForecastActionConfig {

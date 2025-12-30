@@ -11,6 +11,15 @@
     --weather-forecast-card-wind-high-color,
     var(--error-color, #db4437)
   );
+  --wfc-temp-cold: var(--weather-forecast-card-temp-cold-color, #2196f3);
+  --wfc-temp-freezing: var(
+    --weather-forecast-card-temp-freezing-color,
+    #4fb3ff
+  );
+  --wfc-temp-chilly: var(--weather-forecast-card-temp-chilly-color, #ffeb3b);
+  --wfc-temp-mild: var(--weather-forecast-card-temp-mild-color, #4caf50);
+  --wfc-temp-warm: var(--weather-forecast-card-temp-warm-color, #ff9800);
+  --wfc-temp-hot: var(--weather-forecast-card-temp-hot-color, #f44336);
   --wfc-chart-temp-low-line-color: var(
     --weather-forecast-card-chart-temp-low-line-color,
     var(--secondary-color, #ffa600)

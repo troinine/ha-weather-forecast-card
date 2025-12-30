@@ -219,3 +219,21 @@ export const TEST_FORECAST_HOURLY: ForecastAttribute[] = Array.from(
     is_daytime: true,
   })
 );
+
+const celsiusToFahrenheit = (celsius: number) => (celsius * 9) / 5 + 32;
+
+export const TEST_FORECAST_DAILY_FAHRENHEIT: ForecastAttribute[] =
+  ISSUE_14_DAILY_FORECAST.map((entry) => ({
+    ...entry,
+    temperature: celsiusToFahrenheit(entry.temperature),
+    templow:
+      entry.templow !== undefined && entry.templow !== null
+        ? celsiusToFahrenheit(entry.templow)
+        : entry.templow,
+  }));
+
+export const TEST_FORECAST_HOURLY_FAHRENHEIT: ForecastAttribute[] =
+  TEST_FORECAST_HOURLY.map((entry) => ({
+    ...entry,
+    temperature: celsiusToFahrenheit(entry.temperature),
+  }));
