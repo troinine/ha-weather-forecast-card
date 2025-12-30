@@ -203,6 +203,12 @@ export class DragScrollController implements ReactiveController {
     }
 
     const itemWidth = item.getBoundingClientRect().width;
+
+    // If the item has no width (e.g., not rendered yet), skip snapping to avoid NaN scroll values.
+    if (!itemWidth || !Number.isFinite(itemWidth)) {
+      this._completeFinalize();
+      return;
+    }
     const startLeft = this._container.scrollLeft;
     const targetLeft = Math.round(startLeft / itemWidth) * itemWidth;
 
