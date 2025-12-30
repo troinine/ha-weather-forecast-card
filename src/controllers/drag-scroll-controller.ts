@@ -191,12 +191,13 @@ export class DragScrollController implements ReactiveController {
   };
 
   private _runMomentum = () => {
-    if (!this._container || Math.abs(this._state.velocity) < 0.5) {
+    const container = this._container;
+    if (!container || Math.abs(this._state.velocity) < 0.5) {
       this._finalize();
       return;
     }
 
-    this._container.scrollLeft -= this._state.velocity;
+    container.scrollLeft -= this._state.velocity;
     this._state.velocity *= FRICTION_COEFFICIENT;
     this._state.momentumId = requestAnimationFrame(this._runMomentum);
   };
