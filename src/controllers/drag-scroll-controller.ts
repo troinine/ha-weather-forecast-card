@@ -21,6 +21,27 @@ const DRAG_MOVEMENT_THRESHOLD = 3;
 const FRICTION_COEFFICIENT = 0.95;
 const SNAP_ANIMATION_DURATION_MS = 500;
 
+/**
+ * Reactive controller that adds drag-to-scroll behavior to a LitElement host.
+ *
+ * The controller locates a scrollable container within the host's rendered
+ * DOM using the provided `selector`, and optionally uses `childSelector`
+ * to snap the scroll position to individual child elements when the drag
+ * interaction ends.
+ *
+ * Lifecycle integration:
+ * - Registers itself with the host via `host.addController(this)` in the
+ *   constructor, so it participates in the host's reactive lifecycle.
+ * - Uses the `hostUpdated` hook to attach event listeners once the host's
+ *   template has been rendered and the target container is available.
+ *
+ * Usage:
+ * - Instantiate in a LitElement and pass `this` as the host along with a
+ *   configuration object:
+ *     `new DragScrollController(this, { selector: '.scroll-container', childSelector: '.item' });`
+ * - The controller manages mouse events, drag state, momentum scrolling,
+ *   and optional snapping without requiring additional logic in the host.
+ */
 export class DragScrollController implements ReactiveController {
   private _mouseDown = false;
   private _scrolling = false;
