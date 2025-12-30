@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fixture } from "@open-wc/testing";
 import { html } from "lit";
 import { MockHass } from "./mocks/hass";
@@ -243,5 +243,69 @@ describe("weather-forecast-card chart", () => {
     expect(options.scales.x.border.color).toBe(testColors.grid);
     // @ts-expect-error: deep access
     expect(options.scales.x.grid.color).toBe(testColors.grid);
+  });
+
+  it("should support drag-to-scroll when dragging", async () => {
+    const chartComponent = card.shadowRoot!.querySelector("wfc-forecast-chart");
+    expect(chartComponent).not.toBeNull();
+
+    const scrollContainer = chartComponent!.querySelector(
+      ".wfc-scroll-container"
+    ) as HTMLElement;
+    expect(scrollContainer).not.toBeNull();
+
+    expect(scrollContainer.classList.contains("is-dragging")).toBe(false);
+
+    const mouseDownEvent = new MouseEvent("mousedown", {
+      bubbles: true,
+      cancelable: true,
+      clientX: 250,
+    });
+
+    Object.defineProperty(mouseDownEvent, "pageX", { value: 250 });
+
+    scrollContainer.dispatchEvent(mouseDownEvent);
+
+    const mouseMoveEvent = new MouseEvent("mousemove", {
+      bubbles: true,
+      cancelable: true,
+      clientX: 50,
+    });
+
+    Object.defineProperty(mouseMoveEvent, "pageX", { value: 50 });
+
+    window.dispatchEvent(mouseMoveEvent);
+
+    expect(scrollContainer.classList.contains("is-dragging")).toBe(true);
+    expect(scrollContainer.classList.contains("no-snap")).toBe(true);
+
+    const mouseUpEvent = new MouseEvent("mouseup", {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    // Mock dimensions to ensure snapping logic sees a width
+    const scrollSlot = scrollContainer.querySelector(".wfc-forecast-slot");
+    if (scrollSlot) {
+      vi.spyOn(scrollSlot, "getBoundingClientRect").mockReturnValue({
+        width: 100,
+        height: 100,
+        top: 0,
+        left: 0,
+        right: 100,
+        bottom: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      });
+    }
+
+    window.dispatchEvent(mouseUpEvent);
+
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    expect(scrollContainer.classList.contains("is-dragging")).toBe(false);
+
+    expect(scrollContainer.scrollLeft).toBeGreaterThan(0);
   });
 });
