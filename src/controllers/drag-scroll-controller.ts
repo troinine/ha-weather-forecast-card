@@ -163,7 +163,6 @@ export class DragScrollController implements ReactiveController {
       this._scrolling = true;
 
       this._container.classList.add("is-dragging", "no-snap");
-      this._host.requestUpdate();
     }
 
     if (this._scrolled) {
