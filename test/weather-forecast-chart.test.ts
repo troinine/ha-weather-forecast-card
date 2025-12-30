@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fixture } from "@open-wc/testing";
 import { html } from "lit";
 import { MockHass } from "./mocks/hass";
@@ -259,10 +259,10 @@ describe("weather-forecast-card chart", () => {
     const mouseDownEvent = new MouseEvent("mousedown", {
       bubbles: true,
       cancelable: true,
-      clientX: 100,
+      clientX: 250,
     });
 
-    Object.defineProperty(mouseDownEvent, "pageX", { value: 100 });
+    Object.defineProperty(mouseDownEvent, "pageX", { value: 250 });
 
     scrollContainer.dispatchEvent(mouseDownEvent);
 
@@ -283,7 +283,26 @@ describe("weather-forecast-card chart", () => {
       bubbles: true,
       cancelable: true,
     });
+
+    // Mock dimensions to ensure snapping logic sees a width
+    const scrollSlot = scrollContainer.querySelector(".wfc-forecast-slot");
+    if (scrollSlot) {
+      vi.spyOn(scrollSlot, "getBoundingClientRect").mockReturnValue({
+        width: 100,
+        height: 100,
+        top: 0,
+        left: 0,
+        right: 100,
+        bottom: 100,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      });
+    }
+
     window.dispatchEvent(mouseUpEvent);
+
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     expect(scrollContainer.classList.contains("is-dragging")).toBe(false);
 
