@@ -122,6 +122,9 @@ The `current` object controls the display of current weather information and att
 | `show_sun_times`       | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                                                                                                                                                |
 | `use_color_thresholds` | boolean | `false`  | Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot). These thresholds are specified in degrees Celsius (°C). |
 
+> [!IMPORTANT]
+> **Canvas width limit:** To ensure compatibility across different browsers and prevent rendering errors, the canvas width is capped at 16384 pixels when using forecast chart mode. This limit is sufficient for most forecast services. However, any data exceeding this width will be truncated.
+
 ### Forecast Actions
 
 Actions support standard Home Assistant card actions. However, one additional action has been defined: `toggle-forecast` will toggle the forecast between daily and hourly forecast.
