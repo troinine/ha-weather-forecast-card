@@ -546,4 +546,60 @@ describe("weather-forecast-card chart", () => {
       );
     });
   });
+
+  it("should truncate forecast to stay under MAX_CANVAS_WIDTH", async () => {
+    const expectedItems = 327;
+    const largeForecast = Array.from({ length: 500 }, (_, i) => ({
+      datetime: new Date(Date.now() + i * 3600000).toISOString(),
+      temperature: 20,
+      condition: "sunny",
+    }));
+
+    const styles = {
+      "--forecast-item-gap": "0px",
+    };
+
+    const card = await fixture<WeatherForecastCard>(html`
+      <weather-forecast-card
+        .hass=${hass}
+        .config=${{
+          type: "custom:weather-forecast-card",
+          entity: "weather.demo",
+          forecast: { mode: ForecastMode.Chart },
+        }}
+      ></weather-forecast-card>
+    `);
+
+    const chartElement = card.shadowRoot!.querySelector(
+      "wfc-forecast-chart"
+    ) as WfcForecastChart;
+    chartElement.forecast = largeForecast;
+    chartElement.itemWidth = 50;
+
+    Object.entries(styles).forEach(([key, value]) => {
+      chartElement.style.setProperty(key, value);
+    });
+
+    await chartElement.updateComplete;
+
+    // MAX_CANVAS_WIDTH = 16384
+    // itemWidth = 50, gap = 0
+    // maxItems = floor((16384 + 0) / (50 + 0)) = 327
+
+    // @ts-expect-error private
+    const safeForecast = chartElement.safeForecast;
+    expect(safeForecast.length).toBe(expectedItems);
+
+    const header = chartElement.querySelector(".wfc-forecast-chart-header");
+    const headerItems = header!.querySelectorAll(".wfc-forecast-slot");
+    expect(headerItems.length).toBe(expectedItems);
+
+    const footer = chartElement.querySelector(".wfc-forecast-chart-footer");
+    const footerItems = footer!.querySelectorAll(".wfc-forecast-slot");
+    expect(footerItems.length).toBe(expectedItems);
+
+    // @ts-expect-error private
+    const chartInstance = chartElement._chart;
+    expect(chartInstance?.data.labels?.length).toBe(expectedItems);
+  });
 });

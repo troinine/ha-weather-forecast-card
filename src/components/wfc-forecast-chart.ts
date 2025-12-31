@@ -6,6 +6,7 @@ import { styleMap } from "lit/directives/style-map.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { getRelativePosition } from "chart.js/helpers";
 import { actionHandler } from "../hass";
+import { logger } from "../logger";
 import {
   ExtendedHomeAssistant,
   ForecastActionDetails,
@@ -63,6 +64,21 @@ type ForecastLineStyle = Pick<
   | "borderDash"
 >;
 
+// A safe maximum canvas width to avoid exceeding browser limits. This limit covers
+// most of the modern mobile and desktop browsers and covers enough forecast data
+// for reliable forecast information. This roughly covers over 300 forecast items
+// which should be more than enough to provide a reliable forecast view.
+const MAX_CANVAS_WIDTH = 16384;
+
+/**
+ * A chart component to display weather forecast data.
+ *
+ * It supports both daily and hourly forecasts, rendering temperature and precipitation data.
+ * This component manages its own chart instance and updates it based on property changes.
+ *
+ * Note: As canvas width limits vary between browsers, this component enforces a conservative
+ * hard maximum canvas width (MAX_CANVAS_WIDTH) chosen to provide broad browser compatibility.
+ */
 @customElement("wfc-forecast-chart")
 export class WfcForecastChart extends LitElement {
   @property({ attribute: false }) hass!: ExtendedHomeAssistant;
@@ -117,11 +133,12 @@ export class WfcForecastChart extends LitElement {
   }
 
   render(): TemplateResult | typeof nothing {
-    if (!this.forecast?.length || this.itemWidth <= 0) {
+    const forecast = this.safeForecast;
+    if (!forecast?.length || this.itemWidth <= 0) {
       return nothing;
     }
 
-    const count = this.forecast.length;
+    const count = forecast.length;
     const gaps = Math.max(count - 1, 0);
 
     const totalWidthCalc = `calc(${count} * var(--forecast-item-width) + ${gaps} * var(--forecast-item-gap))`;
@@ -154,7 +171,9 @@ export class WfcForecastChart extends LitElement {
         @pointerdown=${this._onPointerDown}
         @action=${this._onForecastAction}
       >
-        <div class="wfc-forecast-chart-header">${this.renderHeaderItems()}</div>
+        <div class="wfc-forecast-chart-header">
+          ${this.renderHeaderItems(forecast)}
+        </div>
 
         <div class="wfc-chart-clipper" style=${styleMap(clipperStyle)}>
           <div
@@ -167,7 +186,7 @@ export class WfcForecastChart extends LitElement {
         </div>
 
         <div class="wfc-forecast-chart-footer">
-          ${this.forecast.map(
+          ${forecast.map(
             (item) => html`
               <div class="wfc-forecast-slot">
                 <wfc-forecast-info
@@ -223,6 +242,7 @@ export class WfcForecastChart extends LitElement {
   }
 
   private getChartConfig(): ChartConfiguration {
+    const data = this.safeForecast;
     const style = getComputedStyle(this);
     const gridColor = style.getPropertyValue("--wfc-chart-grid-color");
     const highTempLabelColor = style.getPropertyValue(
@@ -236,7 +256,7 @@ export class WfcForecastChart extends LitElement {
     );
     const precipColor = style.getPropertyValue("--wfc-precipitation-bar-color");
 
-    const { minTemp, maxTemp } = this.computeScaleLimits();
+    const { minTemp, maxTemp } = this.computeScaleLimits(data);
 
     const maxPrecip = getMaxPrecipitationForUnit(
       getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
@@ -249,10 +269,10 @@ export class WfcForecastChart extends LitElement {
     return {
       type: "line",
       data: {
-        labels: this.forecast.map((f) => f.datetime),
+        labels: data.map((f) => f.datetime),
         datasets: [
           {
-            data: this.forecast.map((f) => f.temperature),
+            data: data.map((f) => f.temperature),
             yAxisID: "yTemp",
             datalabels: {
               anchor: "end",
@@ -266,7 +286,7 @@ export class WfcForecastChart extends LitElement {
             ...tempLineStyle,
           },
           {
-            data: this.forecast.map((f) => f.templow ?? null),
+            data: data.map((f) => f.templow ?? null),
             yAxisID: "yTemp",
             datalabels: {
               anchor: "start",
@@ -280,7 +300,7 @@ export class WfcForecastChart extends LitElement {
             ...templowLineStyle,
           },
           {
-            data: this.forecast.map((f) =>
+            data: data.map((f) =>
               f.precipitation && f.precipitation !== 0 ? f.precipitation : null
             ),
             backgroundColor: precipColor,
@@ -508,16 +528,20 @@ export class WfcForecastChart extends LitElement {
    *   4. Enforces a hard minimum buffer (5° at the bottom) to guarantee sufficient "degree distance" for labels, regardless of how condensed the chart scale is.
    *   5. Round values to the nearest integer for cleaner grid lines.
    *
+   * @param forecast - The forecast data to compute the scale limits for.
    * @returns An object containing `minTemp` and `maxTemp` properties.
    */
-  private computeScaleLimits(): { minTemp: number; maxTemp: number } {
-    const temps = this.forecast.map((f) => f.temperature);
-    const lows = this.forecast.map((f) => f.templow ?? f.temperature);
+  private computeScaleLimits(forecast: ForecastAttribute[]): {
+    minTemp: number;
+    maxTemp: number;
+  } {
+    const temps = forecast.map((f) => f.temperature);
+    const lows = forecast.map((f) => f.templow ?? f.temperature);
 
     const dataMin = Math.min(...lows);
     const dataMax = Math.max(...temps);
 
-    const hasLowTempData = this.forecast.some(
+    const hasLowTempData = forecast.some(
       (f) => f.templow !== undefined && f.templow !== null
     );
 
@@ -543,11 +567,11 @@ export class WfcForecastChart extends LitElement {
     return { minTemp, maxTemp };
   }
 
-  private renderHeaderItems(): TemplateResult[] {
+  private renderHeaderItems(forecast: ForecastAttribute[]): TemplateResult[] {
     const parts: TemplateResult[] = [];
     let currentDay: string | undefined;
 
-    this.forecast.forEach((item) => {
+    forecast.forEach((item) => {
       if (!item.datetime) {
         return;
       }
@@ -577,6 +601,38 @@ export class WfcForecastChart extends LitElement {
     });
 
     return parts;
+  }
+
+  /**
+   * Returns a subset of the forecast that fits within the hardware canvas limit.
+   * This calculation includes the gap width to ensure exact layout synchronization.
+   */
+  private get safeForecast(): ForecastAttribute[] {
+    if (!this.forecast?.length || this.itemWidth <= 0) return [];
+
+    const gap = this._getGapValue();
+
+    const maxItems = Math.floor(
+      (MAX_CANVAS_WIDTH + gap) / (this.itemWidth + gap)
+    );
+
+    if (this.forecast.length > maxItems) {
+      logger.debug(
+        `Truncating forecast to ${maxItems} items to stay under ${MAX_CANVAS_WIDTH}px (including ${gap}px gaps).`
+      );
+
+      return this.forecast.slice(0, maxItems);
+    }
+
+    return this.forecast;
+  }
+
+  private _getGapValue(): number {
+    const style = getComputedStyle(this);
+
+    const gapValue = style.getPropertyValue("--forecast-item-gap").trim();
+
+    return parseFloat(gapValue) || 0;
   }
 
   private _onPointerDown(event: PointerEvent) {
@@ -610,7 +666,7 @@ export class WfcForecastChart extends LitElement {
     const index = this._chart.data.labels?.indexOf(label as string) ?? -1;
     if (index === -1) return;
 
-    const selectedForecast = this.forecast[index];
+    const selectedForecast = this.safeForecast[index];
     if (!selectedForecast) return;
 
     const actionDetails: ForecastActionDetails = {
