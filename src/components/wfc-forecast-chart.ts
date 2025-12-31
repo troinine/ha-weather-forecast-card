@@ -65,7 +65,7 @@ type ForecastLineStyle = Pick<
 >;
 
 // A safe maximum canvas width to avoid exceeding browser limits. This limit covers
-// most of the modern mobile and desktop browsers and covers enought forecast data
+// most of the modern mobile and desktop browsers and covers enough forecast data
 // for reliable forecast information. This roughly covers over 300 forecast items
 // which should be more than enough to provide a reliable forecast view.
 const MAX_CANVAS_WIDTH = 16384;
