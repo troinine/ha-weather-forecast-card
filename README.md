@@ -123,7 +123,7 @@ The `current` object controls the display of current weather information and att
 | `use_color_thresholds` | boolean | `false`  | Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot). These thresholds are specified in degrees Celsius (°C). |
 
 > [!IMPORTANT]
-> **Canvas width limit:** To ensure compatibility across different browsers and prevent rendering errors, the canvas width is capped at 16384 pixels when using forecast chart mode. This limit is sufficient for most forecast services. However, any data exceeding this width will be truncated.
+> **Canvas width limit:** To ensure cross-browser compatibility and prevent rendering issues, the canvas width is capped at 16384 pixels in `chart` mode. At a standard item width of 50px, this supports approximately 320 entries (roughly two weeks of data) which is more than enough to cover reliable weather data from most forecast services. Any data exceeding this limit will be truncated.
 
 ### Forecast Actions
 
