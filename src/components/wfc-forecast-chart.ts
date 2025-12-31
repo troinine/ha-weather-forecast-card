@@ -76,8 +76,8 @@ const MAX_CANVAS_WIDTH = 16384;
  * It supports both daily and hourly forecasts, rendering temperature and precipitation data.
  * This component manages its own chart instance and updates it based on property changes.
  *
- * Note: As canvas width limits vary between browsers, this component includes logic to compute
- * a safe maximum width based on the user's environment.
+ * Note: As canvas width limits vary between browsers, this component enforces a conservative
+ * hard maximum canvas width (MAX_CANVAS_WIDTH) chosen to provide broad browser compatibility.
  */
 @customElement("wfc-forecast-chart")
 export class WfcForecastChart extends LitElement {
