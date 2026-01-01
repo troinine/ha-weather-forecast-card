@@ -274,8 +274,8 @@ Add these variables to your Home Assistant theme to customize the card's appeara
 | `weather-forecast-card-temp-mild-color`                 | `#4caf50`                              | Temperature color for mild conditions. Used when `use_color_thresholds` is `true`     |
 | `weather-forecast-card-temp-warm-color`                 | `#ff9800`                              | Temperature color for warm conditions. Used when `use_color_thresholds` is `true`     |
 | `weather-forecast-card-temp-hot-color`                  | `#f44336`                              | Temperature color for hot conditions. Used when `use_color_thresholds` is `true`      |
-| `weather-forecast-card-chart-temp-low-line-color`       | `var(--secondary-color, #ffa600)`      | Default chart line color for low temperature.                                         |
-| `weather-forecast-card-chart-temp-high-line-color`      | `var(--primary-color, #009ac7)`        | Default chart line color for high temperature                                         |
+| `weather-forecast-card-chart-temp-low-line-color`       | `#2196f3`                              | Default chart line color for low temperature. Corresponds to `cold` threshold color.  |
+| `weather-forecast-card-chart-temp-high-line-color`      | `#ff9800`                              | Default chart line color for high temperature. Corresponds to `warm` threshold color. |
 | `weather-forecast-card-chart-label-color`               | `var(--primary-text-color, #000)`      | Default color for chart labels                                                        |
 | `weather-forecast-card-chart-temp-high-label-color`     | `var(--chart-label-color)`             | Chart label color for high temperature                                                |
 | `weather-forecast-card-chart-temp-low-label-color`      | `var(--secondary-text-color, #9b9b9b)` | Chart label color for low temperature                                                 |
