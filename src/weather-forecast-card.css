@@ -22,11 +22,11 @@
   --wfc-temp-hot: var(--weather-forecast-card-temp-hot-color, #f44336);
   --wfc-chart-temp-low-line-color: var(
     --weather-forecast-card-chart-temp-low-line-color,
-    var(--secondary-color, #ffa600)
+    var(--wfc-temp-cold)
   );
   --wfc-chart-temp-high-line-color: var(
     --weather-forecast-card-chart-temp-high-line-color,
-    var(--primary-color, #009ac7)
+    var(--wfc-temp-warm)
   );
   --wfc-chart-label-color: var(
     --weather-forecast-card-chart-label-color,
