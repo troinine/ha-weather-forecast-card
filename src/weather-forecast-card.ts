@@ -332,6 +332,14 @@ export class WeatherForecastCard extends LitElement {
     }
 
     this._dailyForecastData = dailyForecastData?.forecast;
+
+    if (this._dailyForecastData && this.config?.forecast?.daily_slots != null) {
+      this._dailyForecastData = this._dailyForecastData.slice(
+        0,
+        this.config.forecast.daily_slots
+      );
+    }
+
     const hourlyGroupSize = this.config?.forecast?.hourly_group_size || 0;
 
     if (hourlyGroupSize > 1 && hourlyForecastData?.forecast) {
@@ -341,6 +349,16 @@ export class WeatherForecastCard extends LitElement {
       );
     } else {
       this._hourlyForecastData = hourlyForecastData?.forecast;
+    }
+
+    if (
+      this._hourlyForecastData &&
+      this.config?.forecast?.hourly_slots != null
+    ) {
+      this._hourlyForecastData = this._hourlyForecastData.slice(
+        0,
+        this.config.forecast.hourly_slots
+      );
     }
 
     // Recalculate layout if the number of items changed

@@ -58,6 +58,8 @@ export interface WeatherForecastCardForecastConfig {
   mode?: ForecastMode;
   show_sun_times?: boolean;
   hourly_group_size?: number;
+  hourly_slots?: number;
+  daily_slots?: number;
   scroll_to_selected?: boolean;
   use_color_thresholds?: boolean;
 }

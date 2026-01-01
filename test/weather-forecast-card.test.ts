@@ -165,4 +165,100 @@ describe("weather-forecast-card", () => {
       "0°C / 0°C"
     );
   });
+
+  describe("should respect forecast limits", () => {
+    it("should respect daily_slots limit", async () => {
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        forecast: {
+          daily_slots: 3,
+        },
+      };
+
+      card.setConfig(config);
+      await card.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // @ts-expect-error: accessing private property
+      expect(card._dailyForecastData?.length).toBe(3);
+    });
+
+    it("should respect hourly_slots limit", async () => {
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        default_forecast: "hourly",
+        forecast: {
+          hourly_slots: 10,
+        },
+      };
+
+      card.setConfig(config);
+      await card.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // @ts-expect-error: accessing private property
+      expect(card._hourlyForecastData?.length).toBe(10);
+    });
+
+    it("should respect hourly_slots limit with hourly_group_size", async () => {
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        default_forecast: "hourly",
+        forecast: {
+          hourly_group_size: 3,
+          hourly_slots: 5,
+        },
+      };
+
+      card.setConfig(config);
+      await card.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Total hourly items = 72. Grouped by 3 = 24 items.
+      // Limited by 5 slots = 5 items.
+      // @ts-expect-error: accessing private property
+      expect(card._hourlyForecastData?.length).toBe(5);
+    });
+
+    it("should show all items when slots are not defined", async () => {
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+      };
+
+      card.setConfig(config);
+      await card.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // @ts-expect-error: accessing private property
+      expect(card._dailyForecastData?.length).toBe(TEST_FORECAST_DAILY.length);
+      // @ts-expect-error: accessing private property
+      expect(card._hourlyForecastData?.length).toBe(
+        TEST_FORECAST_HOURLY.length
+      );
+    });
+
+    it("should support 0 slots", async () => {
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        forecast: {
+          daily_slots: 0,
+          hourly_slots: 0,
+        },
+      };
+
+      card.setConfig(config);
+      await card.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // @ts-expect-error: accessing private property
+      expect(card._dailyForecastData?.length).toBe(0);
+      // @ts-expect-error: accessing private property
+      expect(card._hourlyForecastData?.length).toBe(0);
+    });
+  });
 });

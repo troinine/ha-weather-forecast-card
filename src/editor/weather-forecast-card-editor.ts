@@ -273,6 +273,16 @@ export class WeatherForecastCardEditor
         selector: { number: { min: 1, max: 4 } },
         default: 1,
       },
+      {
+        name: "forecast.hourly_slots",
+        optional: true,
+        selector: { number: { min: 0 } },
+      },
+      {
+        name: "forecast.daily_slots",
+        optional: true,
+        selector: { number: { min: 0 } },
+      },
     ] as const;
 
   private _interactionsSchema = (): HaFormSchema[] =>
@@ -430,6 +440,10 @@ export class WeatherForecastCardEditor
         return "Use color thresholds";
       case "forecast.hourly_group_size":
         return "Hourly forecast group size";
+      case "forecast.hourly_slots":
+        return "Hourly forecast slots";
+      case "forecast.daily_slots":
+        return "Daily forecast slots";
       case "forecast_interactions":
         return `${this.hass!.localize("ui.card.weather.forecast")} ${(
           this.hass!.localize(
@@ -473,6 +487,10 @@ export class WeatherForecastCardEditor
         return "Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode.";
       case "forecast.hourly_group_size":
         return "Aggregate hourly forecast data into groups to reduce the number of forecast entries shown.";
+      case "forecast.hourly_slots":
+        return "Limit the number of hourly forecast entries to show.";
+      case "forecast.daily_slots":
+        return "Limit the number of daily forecast entries to show.";
       case "name":
         return "Overrides the friendly name of the entity.";
       case "show_condition_effects":
