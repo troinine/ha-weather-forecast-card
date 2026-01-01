@@ -5,6 +5,7 @@ import { createWarningText, normalizeDate } from "./helpers";
 import { logger } from "./logger";
 import { actionHandler, isInvalidEntityIdError } from "./hass";
 import { ForecastActionEvent, ForecastMode } from "./types";
+import { classMap } from "lit/directives/class-map.js";
 import {
   LitElement,
   html,
@@ -66,6 +67,7 @@ export class WeatherForecastCard extends LitElement {
   @state() private _hourlyForecastEvent?: ForecastEvent | undefined;
   @state() private _currentItemWidth!: number;
   @state() private _currentForecastType: ForecastType = "daily";
+  @state() private _isScrollable = false;
 
   private _hourlyForecastData?: ForecastAttribute[];
   private _dailyForecastData?: ForecastAttribute[];
@@ -138,7 +140,8 @@ export class WeatherForecastCard extends LitElement {
       changedProperties.has("_dailyForecastEvent") ||
       changedProperties.has("_hourlyForecastEvent") ||
       changedProperties.has("_currentForecastType") ||
-      changedProperties.has("_currentItemWidth")
+      changedProperties.has("_currentItemWidth") ||
+      changedProperties.has("_isScrollable")
     );
   }
 
@@ -216,7 +219,10 @@ export class WeatherForecastCard extends LitElement {
           ${this.config.show_forecast === false
             ? nothing
             : html`<div
-                class="wfc-forecast-container"
+                class="${classMap({
+                  "wfc-forecast-container": true,
+                  "is-scrollable": this._isScrollable,
+                })}"
                 .actionHandler=${actionHandler({
                   hasHold: hasAction(
                     this.config.forecast_action?.hold_action as ActionConfig
@@ -521,6 +527,7 @@ export class WeatherForecastCard extends LitElement {
     const gap = freeSpace > 0 ? freeSpace / (n - 1) : 0;
 
     this._currentItemWidth = calculatedItemWidth + gap;
+    this._isScrollable = items.length > itemsPerView;
 
     this.style.setProperty("--forecast-item-gap", `${gap}px`);
     this.style.setProperty("--forecast-item-width", `${calculatedItemWidth}px`);

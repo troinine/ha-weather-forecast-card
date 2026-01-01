@@ -134,6 +134,41 @@ describe("weather-forecast-card", () => {
     expect(newWidth).toBeGreaterThan(initialWidth);
   });
 
+  it("should add is-scrollable class when content overflows", async () => {
+    const container = card.shadowRoot!.querySelector(
+      ".wfc-forecast-container"
+    ) as HTMLElement;
+
+    // Set container width such that it overflows
+    Object.defineProperty(container, "clientWidth", {
+      value: 50, // Small width to ensure overflow (1 item per view, but we have 5)
+      configurable: true,
+    });
+
+    // Trigger layout
+    // @ts-expect-error: accessing private method
+    card.layoutForecastItems(50);
+    await card.updateComplete;
+
+    // @ts-expect-error: accessing private property
+    expect(card._isScrollable).toBe(true);
+    expect(container.classList.contains("is-scrollable")).toBe(true);
+
+    // Set container width such that it DOES NOT overflow
+    Object.defineProperty(container, "clientWidth", {
+      value: 1000, // Large width to ensure it fits (all items fit)
+      configurable: true,
+    });
+
+    // @ts-expect-error: accessing private method
+    card.layoutForecastItems(1000);
+    await card.updateComplete;
+
+    // @ts-expect-error: accessing private property
+    expect(card._isScrollable).toBe(false);
+    expect(container.classList.contains("is-scrollable")).toBe(false);
+  });
+
   it("should render 0°C temperature", async () => {
     const zeroHourly = [...TEST_FORECAST_HOURLY];
     zeroHourly[0] = { ...zeroHourly[0], temperature: 0 };
