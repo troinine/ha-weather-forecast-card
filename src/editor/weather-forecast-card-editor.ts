@@ -276,12 +276,12 @@ export class WeatherForecastCardEditor
       {
         name: "forecast.hourly_slots",
         optional: true,
-        selector: { number: { min: 0 } },
+        selector: { number: { min: 1 } },
       },
       {
         name: "forecast.daily_slots",
         optional: true,
-        selector: { number: { min: 0 } },
+        selector: { number: { min: 1 } },
       },
     ] as const;
 

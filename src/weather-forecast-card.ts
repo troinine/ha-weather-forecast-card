@@ -111,6 +111,20 @@ export class WeatherForecastCard extends LitElement {
       );
     }
 
+    if (
+      config.forecast?.daily_slots != null &&
+      config.forecast.daily_slots <= 0
+    ) {
+      throw new Error("daily_slots must be greater than 0");
+    }
+
+    if (
+      config.forecast?.hourly_slots != null &&
+      config.forecast.hourly_slots <= 0
+    ) {
+      throw new Error("hourly_slots must be greater than 0");
+    }
+
     this.config = merge({}, DEFAULT_CONFIG, config);
     this._currentForecastType = this.config.default_forecast || "daily";
   }

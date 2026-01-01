@@ -276,24 +276,32 @@ describe("weather-forecast-card", () => {
       );
     });
 
-    it("should support 0 slots", async () => {
-      const config: WeatherForecastCardConfig = {
+    it("should throw error if daily_slots is 0 or less", async () => {
+      const config = {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
         forecast: {
           daily_slots: 0,
+        },
+      } as WeatherForecastCardConfig;
+
+      expect(() => card.setConfig(config)).toThrow(
+        "daily_slots must be greater than 0"
+      );
+    });
+
+    it("should throw error if hourly_slots is 0 or less", async () => {
+      const config = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        forecast: {
           hourly_slots: 0,
         },
-      };
+      } as WeatherForecastCardConfig;
 
-      card.setConfig(config);
-      await card.updateComplete;
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      // @ts-expect-error: accessing private property
-      expect(card._dailyForecastData?.length).toBe(0);
-      // @ts-expect-error: accessing private property
-      expect(card._hourlyForecastData?.length).toBe(0);
+      expect(() => card.setConfig(config)).toThrow(
+        "hourly_slots must be greater than 0"
+      );
     });
   });
 });
