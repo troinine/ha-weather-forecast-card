@@ -97,7 +97,7 @@ export const CARDINAL_DIRECTIONS_DEGREES_MAP: Record<string, number> = {
   "N": 0, "P": 0, "NNE": 22.5, "NNO": 22.5, "NNW": 337.5,
   // North-East / East
   "NE": 45, "NO": 45, "ENE": 67.5, "ONO": 67.5,
-  "E": 90, "O": 90, "Ø": 90, 
+  "E": 90, "O": 90, "Ø": 90,
   // South-East / South
   "ESE": 112.5, "OSO": 112.5, "SE": 135, "SO": 135,
   "SSE": 157.5, "SSO": 157.5, "S": 180,
