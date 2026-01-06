@@ -37,7 +37,7 @@ export interface ForecastAttribute {
   is_daytime?: boolean;
   pressure?: number;
   wind_speed?: number;
-  wind_bearing?: number;
+  wind_bearing?: number | string;
 }
 
 export interface WeatherEntityAttributes extends HassEntityAttributeBase {
@@ -72,7 +72,7 @@ export interface WeatherEntity extends HassEntityBase {
   attributes: WeatherEntityAttributes;
 }
 
-const CARDINAL_DIRECTIONS = [
+export const CARDINAL_DIRECTIONS = [
   "N",
   "NNE",
   "NE",
@@ -90,6 +90,21 @@ const CARDINAL_DIRECTIONS = [
   "NW",
   "NNW",
 ] as const;
+
+// prettier-ignore
+export const CARDINAL_DIRECTIONS_DEGREES_MAP: Record<string, number> = {
+  // North
+  "N": 0, "P": 0, "NNE": 22.5, "NNO": 22.5, "NNW": 337.5,
+  // North-East / East
+  "NE": 45, "NO": 45, "ENE": 67.5, "ONO": 67.5,
+  "E": 90, "O": 90, "Ø": 90, 
+  // South-East / South
+  "ESE": 112.5, "OSO": 112.5, "SE": 135, "SO": 135,
+  "SSE": 157.5, "SSO": 157.5, "S": 180,
+  // South-West / West
+  "SSW": 202.5, "SW": 225, "WSW": 247.5,
+  "W": 270, "V": 270, "WNW": 292.5, "NW": 315,
+} as const;
 
 export const getWindBearing = (
   degree: number | string | undefined | null
@@ -388,6 +403,31 @@ export const normalizeWindSpeed = (speed: number, unit: string): number => {
   const multiplier = multipliers[unit] || 1;
 
   return speed * multiplier;
+};
+
+export const getNormalizedWindBearing = (
+  forecast: ForecastAttribute
+): number | undefined => {
+  if (forecast.wind_bearing == null) {
+    return undefined;
+  }
+
+  if (typeof forecast.wind_bearing === "number") {
+    return forecast.wind_bearing;
+  }
+
+  if (typeof forecast.wind_bearing === "string") {
+    const parsed = parseFloat(forecast.wind_bearing);
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      return parsed;
+    }
+
+    const cardinalBearing = forecast.wind_bearing.toUpperCase();
+
+    return CARDINAL_DIRECTIONS_DEGREES_MAP[cardinalBearing];
+  }
+
+  return undefined;
 };
 
 export const aggregateHourlyForecastData = (
