@@ -1,8 +1,9 @@
-import { LitElement, html, css, TemplateResult, nothing } from "lit";
+import { LitElement, html, css, TemplateResult, nothing, svg } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ExtendedHomeAssistant } from "../types";
 import {
   ForecastAttribute,
+  getNormalizedWindBearing,
   getNormalizedWindSpeed,
   WeatherEntity,
 } from "../data/weather";
@@ -35,7 +36,7 @@ export class WfcWindIndicator extends LitElement {
     }
 
     const windSpeed = this.forecast.wind_speed || 0;
-    const windBearing = this.forecast.wind_bearing || 0;
+    const windBearing = getNormalizedWindBearing(this.forecast);
 
     const R = this.radius;
     const strokeWidth = 4;
@@ -48,9 +49,11 @@ export class WfcWindIndicator extends LitElement {
     const lineColor = this.computeLineColor();
 
     let bearing = windBearing;
-    if (this.type === "direction") {
+    if (bearing !== undefined && this.type === "direction") {
       bearing = (bearing + 180) % 360;
     }
+
+    const hasBearing = Number.isFinite(bearing);
 
     const baseY = cy - R;
     const tipOffset = R * 0.55;
@@ -63,7 +66,9 @@ export class WfcWindIndicator extends LitElement {
         height="${this.size}"
         viewBox="0 0 ${boxSize} ${boxSize}"
         role="img"
-        aria-label="Wind speed: ${speed}, bearing: ${bearing} degrees"
+        aria-label="${hasBearing
+          ? `Wind speed: ${speed}, bearing: ${bearing} degrees`
+          : `Wind speed: ${speed}`}"
       >
         <circle
           cx="${cx}"
@@ -73,18 +78,14 @@ export class WfcWindIndicator extends LitElement {
           stroke-width="${strokeWidth}"
           fill="none"
         />
-
-        <g transform="rotate(${bearing} ${cx} ${cy})">
-          <polygon
-            points="
-              ${cx - spreadX},${baseY}
-              ${cx + spreadX},${baseY}
-              ${cx},${tipY}
-            "
-            fill="${lineColor}"
-          />
-        </g>
-
+        ${hasBearing
+          ? svg` <g transform="rotate(${bearing} ${cx} ${cy})">
+              <polygon
+                points="${cx - spreadX},${baseY} ${cx + spreadX},${baseY} ${cx},${tipY}"
+                fill="${lineColor}"
+              />
+            </g>`
+          : nothing}
         <text x="${cx}" y="${cy}" dy="0.1em">${speed}</text>
       </svg>
     `;

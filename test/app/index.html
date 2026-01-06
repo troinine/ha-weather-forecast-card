@@ -95,6 +95,12 @@
           id="test-card-color-thresholds-fahrenheit"
         ></weather-forecast-card>
       </div>
+      <h3>Cardinal wind bearing</h3>
+      <div class="test-card">
+        <weather-forecast-card
+          id="test-card-cardinal-wind"
+        ></weather-forecast-card>
+      </div>
       <h2>Bug fixes</h2>
       <h3>#14</h3>
       <div class="test-card">
@@ -114,6 +120,8 @@
         MockHass,
         ISSUE_14_DAILY_FORECAST,
         ISSUE_14_DAILY_FORECAST_2,
+        TEST_FORECAST_HOURLY_CARDINAL_WIND_BEARING,
+        TEST_FORECAST_DAILY_CARDINAL_WIND_BEARING,
       } from "../mocks/index.ts";
 
       const initializeCard = (cardId, config, hass) => {
@@ -245,6 +253,24 @@
             },
           },
           hassFahrenheit.getHass()
+        );
+
+        const hassCardinalWind = new MockHass();
+        hassCardinalWind.hourlyForecast =
+          TEST_FORECAST_HOURLY_CARDINAL_WIND_BEARING;
+        hassCardinalWind.dailyForecast =
+          TEST_FORECAST_DAILY_CARDINAL_WIND_BEARING;
+
+        initializeCard(
+          "test-card-cardinal-wind",
+          {
+            entity: "weather.demo",
+            forecast: {
+              mode: "chart",
+              extra_attribute: "wind_direction",
+            },
+          },
+          hassCardinalWind.getHass()
         );
 
         const hassIssue14 = new MockHass();

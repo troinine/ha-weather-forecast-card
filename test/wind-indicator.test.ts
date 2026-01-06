@@ -156,8 +156,7 @@ describe("wfc-wind-indicator", () => {
       const svg = element.shadowRoot?.querySelector("svg");
       expect(svg).not.toBeNull();
       const group = element.shadowRoot?.querySelector("g");
-      const transform = group?.getAttribute("transform");
-      expect(transform).toContain("rotate(0"); // defaults to 0
+      expect(group).toBeNull(); // No tip rendered by default
     });
 
     it("should render with default values when both wind properties are undefined", async () => {
@@ -180,8 +179,7 @@ describe("wfc-wind-indicator", () => {
       const text = element.shadowRoot?.querySelector("text");
       expect(text?.textContent).toBe("0");
       const group = element.shadowRoot?.querySelector("g");
-      const transform = group?.getAttribute("transform");
-      expect(transform).toContain("rotate(0");
+      expect(group).toBeNull();
     });
   });
 
@@ -354,6 +352,336 @@ describe("wfc-wind-indicator", () => {
 
       expect(circle?.getAttribute("stroke")).toBe("var(--wfc-wind-high)");
       expect(polygon?.getAttribute("fill")).toBe("var(--wfc-wind-high)");
+    });
+  });
+
+  describe("cardinal wind bearing", () => {
+    it("should handle cardinal direction 'N' (0 degrees)", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "N",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(0");
+    });
+
+    it("should handle cardinal direction 'E' (90 degrees)", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "E",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(90");
+    });
+
+    it("should handle cardinal direction 'S' (180 degrees)", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "S",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(180");
+    });
+
+    it("should handle cardinal direction 'W' (270 degrees)", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "W",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(270");
+    });
+
+    it("should handle intercardinal direction 'NE' (45 degrees)", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "NE",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(45");
+    });
+
+    it("should handle intercardinal direction 'SE' (135 degrees)", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "SE",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(135");
+    });
+
+    it("should handle intercardinal direction 'SW' (225 degrees)", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "SW",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(225");
+    });
+
+    it("should handle intercardinal direction 'NW' (315 degrees)", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "NW",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(315");
+    });
+
+    it("should handle lowercase cardinal directions (case-insensitive)", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "ne",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(45");
+    });
+
+    it("should handle numeric string wind bearings", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "180",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(180");
+    });
+
+    it("should handle decimal numeric string wind bearings", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "45.5",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const group = element.shadowRoot?.querySelector("g");
+      const transform = group?.getAttribute("transform");
+      expect(transform).toContain("rotate(45.5");
+    });
+
+    it("should not render tip for invalid cardinal direction strings", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "INVALID",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const svg = element.shadowRoot?.querySelector("svg");
+      expect(svg).not.toBeNull();
+      const polygon = element.shadowRoot?.querySelector("polygon");
+      expect(polygon).toBeNull();
+      expect(svg?.getAttribute("aria-label")).toBe("Wind speed: 10");
+    });
+
+    it("should not render tip for empty string wind bearing", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const svg = element.shadowRoot?.querySelector("svg");
+      expect(svg).not.toBeNull();
+      const polygon = element.shadowRoot?.querySelector("polygon");
+      expect(polygon).toBeNull();
+      expect(svg?.getAttribute("aria-label")).toBe("Wind speed: 10");
+    });
+
+    it("should not render tip for NaN numeric string wind bearing", async () => {
+      const mockHass = new MockHass();
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const weatherEntity = hass.states["weather.demo"];
+      const forecast: ForecastAttribute = {
+        wind_speed: 10,
+        wind_bearing: "not-a-number",
+      } as ForecastAttribute;
+
+      const element = await fixture<WfcWindIndicator>(
+        html`<wfc-wind-indicator
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .forecast=${forecast}
+        ></wfc-wind-indicator>`
+      );
+      await element.updateComplete;
+
+      const svg = element.shadowRoot?.querySelector("svg");
+      expect(svg).not.toBeNull();
+      const polygon = element.shadowRoot?.querySelector("polygon");
+      expect(polygon).toBeNull();
+      expect(svg?.getAttribute("aria-label")).toBe("Wind speed: 10");
     });
   });
 
