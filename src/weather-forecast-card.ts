@@ -4,7 +4,11 @@ import { styles } from "./weather-forecast-card.styles";
 import { createWarningText, normalizeDate } from "./helpers";
 import { logger } from "./logger";
 import { actionHandler, isInvalidEntityIdError } from "./hass";
-import { ForecastActionEvent, ForecastMode } from "./types";
+import {
+  ForecastActionEvent,
+  ForecastMode,
+  MAX_TEMPERATURE_PRECISION,
+} from "./types";
 import { classMap } from "lit/directives/class-map.js";
 import {
   LitElement,
@@ -123,6 +127,19 @@ export class WeatherForecastCard extends LitElement {
       config.forecast.hourly_slots <= 0
     ) {
       throw new Error("hourly_slots must be greater than 0");
+    }
+
+    if (
+      (config.current?.temperature_precision != null &&
+        (config.current.temperature_precision < 0 ||
+          config.current.temperature_precision > MAX_TEMPERATURE_PRECISION)) ||
+      (config.forecast?.temperature_precision != null &&
+        (config.forecast.temperature_precision < 0 ||
+          config.forecast.temperature_precision > MAX_TEMPERATURE_PRECISION))
+    ) {
+      throw new Error(
+        `temperature_precision must be 0 or greater and at most ${MAX_TEMPERATURE_PRECISION}`
+      );
     }
 
     this.config = merge({}, DEFAULT_CONFIG, config);

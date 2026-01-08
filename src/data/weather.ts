@@ -1,4 +1,4 @@
-import { HomeAssistant } from "custom-card-helpers";
+import { formatNumber, HomeAssistant } from "custom-card-helpers";
 import type {
   HassEntityAttributeBase,
   HassEntityBase,
@@ -514,6 +514,28 @@ export const aggregateHourlyForecastData = (
   }
 
   return groupedForecast;
+};
+
+export const formatTemperature = (
+  hass: ExtendedHomeAssistant,
+  weatherEntity: WeatherEntity,
+  value: number | string,
+  precision?: number,
+  excludeUnit?: boolean
+): string => {
+  const options =
+    precision != null
+      ? {
+          maximumFractionDigits: precision,
+          minimumFractionDigits: precision,
+        }
+      : undefined;
+
+  const unit = getWeatherUnit(hass, weatherEntity, "temperature");
+
+  const formattedValue = formatNumber(value, hass.locale, options);
+
+  return `${formattedValue}${excludeUnit ? "" : unit}`;
 };
 
 const computeAverageBearing = (bearings: number[]): number => {

@@ -12,6 +12,7 @@ import {
 import {
   CURRENT_WEATHER_ATTRIBUTES,
   ExtendedHomeAssistant,
+  MAX_TEMPERATURE_PRECISION,
   WEATHER_EFFECTS,
   WeatherForecastCardConfig,
   WeatherForecastCardCurrentConfig,
@@ -361,6 +362,16 @@ export class WeatherForecastCardEditor
             selector: { text: {} },
             optional: true,
           },
+          {
+            name: "current.temperature_precision",
+            optional: true,
+            selector: { number: { min: 0, max: MAX_TEMPERATURE_PRECISION } },
+          },
+          {
+            name: "forecast.temperature_precision",
+            optional: true,
+            selector: { number: { min: 0, max: 2 } },
+          },
         ],
       },
     ] as const;
@@ -432,6 +443,10 @@ export class WeatherForecastCardEditor
         ).toLocaleLowerCase()}`;
       case "forecast.mode":
         return "Forecast display mode";
+      case "current.temperature_precision":
+        return "Current temperature precision";
+      case "forecast.temperature_precision":
+        return "Forecast temperature precision";
       case "forecast.scroll_to_selected":
         return "Scroll to selected forecast";
       case "forecast.show_sun_times":
@@ -491,6 +506,10 @@ export class WeatherForecastCardEditor
         return "Limit the number of hourly forecast entries to show.";
       case "forecast.daily_slots":
         return "Limit the number of daily forecast entries to show.";
+      case "current.temperature_precision":
+        return "The number of decimal places to show for current temperature values.";
+      case "forecast.temperature_precision":
+        return "The number of decimal places to show for forecast temperature values.";
       case "name":
         return "Overrides the friendly name of the entity.";
       case "show_condition_effects":
