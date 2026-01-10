@@ -96,8 +96,7 @@ export class WfcCurrentWeather extends LitElement {
                         <div
                           class="wfc-current-temperature-high-low wfc-secondary"
                         >
-                          ${tempHighLowInfo.temperatureHigh} /
-                          ${tempHighLowInfo.temperatureLow}
+                          ${`${tempHighLowInfo.temperatureHigh} / ${tempHighLowInfo.temperatureLow}`}
                         </div>
                       `
                     : nothing}
@@ -184,22 +183,24 @@ export class WfcCurrentWeather extends LitElement {
     const low = this.dailyForecast[0]?.templow;
 
     return {
-      temperatureHigh: high
-        ? formatTemperature(
-            this.hass,
-            this.weatherEntity,
-            high,
-            this.config.current?.temperature_precision
-          )
-        : undefined,
-      temperatureLow: low
-        ? formatTemperature(
-            this.hass,
-            this.weatherEntity,
-            low,
-            this.config.current?.temperature_precision
-          )
-        : undefined,
+      temperatureHigh:
+        high != null
+          ? formatTemperature(
+              this.hass,
+              this.weatherEntity,
+              high,
+              this.config.current?.temperature_precision
+            )
+          : undefined,
+      temperatureLow:
+        low != null
+          ? formatTemperature(
+              this.hass,
+              this.weatherEntity,
+              low,
+              this.config.current?.temperature_precision
+            )
+          : undefined,
     };
   }
 }
