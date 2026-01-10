@@ -2,13 +2,17 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { fixture } from "@open-wc/testing";
 import { html } from "lit";
 import { MockHass } from "./mocks/hass";
-import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../src/types";
+import {
+  ExtendedHomeAssistant,
+  ForecastMode,
+  WeatherForecastCardConfig,
+} from "../src/types";
 import { WeatherEntity } from "../src/data/weather";
 import { WfcCurrentWeather } from "../src/components/wfc-current-weather";
-import { WfcForecastChart } from "../src/components/wfc-forecast-chart";
+import { createWeatherForecastCardTestFixture } from "./test-utils";
 
+import "../src/index";
 import "../src/components/wfc-current-weather";
-import "../src/components/wfc-forecast-chart";
 
 describe("temperature_precision", () => {
   let hass: ExtendedHomeAssistant;
@@ -281,35 +285,16 @@ describe("temperature_precision", () => {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
         forecast: {
+          mode: ForecastMode.Chart,
           temperature_precision: 0,
         },
       };
 
-      const card = await fixture<WfcForecastChart>(
-        html`<div>
-          <wfc-forecast-chart
-            .hass=${hass}
-            .weatherEntity=${weatherEntity}
-            .config=${config}
-            .forecast=${mockHass.dailyForecast}
-            .forecastType=${"daily"}
-            .itemWidth=${100}
-          ></wfc-forecast-chart>
-        </div>`
+      const { chart } = await createWeatherForecastCardTestFixture(
+        hass,
+        config
       );
 
-      await card.updateComplete;
-      const chartElement = card.querySelector("wfc-forecast-chart");
-
-      // @ts-expect-error init chart
-      chartElement.initChart();
-
-      await new Promise((resolve) => setTimeout(resolve, 150));
-
-      // @ts-expect-error: _chart is private
-      const chart = chartElement._chart;
-
-      expect(chart).toBeDefined();
       expect(chart!.data?.datasets?.length).toBeGreaterThan(0);
 
       const mockContext = { chart };
@@ -327,35 +312,16 @@ describe("temperature_precision", () => {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
         forecast: {
+          mode: ForecastMode.Chart,
           temperature_precision: 1,
         },
       };
 
-      const card = await fixture<WfcForecastChart>(
-        html`<div>
-          <wfc-forecast-chart
-            .hass=${hass}
-            .weatherEntity=${weatherEntity}
-            .config=${config}
-            .forecast=${mockHass.dailyForecast}
-            .forecastType=${"daily"}
-            .itemWidth=${100}
-          ></wfc-forecast-chart>
-        </div>`
+      const { chart } = await createWeatherForecastCardTestFixture(
+        hass,
+        config
       );
 
-      await card.updateComplete;
-      const chartElement = card.querySelector("wfc-forecast-chart");
-
-      // @ts-expect-error init chart
-      chartElement.initChart();
-
-      await new Promise((resolve) => setTimeout(resolve, 150));
-
-      // @ts-expect-error: _chart is private
-      const chart = chartElement._chart;
-
-      expect(chart).toBeDefined();
       expect(chart!.data?.datasets?.length).toBeGreaterThan(0);
 
       const mockContext = { chart };
@@ -373,35 +339,16 @@ describe("temperature_precision", () => {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
         forecast: {
+          mode: ForecastMode.Chart,
           temperature_precision: 2,
         },
       };
 
-      const card = await fixture<WfcForecastChart>(
-        html`<div>
-          <wfc-forecast-chart
-            .hass=${hass}
-            .weatherEntity=${weatherEntity}
-            .config=${config}
-            .forecast=${mockHass.dailyForecast}
-            .forecastType=${"daily"}
-            .itemWidth=${100}
-          ></wfc-forecast-chart>
-        </div>`
+      const { chart } = await createWeatherForecastCardTestFixture(
+        hass,
+        config
       );
 
-      await card.updateComplete;
-      const chartElement = card.querySelector("wfc-forecast-chart");
-
-      // @ts-expect-error init chart
-      chartElement.initChart();
-
-      await new Promise((resolve) => setTimeout(resolve, 150));
-
-      // @ts-expect-error: _chart is private
-      const chart = chartElement._chart;
-
-      expect(chart).toBeDefined();
       expect(chart!.data?.datasets?.length).toBeGreaterThan(0);
 
       const mockContext = { chart };

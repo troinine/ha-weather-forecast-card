@@ -13,6 +13,7 @@ import { TEST_FORECAST_DAILY, TEST_FORECAST_HOURLY } from "./mocks/test-data";
 import { WfcForecastChart } from "../src/components/wfc-forecast-chart";
 import { merge } from "lodash-es";
 import { Chart } from "chart.js";
+import { createWeatherForecastCardTestFixture } from "./test-utils";
 
 import "../src/index";
 
@@ -60,44 +61,17 @@ describe("weather-forecast-card chart", () => {
       styleOverrides
     );
 
-    const card = await fixture<WeatherForecastCard>(html`
-      <weather-forecast-card
-        .hass=${hass}
-        .config=${config}
-      ></weather-forecast-card>
-    `);
-
-    expect(card).not.toBeNull();
-    expect(card).toBeInstanceOf(WeatherForecastCard);
-
-    card.setConfig(config);
-    await card.updateComplete;
-
-    await new Promise((resolve) => setTimeout(resolve, 150));
-
-    const chartElement = card.shadowRoot!.querySelector(
-      "wfc-forecast-chart"
-    ) as WfcForecastChart;
-
-    expect(chartElement).not.toBeNull();
-
-    Object.entries(styles).forEach(([key, value]) => {
-      chartElement.style.setProperty(key, value);
-    });
-
-    // Force chart initialization
-    chartElement.itemWidth = 100;
-    await chartElement.updateComplete;
-
-    // @ts-expect-error: _chart is private
-    chartElement.initChart();
-
-    // @ts-expect-error: _chart is private
-    const chart = chartElement._chart as Chart;
+    const { card, chart } = await createWeatherForecastCardTestFixture(
+      hass,
+      config,
+      {
+        chartStyles: styles,
+      }
+    );
 
     // HappyDOM doesn't do layout, so we need to mock some chart methods
-    chart.resize = vi.fn();
-    chart.update = vi.fn();
+    chart!.resize = vi.fn();
+    chart!.update = vi.fn();
 
     expect(chart).not.toBeNull();
     expect(chart).toBeDefined();
