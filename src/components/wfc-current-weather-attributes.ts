@@ -1,13 +1,18 @@
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { capitalize } from "lodash-es";
+import memoizeOne from "memoize-one";
 import {
   CurrentWeatherAttributes,
   ExtendedHomeAssistant,
   WeatherForecastCardConfig,
 } from "../types";
-import { getWeatherUnit, getWind, WeatherEntity } from "../data/weather";
-import { capitalize } from "lodash-es";
-import memoizeOne from "memoize-one";
+import {
+  formatTemperature,
+  getWeatherUnit,
+  getWind,
+  WeatherEntity,
+} from "../data/weather";
 
 const ATTRIBUTE_ICON_MAP: { [key in CurrentWeatherAttributes]: string } = {
   humidity: "mdi:cloud-percent-outline",
@@ -86,8 +91,9 @@ export class WfcCurrentWeatherAttributes extends LitElement {
     attribute: CurrentWeatherAttributes
   ): string | undefined => {
     const stateObj = this.weatherEntity;
+    const value = stateObj.attributes[attribute];
 
-    if (stateObj.attributes[attribute] === undefined) {
+    if (value === undefined) {
       return undefined;
     }
 
@@ -96,20 +102,27 @@ export class WfcCurrentWeatherAttributes extends LitElement {
     }
 
     // hass.formatEntityAttributeValue does not support wind_gust_speed yet
-    if (
-      attribute === "wind_gust_speed" &&
-      stateObj.attributes.wind_gust_speed !== undefined
-    ) {
+    if (attribute === "wind_gust_speed") {
       const unit = getWeatherUnit(this.hass, stateObj, "wind_gust_speed");
 
-      return `${stateObj.attributes.wind_gust_speed} ${unit}`;
+      return `${value} ${unit}`;
     }
 
     // hass.formatEntityAttributeValue does not support ozone yet
-    if (attribute === "ozone" && stateObj.attributes.ozone !== undefined) {
+    if (attribute === "ozone") {
       const unit = getWeatherUnit(this.hass, stateObj, "ozone");
 
-      return `${stateObj.attributes.ozone} ${unit}`;
+      return `${value} ${unit}`;
+    }
+
+    // Temperature related attributes need special handling for precision
+    if (attribute === "apparent_temperature" || attribute === "dew_point") {
+      return formatTemperature(
+        this.hass,
+        stateObj,
+        value,
+        this.config.current?.temperature_precision
+      );
     }
 
     return this.hass.formatEntityAttributeValue(this.weatherEntity, attribute);

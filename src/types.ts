@@ -17,6 +17,8 @@ export type ForecastActionEvent = HASSDomEvent<ForecastActionDetails>;
 
 export type ForecastActionHandler = (event: ForecastActionEvent) => void;
 
+export const MAX_TEMPERATURE_PRECISION = 2;
+
 export const CURRENT_WEATHER_ATTRIBUTES = [
   "humidity",
   "pressure",
@@ -62,6 +64,7 @@ export interface WeatherForecastCardForecastConfig {
   daily_slots?: number;
   scroll_to_selected?: boolean;
   use_color_thresholds?: boolean;
+  temperature_precision?: number;
 }
 
 export interface WeatherForecastCardCurrentConfig {
@@ -69,6 +72,7 @@ export interface WeatherForecastCardCurrentConfig {
     | boolean
     | CurrentWeatherAttributes
     | CurrentWeatherAttributes[];
+  temperature_precision?: number;
 }
 
 export interface WeatherForecastCardForecastActionConfig {
@@ -110,17 +114,6 @@ export type ExtendedHomeAssistant = HomeAssistant & {
   themes?: {
     darkMode: boolean;
   };
-};
-
-export type TemperatureHighLow = {
-  temperatureHigh: string;
-  temperatureLow: string;
-  temperatureHighLowUnit: string;
-};
-
-export type TemperatureInfo = {
-  temperature: string;
-  temperatureUnit: string;
 };
 
 export type SuntimesInfo = {

@@ -275,6 +275,16 @@ describe("weather-forecast-card", () => {
         TEST_FORECAST_HOURLY.length
       );
     });
+  });
+
+  describe("should validate card configuration", () => {
+    it("should throw error if entity is missing", () => {
+      const config = {
+        type: "custom:weather-forecast-card",
+      } as WeatherForecastCardConfig;
+
+      expect(() => card.setConfig(config)).toThrow("entity is required");
+    });
 
     it("should throw error if daily_slots is 0 or less", async () => {
       const config = {
@@ -301,6 +311,62 @@ describe("weather-forecast-card", () => {
 
       expect(() => card.setConfig(config)).toThrow(
         "hourly_slots must be greater than 0"
+      );
+    });
+
+    it("should throw error if current.temperature_precision is negative", async () => {
+      const config = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        current: {
+          temperature_precision: -1,
+        },
+      } as WeatherForecastCardConfig;
+
+      expect(() => card.setConfig(config)).toThrow(
+        "temperature_precision must be 0 or greater and at most 2"
+      );
+    });
+
+    it("should throw error if forecast.temperature_precision is negative", async () => {
+      const config = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        forecast: {
+          temperature_precision: -2,
+        },
+      } as WeatherForecastCardConfig;
+
+      expect(() => card.setConfig(config)).toThrow(
+        "temperature_precision must be 0 or greater and at most 2"
+      );
+    });
+
+    it("should throw error if current.temperature_precision is greater than 2", async () => {
+      const config = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        current: {
+          temperature_precision: 3,
+        },
+      } as WeatherForecastCardConfig;
+
+      expect(() => card.setConfig(config)).toThrow(
+        "temperature_precision must be 0 or greater and at most 2"
+      );
+    });
+
+    it("should throw error if forecast.temperature_precision is greater than 2", async () => {
+      const config = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        forecast: {
+          temperature_precision: 4,
+        },
+      } as WeatherForecastCardConfig;
+
+      expect(() => card.setConfig(config)).toThrow(
+        "temperature_precision must be 0 or greater and at most 2"
       );
     });
   });

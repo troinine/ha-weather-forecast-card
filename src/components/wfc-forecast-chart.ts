@@ -7,20 +7,17 @@ import ChartDataLabels from "chartjs-plugin-datalabels";
 import { getRelativePosition } from "chart.js/helpers";
 import { actionHandler } from "../hass";
 import { logger } from "../logger";
+import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
 import {
   ExtendedHomeAssistant,
   ForecastActionDetails,
   WeatherForecastCardConfig,
 } from "../types";
 import {
-  ActionHandlerEvent,
-  fireEvent,
-  formatNumber,
-} from "custom-card-helpers";
-import {
   ForecastAttribute,
   ForecastType,
   formatPrecipitation,
+  formatTemperature,
   getMaxPrecipitationForUnit,
   getWeatherUnit,
   WeatherEntity,
@@ -280,7 +277,7 @@ export class WfcForecastChart extends LitElement {
               color: highTempLabelColor,
               formatter: (value) =>
                 value != null
-                  ? `${formatNumber(value, this.hass.locale)}°`
+                  ? `${formatTemperature(this.hass, this.weatherEntity, value, this.config.forecast?.temperature_precision, true)}°`
                   : null,
             },
             ...tempLineStyle,
@@ -294,7 +291,7 @@ export class WfcForecastChart extends LitElement {
               color: lowTempLabelColor,
               formatter: (value) =>
                 value != null
-                  ? `${formatNumber(value, this.hass.locale)}°`
+                  ? `${formatTemperature(this.hass, this.weatherEntity, value, this.config.forecast?.temperature_precision, true)}°`
                   : null,
             },
             ...templowLineStyle,

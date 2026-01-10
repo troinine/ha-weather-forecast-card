@@ -5,7 +5,6 @@ import { getSuntimesInfo } from "../helpers";
 import {
   ActionConfig,
   ActionHandlerEvent,
-  formatNumber,
   handleAction,
   hasAction,
 } from "custom-card-helpers";
@@ -13,18 +12,21 @@ import {
   CURRENT_WEATHER_ATTRIBUTES,
   CurrentWeatherAttributes,
   ExtendedHomeAssistant,
-  TemperatureHighLow,
-  TemperatureInfo,
   WeatherForecastCardConfig,
 } from "../types";
 import {
   ForecastAttribute,
-  getWeatherUnit,
+  formatTemperature,
   WeatherEntity,
 } from "../data/weather";
 
 import "./wfc-weather-condition-icon-provider";
 import "./wfc-current-weather-attributes";
+
+type TemperatureHighLow = {
+  temperatureHigh?: string;
+  temperatureLow?: string;
+};
 
 @customElement("wfc-current-weather")
 export class WfcCurrentWeather extends LitElement {
@@ -43,7 +45,7 @@ export class WfcCurrentWeather extends LitElement {
     }
 
     const { state } = this.weatherEntity;
-    const tempInfo = this.getTemperature();
+    const currentTemperature = this.getTemperature();
     const tempHighLowInfo = this.getTemperatureHighLow();
     const name =
       this.config.name || this.weatherEntity.attributes.friendly_name;
@@ -71,7 +73,7 @@ export class WfcCurrentWeather extends LitElement {
               ? html`<div class="wfc-name wfc-secondary">${name}</div>`
               : nothing}
           </div>
-          ${tempInfo !== null
+          ${currentTemperature !== null
             ? html`
                 <div class="wfc-current-temperatures">
                   <div
@@ -87,16 +89,14 @@ export class WfcCurrentWeather extends LitElement {
                     })}
                     @action=${this.onAction}
                   >
-                    ${tempInfo.temperature}${tempInfo.temperatureUnit}
+                    ${currentTemperature}
                   </div>
                   ${tempHighLowInfo
                     ? html`
                         <div
                           class="wfc-current-temperature-high-low wfc-secondary"
                         >
-                          ${tempHighLowInfo.temperatureHigh}${tempHighLowInfo.temperatureHighLowUnit}
-                          /
-                          ${tempHighLowInfo.temperatureLow}${tempHighLowInfo.temperatureHighLowUnit}
+                          ${`${tempHighLowInfo.temperatureHigh} / ${tempHighLowInfo.temperatureLow}`}
                         </div>
                       `
                     : nothing}
@@ -149,31 +149,26 @@ export class WfcCurrentWeather extends LitElement {
     handleAction(this, this.hass!, config, event.detail.action);
   };
 
-  private getTemperature(): TemperatureInfo | null {
+  private getTemperature(): string | null {
     if (this.config?.temperature_entity) {
       const tempEntity = this.hass.states[this.config.temperature_entity];
       if (tempEntity) {
-        return {
-          temperature: formatNumber(tempEntity.state, this.hass.locale),
-          temperatureUnit:
-            tempEntity.attributes.unit_of_measurement ||
-            this.hass.config?.unit_system?.temperature,
-        };
+        return formatTemperature(
+          this.hass,
+          this.weatherEntity,
+          tempEntity.state,
+          this.config.current?.temperature_precision
+        );
       }
     }
 
     if (this.weatherEntity.attributes.temperature != null) {
-      return {
-        temperature: formatNumber(
-          this.weatherEntity.attributes.temperature,
-          this.hass.locale
-        ),
-        temperatureUnit: getWeatherUnit(
-          this.hass,
-          this.weatherEntity,
-          "temperature"
-        ),
-      };
+      return formatTemperature(
+        this.hass,
+        this.weatherEntity,
+        this.weatherEntity.attributes.temperature,
+        this.config.current?.temperature_precision
+      );
     }
 
     return null;
@@ -187,19 +182,26 @@ export class WfcCurrentWeather extends LitElement {
     const high = this.dailyForecast[0]?.temperature;
     const low = this.dailyForecast[0]?.templow;
 
-    if (high != null && low != null) {
-      return {
-        temperatureHigh: formatNumber(high, this.hass.locale),
-        temperatureLow: formatNumber(low, this.hass.locale),
-        temperatureHighLowUnit: getWeatherUnit(
-          this.hass,
-          this.weatherEntity,
-          "temperature"
-        ),
-      };
-    }
-
-    return null;
+    return {
+      temperatureHigh:
+        high != null
+          ? formatTemperature(
+              this.hass,
+              this.weatherEntity,
+              high,
+              this.config.current?.temperature_precision
+            )
+          : undefined,
+      temperatureLow:
+        low != null
+          ? formatTemperature(
+              this.hass,
+              this.weatherEntity,
+              low,
+              this.config.current?.temperature_precision
+            )
+          : undefined,
+    };
   }
 }
 
