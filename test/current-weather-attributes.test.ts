@@ -106,8 +106,8 @@ describe("wfc-current-weather attributes", () => {
       "9 km",
       "200 DU",
       "3",
-      "1 °C",
-      "2 °C",
+      "1°C",
+      "2°C",
       "50 %",
     ]);
   });
