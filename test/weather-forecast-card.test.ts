@@ -342,7 +342,7 @@ describe("weather-forecast-card", () => {
       );
     });
 
-    it("should trhow error if current.temperature_precision is greater than 2", async () => {
+    it("should throw error if current.temperature_precision is greater than 2", async () => {
       const config = {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
@@ -356,7 +356,7 @@ describe("weather-forecast-card", () => {
       );
     });
 
-    it("should trhow error if forecast.temperature_precision is greater than 2", async () => {
+    it("should throw error if forecast.temperature_precision is greater than 2", async () => {
       const config = {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
