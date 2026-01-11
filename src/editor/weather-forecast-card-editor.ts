@@ -370,7 +370,7 @@ export class WeatherForecastCardEditor
           {
             name: "forecast.temperature_precision",
             optional: true,
-            selector: { number: { min: 0, max: 2 } },
+            selector: { number: { min: 0, max: MAX_TEMPERATURE_PRECISION } },
           },
         ],
       },
