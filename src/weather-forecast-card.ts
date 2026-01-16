@@ -151,6 +151,8 @@ export class WeatherForecastCard extends LitElement {
 
     this._minForecastItemWidth = this.getInitialMinForecastItemWidth();
     this.waitForLayout();
+    
+    this.subscribeForecastEvents();
   }
 
   public disconnectedCallback(): void {
@@ -466,8 +468,24 @@ export class WeatherForecastCard extends LitElement {
   private unsubscribeForecastEvents() {
     logger.debug("Unsubscribing from forecast events");
 
-    this._dailySubscription?.then((unsub) => unsub());
-    this._hourlySubscription?.then((unsub) => unsub());
+    this._dailySubscription?.then((unsub) => {
+      try {
+        unsub();
+      } catch (error) {
+        logger.debug("Error unsubscribing from daily forecast:", error);
+      }
+    });
+    this._hourlySubscription?.then((unsub) => {
+      try {
+        unsub();
+      } catch (error) {
+        logger.debug("Error unsubscribing from hourly forecast:", error);
+      }
+    });
+
+    // Clear subscription references to prevent re-unsubscribing
+    this._dailySubscription = undefined;
+    this._hourlySubscription = undefined;
   }
 
   private async subscribeForecastEvents() {
