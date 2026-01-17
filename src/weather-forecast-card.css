@@ -160,10 +160,30 @@ ha-card {
   height: 100%;
 }
 
-.wfc-current-temperatures {
+.wfc-current-primary-secondary {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+}
+
+.wfc-current-secondary-info {
+  display: flex;
+  align-items: center;
+}
+
+.wfc-current-secondary-icon {
+  width: var(--ha-font-size-xl, 20px);
+  height: var(--ha-font-size-xl, 20px);
+  --mdc-icon-size: var(--ha-font-size-xl, 20px);
+}
+
+.wfc-current-secondary-value {
+  padding-left: 4px;
+}
+
+.wfc-current-secondary-icon svg {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .wfc-current-state,
