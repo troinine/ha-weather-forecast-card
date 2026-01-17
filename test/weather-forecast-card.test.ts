@@ -7,6 +7,7 @@ import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../src/types";
 
 import "../src/index";
 import { TEST_FORECAST_DAILY, TEST_FORECAST_HOURLY } from "./mocks/test-data";
+import { normalizeDate } from "../src/helpers";
 
 describe("weather-forecast-card", () => {
   const mockHassInstance = new MockHass();
@@ -59,7 +60,7 @@ describe("weather-forecast-card", () => {
     const el = card.shadowRoot!.querySelector(".wfc-current-weather-container");
     expect(el).not.toBeNull();
 
-    const elTemperatures = el?.querySelector(".wfc-current-temperatures");
+    const elTemperatures = el?.querySelector(".wfc-current-primary-secondary");
     expect(elTemperatures).not.toBeNull();
 
     const elTemperatureCurrent = elTemperatures?.querySelector(
@@ -72,7 +73,7 @@ describe("weather-forecast-card", () => {
     );
 
     const elTemperatureHighLow = elTemperatures?.querySelector(
-      ".wfc-current-temperature-high-low"
+      ".wfc-current-secondary-value"
     );
     expect(elTemperatureHighLow).not.toBeNull();
 
@@ -80,9 +81,24 @@ describe("weather-forecast-card", () => {
       ?.replace(/\s+/g, " ")
       .trim();
 
-    expect(textHighLow).toBe(
-      `${TEST_FORECAST_DAILY[0].temperature}°C / ${TEST_FORECAST_DAILY[0].templow}°C`
+    const todayTs = normalizeDate(new Date().toISOString());
+    const todaysHours = TEST_FORECAST_HOURLY.filter(
+      (f) => normalizeDate(f.datetime) === todayTs
     );
+
+    const expectedHigh = Math.max(
+      TEST_FORECAST_DAILY[0].temperature ?? -Infinity,
+      ...todaysHours.map((f) => f.temperature ?? -Infinity)
+    );
+
+    const expectedLow = Math.min(
+      TEST_FORECAST_DAILY[0].templow ??
+        TEST_FORECAST_DAILY[0].temperature ??
+        Infinity,
+      ...todaysHours.map((f) => f.templow ?? f.temperature ?? Infinity)
+    );
+
+    expect(textHighLow).toBe(`${expectedHigh}°C / ${expectedLow}°C`);
   });
 
   it("should render current conditions", async () => {
@@ -170,22 +186,26 @@ describe("weather-forecast-card", () => {
   });
 
   it("should render 0°C temperature", async () => {
-    const zeroHourly = [...TEST_FORECAST_HOURLY];
-    zeroHourly[0] = { ...zeroHourly[0], temperature: 0 };
+    const zeroHourly = TEST_FORECAST_HOURLY.map((item) => ({
+      ...item,
+      temperature: 0,
+    }));
 
-    const zeroDaily = [...TEST_FORECAST_DAILY];
-    zeroDaily[0] = { ...zeroDaily[0], temperature: 0, templow: 0 };
+    const zeroDaily = TEST_FORECAST_DAILY.map((item) => ({
+      ...item,
+      temperature: 0,
+      templow: 0,
+    }));
 
     mockHassInstance.hourlyForecast = zeroHourly;
     mockHassInstance.dailyForecast = zeroDaily;
 
     mockHassInstance.updateForecasts("hourly");
     mockHassInstance.updateForecasts("daily");
-
     card.hass = mockHassInstance.getHass() as ExtendedHomeAssistant;
 
     await card.updateComplete;
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const el = card.shadowRoot!.querySelector(".wfc-current-weather-container");
     expect(el).not.toBeNull();
@@ -194,11 +214,9 @@ describe("weather-forecast-card", () => {
     expect(elTemperatureCurrent?.textContent.trim()).toBe("0°C");
 
     const elTemperatureHighLow = el?.querySelector(
-      ".wfc-current-temperature-high-low"
+      ".wfc-current-secondary-value"
     );
-    expect(elTemperatureHighLow?.textContent?.replace(/\s+/g, " ").trim()).toBe(
-      "0°C / 0°C"
-    );
+    expect(elTemperatureHighLow?.textContent?.trim()).toBe("0°C / 0°C");
   });
 
   describe("should respect forecast limits", () => {

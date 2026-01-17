@@ -3,7 +3,6 @@ import { customElement, property } from "lit/decorators.js";
 import { HassEntity } from "home-assistant-js-websocket";
 import type { ExtendedHomeAssistant } from "../../src/types";
 import {
-  mdiCloudPercentOutline,
   mdiGauge,
   mdiWeatherWindyVariant,
   mdiWeatherWindy,
@@ -11,6 +10,8 @@ import {
   mdiMolecule,
   mdiWeatherSunnyAlert,
   mdiWaterThermometerOutline,
+  mdiWaterPercent,
+  mdiCloudOutline,
 } from "@mdi/js";
 
 /**
@@ -29,7 +30,7 @@ export class HaAttributeIcon extends LitElement {
   @property({ attribute: false }) icon!: string;
 
   private iconMap: { [key: string]: string } = {
-    "mdi:cloud-percent-outline": mdiCloudPercentOutline,
+    "mdi:water-percent": mdiWaterPercent,
     "mdi:gauge": mdiGauge,
     "mdi:weather-windy-variant": mdiWeatherWindyVariant,
     "mdi:weather-windy": mdiWeatherWindy,
@@ -38,7 +39,7 @@ export class HaAttributeIcon extends LitElement {
     "mdi:weather-sunny-alert": mdiWeatherSunnyAlert,
     "mdi:water-thermometer-outline": mdiWaterThermometerOutline,
     "mdi:thermometer": mdiWaterThermometerOutline,
-    "mdi:cloud-outline": mdiCloudPercentOutline,
+    "mdi:cloud-outline": mdiCloudOutline,
   };
 
   protected createRenderRoot() {

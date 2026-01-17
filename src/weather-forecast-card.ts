@@ -243,6 +243,7 @@ export class WeatherForecastCard extends LitElement {
                   .hass=${this.hass}
                   .weatherEntity=${stateObject}
                   .config=${this.config}
+                  .hourlyForecast=${this._hourlyForecastData}
                   .dailyForecast=${this._dailyForecastData}
                 ></wfc-current-weather>
               </div>`

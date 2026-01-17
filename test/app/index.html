@@ -101,6 +101,12 @@
           id="test-card-cardinal-wind"
         ></weather-forecast-card>
       </div>
+      <h3>Secondary info attribute</h3>
+      <div class="test-card">
+        <weather-forecast-card
+          id="test-card-secondary-info-attribute"
+        ></weather-forecast-card>
+      </div>
       <h2>Bug fixes</h2>
       <h3>#14</h3>
       <div class="test-card">
@@ -271,6 +277,17 @@
             },
           },
           hassCardinalWind.getHass()
+        );
+
+        initializeCard(
+          "test-card-secondary-info-attribute",
+          {
+            entity: "weather.demo",
+            current: {
+              secondary_info_attribute: "humidity",
+            },
+          },
+          hass
         );
 
         const hassIssue14 = new MockHass();

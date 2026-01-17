@@ -4,9 +4,9 @@ import { html } from "lit";
 import { MockHass } from "./mocks/hass";
 import { ExtendedHomeAssistant } from "../src/types";
 import { WeatherEntity } from "../src/data/weather";
+import { WfcCurrentWeather } from "../src/components/wfc-current-weather";
 
 import "../src/components/wfc-current-weather";
-import { WfcCurrentWeather } from "../src/components/wfc-current-weather";
 
 const baseConfig = {
   type: "custom:weather-forecast-card",
@@ -136,5 +136,366 @@ describe("wfc-current-weather attributes", () => {
       ".wfc-current-attribute-value"
     )?.textContent;
     expect(value?.trim()).toBe("5 m/s");
+  });
+});
+
+describe("secondary_info_attribute", () => {
+  let hass: ExtendedHomeAssistant;
+  let weatherEntity: WeatherEntity;
+
+  beforeEach(() => {
+    const mockHass = new MockHass();
+    hass = mockHass.getHass() as ExtendedHomeAssistant;
+
+    const original = hass.states["weather.demo"] as WeatherEntity;
+    weatherEntity = {
+      ...original,
+      attributes: {
+        ...original.attributes,
+        humidity: 65,
+        pressure: 1013,
+        wind_speed: 12,
+        wind_bearing: 180,
+        dew_point: 8,
+        apparent_temperature: 22,
+        cloud_coverage: 75,
+      },
+    } as WeatherEntity;
+
+    hass.states["weather.demo"] = weatherEntity;
+  });
+
+  it("renders secondary info when secondary_info_attribute is set", async () => {
+    const mockHass = new MockHass();
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { secondary_info_attribute: "humidity" },
+        }}
+        .hourlyForecast=${mockHass.hourlyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const secondaryInfo = el.querySelector(".wfc-current-secondary-info");
+    expect(secondaryInfo).not.toBeNull();
+
+    const value = secondaryInfo?.querySelector(".wfc-current-secondary-value");
+    expect(value?.textContent?.trim()).toBe("65 %");
+  });
+
+  it("renders secondary info with humidity icon", async () => {
+    const mockHass = new MockHass();
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { secondary_info_attribute: "humidity" },
+        }}
+        .hourlyForecast=${mockHass.hourlyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const icon = el.querySelector(".wfc-current-secondary-icon");
+    expect(icon).not.toBeNull();
+    // @ts-expect-error icon exists
+    expect(icon?.icon).toBe("mdi:water-percent");
+  });
+
+  it("renders secondary info with wind_speed icon", async () => {
+    const mockHass = new MockHass();
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { secondary_info_attribute: "wind_speed" },
+        }}
+        .hourlyForecast=${mockHass.hourlyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const icon = el.querySelector(".wfc-current-secondary-icon");
+    // @ts-expect-error icon exists
+    expect(icon?.icon).toBe("mdi:weather-windy-variant");
+
+    const value = el.querySelector(".wfc-current-secondary-value");
+    expect(value?.textContent?.trim()).toBe("12 m/s (S)");
+  });
+
+  it("renders secondary info with dew_point", async () => {
+    const mockHass = new MockHass();
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { secondary_info_attribute: "dew_point" },
+        }}
+        .hourlyForecast=${mockHass.hourlyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const icon = el.querySelector(".wfc-current-secondary-icon");
+    // @ts-expect-error icon exists
+    expect(icon?.icon).toBe("mdi:water-thermometer-outline");
+
+    const value = el.querySelector(".wfc-current-secondary-value");
+    expect(value?.textContent?.trim()).toBe("8°C");
+  });
+
+  it("renders secondary info with apparent_temperature", async () => {
+    const mockHass = new MockHass();
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { secondary_info_attribute: "apparent_temperature" },
+        }}
+        .hourlyForecast=${mockHass.hourlyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const icon = el.querySelector(".wfc-current-secondary-icon");
+    // @ts-expect-error icon exists
+    expect(icon?.icon).toBe("mdi:thermometer");
+
+    const value = el.querySelector(".wfc-current-secondary-value");
+    expect(value?.textContent?.trim()).toBe("22°C");
+  });
+
+  it("renders secondary info with pressure", async () => {
+    const mockHass = new MockHass();
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { secondary_info_attribute: "pressure" },
+        }}
+        .hourlyForecast=${mockHass.hourlyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const secondaryIcon = el.querySelector(
+      ".wfc-current-secondary-info .wfc-current-secondary-icon"
+    );
+
+    // @ts-expect-error icon exists
+    expect(secondaryIcon?.icon).toBe("mdi:gauge");
+
+    const value = el.querySelector(".wfc-current-secondary-value");
+    expect(value?.textContent?.trim()).toBe("1013 hPa");
+  });
+
+  it("falls back to extrema when secondary_info_attribute is non-existent", async () => {
+    const mockHass = new MockHass();
+    mockHass.hourlyForecast = [
+      {
+        datetime: new Date().toISOString(),
+        temperature: 5.2,
+        condition: "cloudy",
+      },
+      {
+        datetime: new Date(Date.now() + 3600000).toISOString(),
+        temperature: 7.1,
+        condition: "cloudy",
+      },
+    ];
+    mockHass.dailyForecast = [
+      {
+        datetime: new Date().toISOString(),
+        temperature: 10,
+        templow: 5.3,
+        condition: "cloudy",
+      },
+    ];
+
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { secondary_info_attribute: "non_existent_attr" },
+        }}
+        .hourlyForecast=${mockHass.hourlyForecast}
+        .dailyForecast=${mockHass.dailyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const secondaryInfo = el.querySelector(".wfc-current-secondary-info");
+    expect(secondaryInfo).not.toBeNull();
+
+    const value = secondaryInfo?.querySelector(".wfc-current-secondary-value");
+    expect(value?.textContent?.trim()).toBe("10°C / 5.2°C");
+  });
+
+  it("falls back to humidity when extrema is missing", async () => {
+    const mockHass = new MockHass();
+    mockHass.hourlyForecast = [
+      // @ts-expect-error temperature is mandatory although can be missing
+      {
+        datetime: new Date().toISOString(),
+        condition: "cloudy",
+      },
+      // @ts-expect-error temperature is mandatory although can be missing
+      {
+        datetime: new Date(Date.now() + 3600000).toISOString(),
+        condition: "cloudy",
+      },
+    ];
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${baseConfig}
+        .hourlyForecast=${mockHass.hourlyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const secondaryInfo = el.querySelector(".wfc-current-secondary-info");
+    expect(secondaryInfo).not.toBeNull();
+
+    const icon = secondaryInfo?.querySelector(".wfc-current-secondary-icon");
+    // @ts-expect-error icon exists
+    expect(icon?.icon).toBe("mdi:water-percent");
+
+    const value = secondaryInfo?.querySelector(".wfc-current-secondary-value");
+    expect(value?.textContent?.trim()).toBe("65 %");
+  });
+
+  it("falls back to extrema when secondary_info_attribute is not set", async () => {
+    const mockHass = new MockHass();
+    mockHass.hourlyForecast = [
+      {
+        datetime: new Date().toISOString(),
+        temperature: 5.2,
+        condition: "cloudy",
+      },
+      {
+        datetime: new Date(Date.now() + 3600000).toISOString(),
+        temperature: 7.1,
+        condition: "cloudy",
+      },
+    ];
+    mockHass.dailyForecast = [
+      {
+        datetime: new Date().toISOString(),
+        temperature: 10,
+        templow: 5.3,
+        condition: "cloudy",
+      },
+    ];
+
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${baseConfig}
+        .hourlyForecast=${mockHass.hourlyForecast}
+        .dailyForecast=${mockHass.dailyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const secondaryInfo = el.querySelector(".wfc-current-secondary-info");
+    expect(secondaryInfo).not.toBeNull();
+
+    const secondaryIcon = el.querySelector(
+      ".wfc-current-secondary-info .wfc-current-secondary-icon"
+    );
+    expect(secondaryIcon).toBeNull();
+
+    const value = secondaryInfo?.querySelector(".wfc-current-secondary-value");
+    expect(value?.textContent?.trim()).toBe("10°C / 5.2°C");
+  });
+
+  it("renders secondary info with proper alignment styling", async () => {
+    const mockHass = new MockHass();
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { secondary_info_attribute: "humidity" },
+        }}
+        .hourlyForecast=${mockHass.hourlyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const secondaryInfoContainer = el.querySelector(
+      ".wfc-current-secondary-info"
+    );
+    expect(secondaryInfoContainer).not.toBeNull();
+
+    const icon = secondaryInfoContainer?.querySelector(
+      ".wfc-current-secondary-icon"
+    );
+    const value = secondaryInfoContainer?.querySelector(
+      ".wfc-current-secondary-value"
+    );
+
+    expect(icon).not.toBeNull();
+    expect(value).not.toBeNull();
   });
 });

@@ -3,7 +3,11 @@ import type {
   HassEntityAttributeBase,
   HassEntityBase,
 } from "home-assistant-js-websocket";
-import { ExtendedHomeAssistant } from "../types";
+import {
+  CurrentWeatherAttributes,
+  ExtendedHomeAssistant,
+  WeatherForecastCardConfig,
+} from "../types";
 import memoizeOne from "memoize-one";
 import { average } from "../helpers";
 
@@ -105,6 +109,21 @@ export const CARDINAL_DIRECTIONS_DEGREES_MAP: Record<string, number> = {
   "SSW": 202.5, "SW": 225, "WSW": 247.5,
   "W": 270, "V": 270, "WNW": 292.5, "NW": 315,
 } as const;
+
+export const WEATHER_ATTRIBUTE_ICON_MAP: {
+  [key in CurrentWeatherAttributes]: string;
+} = {
+  humidity: "mdi:water-percent",
+  pressure: "mdi:gauge",
+  wind_speed: "mdi:weather-windy-variant",
+  wind_gust_speed: "mdi:weather-windy",
+  visibility: "mdi:eye",
+  ozone: "mdi:molecule",
+  uv_index: "mdi:weather-sunny-alert",
+  dew_point: "mdi:water-thermometer-outline",
+  apparent_temperature: "mdi:thermometer",
+  cloud_coverage: "mdi:cloud-outline",
+};
 
 export const getWindBearing = (
   degree: number | string | undefined | null
@@ -514,6 +533,49 @@ export const aggregateHourlyForecastData = (
   }
 
   return groupedForecast;
+};
+
+export const formatWeatherEntityAttributeValue = (
+  hass: ExtendedHomeAssistant,
+  weatherEntity: WeatherEntity,
+  config: WeatherForecastCardConfig,
+  attribute: CurrentWeatherAttributes
+): string | undefined => {
+  const value = weatherEntity.attributes[attribute];
+
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (attribute === "wind_speed") {
+    return getWind(hass, weatherEntity);
+  }
+
+  // hass.formatEntityAttributeValue does not support wind_gust_speed yet
+  if (attribute === "wind_gust_speed") {
+    const unit = getWeatherUnit(hass, weatherEntity, "wind_gust_speed");
+
+    return `${value} ${unit}`;
+  }
+
+  // hass.formatEntityAttributeValue does not support ozone yet
+  if (attribute === "ozone") {
+    const unit = getWeatherUnit(hass, weatherEntity, "ozone");
+
+    return `${value} ${unit}`;
+  }
+
+  // Temperature related attributes need special handling for precision
+  if (attribute === "apparent_temperature" || attribute === "dew_point") {
+    return formatTemperature(
+      hass,
+      weatherEntity,
+      value,
+      config.current?.temperature_precision
+    );
+  }
+
+  return hass.formatEntityAttributeValue(weatherEntity, attribute);
 };
 
 export const formatTemperature = (

@@ -73,6 +73,7 @@ export interface WeatherForecastCardCurrentConfig {
     | CurrentWeatherAttributes
     | CurrentWeatherAttributes[];
   temperature_precision?: number;
+  secondary_info_attribute?: CurrentWeatherAttributes;
 }
 
 export interface WeatherForecastCardForecastActionConfig {
@@ -105,11 +106,13 @@ export type ExtendedHomeAssistant = HomeAssistant & {
   formatEntityState: (stateObj: HassEntity) => string | undefined;
   formatEntityAttributeValue: (
     stateObj: HassEntity,
-    attribute: string
+    attribute: string,
+    value?: number | string
   ) => string | undefined;
   formatEntityAttributeName: (
     stateObj: HassEntity,
-    attribute: string
+    attribute: string,
+    value?: number | string
   ) => string | undefined;
   themes?: {
     darkMode: boolean;

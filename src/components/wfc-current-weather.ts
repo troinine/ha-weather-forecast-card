@@ -1,7 +1,7 @@
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { actionHandler } from "../hass";
-import { getSuntimesInfo } from "../helpers";
+import { getSuntimesInfo, normalizeDate } from "../helpers";
 import {
   ActionConfig,
   ActionHandlerEvent,
@@ -17,21 +17,40 @@ import {
 import {
   ForecastAttribute,
   formatTemperature,
+  formatWeatherEntityAttributeValue,
+  WEATHER_ATTRIBUTE_ICON_MAP,
   WeatherEntity,
 } from "../data/weather";
 
 import "./wfc-weather-condition-icon-provider";
 import "./wfc-current-weather-attributes";
 
-type TemperatureHighLow = {
-  temperatureHigh?: string;
-  temperatureLow?: string;
+type SecondaryInfo = {
+  icon?: string;
+  value?: string;
+};
+
+type TemperatureExtrema = {
+  high?: string;
+  low?: string;
+};
+
+type ExtendedCurrentWeatherAttribute =
+  | (typeof CURRENT_WEATHER_ATTRIBUTES)[number]
+  | "precipitation";
+
+const EXTENDED_WEATHER_ATTRIBUTE_ICON_MAP: {
+  [key in ExtendedCurrentWeatherAttribute]: string;
+} = {
+  ...WEATHER_ATTRIBUTE_ICON_MAP,
+  precipitation: "mdi:weather-rainy",
 };
 
 @customElement("wfc-current-weather")
 export class WfcCurrentWeather extends LitElement {
   @property({ attribute: false }) hass!: ExtendedHomeAssistant;
   @property({ attribute: false }) weatherEntity!: WeatherEntity;
+  @property({ attribute: false }) hourlyForecast?: ForecastAttribute[];
   @property({ attribute: false }) dailyForecast?: ForecastAttribute[];
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
@@ -46,15 +65,11 @@ export class WfcCurrentWeather extends LitElement {
 
     const { state } = this.weatherEntity;
     const currentTemperature = this.getTemperature();
-    const tempHighLowInfo = this.getTemperatureHighLow();
+    const secondaryInfo = this.getSecondaryWeatherAttribute();
+    const isNightTime = this.isNightTime();
+    const attributes = this.getConfiguredAttributes();
     const name =
       this.config.name || this.weatherEntity.attributes.friendly_name;
-    const suntimesInfo = getSuntimesInfo(this.hass, new Date());
-    const isNightTime =
-      this.config.forecast?.show_sun_times && suntimesInfo
-        ? suntimesInfo.isNightTime
-        : false;
-    const attributes = this.getConfiguredAttributes();
 
     return html`
       <div class="wfc-current-weather">
@@ -67,15 +82,15 @@ export class WfcCurrentWeather extends LitElement {
           ></wfc-weather-condition-icon-provider>
           <div class="wfc-name-state">
             <div class="wfc-current-state">
-              ${this.hass?.formatEntityState?.(this.weatherEntity)}
+              ${this.hass.formatEntityState(this.weatherEntity)}
             </div>
             ${name
-              ? html`<div class="wfc-name wfc-secondary">${name}</div>`
+              ? html`<span class="wfc-name wfc-secondary">${name}</span>`
               : nothing}
           </div>
-          ${currentTemperature !== null
-            ? html`
-                <div class="wfc-current-temperatures">
+          <div class="wfc-current-primary-secondary">
+            ${currentTemperature !== null
+              ? html`
                   <div
                     class="wfc-current-temperature"
                     .actionHandler=${actionHandler({
@@ -91,18 +106,27 @@ export class WfcCurrentWeather extends LitElement {
                   >
                     ${currentTemperature}
                   </div>
-                  ${tempHighLowInfo
-                    ? html`
-                        <div
-                          class="wfc-current-temperature-high-low wfc-secondary"
-                        >
-                          ${`${tempHighLowInfo.temperatureHigh} / ${tempHighLowInfo.temperatureLow}`}
-                        </div>
-                      `
-                    : nothing}
-                </div>
-              `
-            : nothing}
+                `
+              : nothing}
+            ${secondaryInfo
+              ? html`
+                  <div class="wfc-current-secondary-info">
+                    ${secondaryInfo.icon
+                      ? html`
+                          <ha-attribute-icon
+                            class="wfc-current-secondary-icon wfc-secondary"
+                            .hass=${this.hass}
+                            .icon=${secondaryInfo.icon}
+                          ></ha-attribute-icon>
+                        `
+                      : nothing}
+                    <span class="wfc-current-secondary-value wfc-secondary"
+                      >${secondaryInfo.value}</span
+                    >
+                  </div>
+                `
+              : nothing}
+          </div>
         </div>
         ${attributes.length > 0
           ? html`<wfc-current-weather-attributes
@@ -114,6 +138,14 @@ export class WfcCurrentWeather extends LitElement {
           : nothing}
       </div>
     `;
+  }
+
+  private isNightTime(): boolean {
+    const suntimesInfo = getSuntimesInfo(this.hass, new Date());
+
+    return this.config.forecast?.show_sun_times && suntimesInfo
+      ? suntimesInfo.isNightTime
+      : false;
   }
 
   private getConfiguredAttributes(): CurrentWeatherAttributes[] {
@@ -174,33 +206,110 @@ export class WfcCurrentWeather extends LitElement {
     return null;
   }
 
-  private getTemperatureHighLow(): TemperatureHighLow | null {
-    if (!this.dailyForecast || this.dailyForecast.length === 0) {
+  private getSecondaryWeatherAttribute(): SecondaryInfo | null {
+    const forecast = this.hourlyForecast;
+
+    const secondaryInfoAttribute =
+      this.config.current?.secondary_info_attribute;
+    if (secondaryInfoAttribute) {
+      if (secondaryInfoAttribute in this.weatherEntity.attributes) {
+        const weatherAttrIcon =
+          EXTENDED_WEATHER_ATTRIBUTE_ICON_MAP[secondaryInfoAttribute];
+
+        const value = formatWeatherEntityAttributeValue(
+          this.hass,
+          this.weatherEntity,
+          this.config,
+          secondaryInfoAttribute
+        );
+
+        if (value != null) {
+          return {
+            icon: weatherAttrIcon,
+            value,
+          };
+        }
+      }
+    }
+
+    const extrema = this.getTemperatureExtrema();
+
+    if (extrema) {
+      return {
+        value: `${extrema.high} / ${extrema.low}`,
+      };
+    }
+
+    let value: number;
+    let attribute: ExtendedCurrentWeatherAttribute;
+
+    if (forecast && forecast.length && forecast[0]?.precipitation != null) {
+      value = forecast[0].precipitation!;
+      attribute = "precipitation";
+    } else if ("humidity" in this.weatherEntity.attributes) {
+      value = this.weatherEntity.attributes.humidity!;
+      attribute = "humidity";
+    } else {
       return null;
     }
 
-    const high = this.dailyForecast[0]?.temperature;
-    const low = this.dailyForecast[0]?.templow;
+    const weatherAttrIcon = EXTENDED_WEATHER_ATTRIBUTE_ICON_MAP[attribute];
 
     return {
-      temperatureHigh:
-        high != null
-          ? formatTemperature(
-              this.hass,
-              this.weatherEntity,
-              high,
-              this.config.current?.temperature_precision
-            )
-          : undefined,
-      temperatureLow:
-        low != null
-          ? formatTemperature(
-              this.hass,
-              this.weatherEntity,
-              low,
-              this.config.current?.temperature_precision
-            )
-          : undefined,
+      icon: weatherAttrIcon,
+      value: this.hass.formatEntityAttributeValue(
+        this.weatherEntity,
+        attribute,
+        value
+      ),
+    };
+  }
+
+  private getTemperatureExtrema(): TemperatureExtrema | null {
+    if (!this.hourlyForecast?.length || !this.dailyForecast?.length) {
+      return null;
+    }
+
+    const todayTimestamp = normalizeDate(new Date().toISOString());
+
+    let minTemp =
+      this.dailyForecast[0]?.templow ??
+      this.dailyForecast[0]?.temperature ??
+      Infinity;
+    let maxTemp = this.dailyForecast[0]?.temperature ?? -Infinity;
+
+    for (const entry of this.hourlyForecast) {
+      if (normalizeDate(entry.datetime) === todayTimestamp) {
+        const low = entry.templow ?? entry.temperature;
+        const high = entry.temperature;
+
+        if (low != null && low < minTemp) {
+          minTemp = low;
+        }
+
+        if (high != null && high > maxTemp) {
+          maxTemp = high;
+        }
+      }
+    }
+
+    if (minTemp === Infinity || maxTemp === -Infinity) {
+      return null;
+    }
+
+    return {
+      high: formatTemperature(
+        this.hass,
+        this.weatherEntity,
+        maxTemp,
+        this.config.current?.temperature_precision
+      ),
+      low: formatTemperature(
+        this.hass,
+        this.weatherEntity,
+        minTemp,
+        this.config.current?.temperature_precision
+      ),
     };
   }
 }

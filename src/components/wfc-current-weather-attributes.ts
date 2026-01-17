@@ -8,24 +8,10 @@ import {
   WeatherForecastCardConfig,
 } from "../types";
 import {
-  formatTemperature,
-  getWeatherUnit,
-  getWind,
+  formatWeatherEntityAttributeValue,
+  WEATHER_ATTRIBUTE_ICON_MAP,
   WeatherEntity,
 } from "../data/weather";
-
-const ATTRIBUTE_ICON_MAP: { [key in CurrentWeatherAttributes]: string } = {
-  humidity: "mdi:cloud-percent-outline",
-  pressure: "mdi:gauge",
-  wind_speed: "mdi:weather-windy-variant",
-  wind_gust_speed: "mdi:weather-windy",
-  visibility: "mdi:eye",
-  ozone: "mdi:molecule",
-  uv_index: "mdi:weather-sunny-alert",
-  dew_point: "mdi:water-thermometer-outline",
-  apparent_temperature: "mdi:thermometer",
-  cloud_coverage: "mdi:cloud-outline",
-};
 
 @customElement("wfc-current-weather-attributes")
 export class WfcCurrentWeatherAttributes extends LitElement {
@@ -64,7 +50,12 @@ export class WfcCurrentWeatherAttributes extends LitElement {
   private _renderAttribute(
     attribute: CurrentWeatherAttributes
   ): TemplateResult | typeof nothing {
-    const value = this.computeAttributeValue(attribute);
+    const value = formatWeatherEntityAttributeValue(
+      this.hass,
+      this.weatherEntity,
+      this.config,
+      attribute
+    );
 
     if (!value) {
       return nothing;
@@ -77,7 +68,7 @@ export class WfcCurrentWeatherAttributes extends LitElement {
           .hass=${this.hass}
           .stateObj=${this.weatherEntity}
           .attribute=${attribute}
-          .icon=${ATTRIBUTE_ICON_MAP[attribute]}
+          .icon=${WEATHER_ATTRIBUTE_ICON_MAP[attribute]}
         ></ha-attribute-icon>
         <span class="wfc-current-attribute-name">
           ${this.localize(attribute)}
@@ -86,47 +77,6 @@ export class WfcCurrentWeatherAttributes extends LitElement {
       </div>
     `;
   }
-
-  private computeAttributeValue = (
-    attribute: CurrentWeatherAttributes
-  ): string | undefined => {
-    const stateObj = this.weatherEntity;
-    const value = stateObj.attributes[attribute];
-
-    if (value === undefined) {
-      return undefined;
-    }
-
-    if (attribute === "wind_speed") {
-      return getWind(this.hass, stateObj);
-    }
-
-    // hass.formatEntityAttributeValue does not support wind_gust_speed yet
-    if (attribute === "wind_gust_speed") {
-      const unit = getWeatherUnit(this.hass, stateObj, "wind_gust_speed");
-
-      return `${value} ${unit}`;
-    }
-
-    // hass.formatEntityAttributeValue does not support ozone yet
-    if (attribute === "ozone") {
-      const unit = getWeatherUnit(this.hass, stateObj, "ozone");
-
-      return `${value} ${unit}`;
-    }
-
-    // Temperature related attributes need special handling for precision
-    if (attribute === "apparent_temperature" || attribute === "dew_point") {
-      return formatTemperature(
-        this.hass,
-        stateObj,
-        value,
-        this.config.current?.temperature_precision
-      );
-    }
-
-    return this.hass.formatEntityAttributeValue(this.weatherEntity, attribute);
-  };
 
   private localize = (attribute: string): string => {
     return (
