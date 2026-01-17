@@ -81,9 +81,9 @@ export class WfcCurrentWeather extends LitElement {
             .classes=${"wfc-current-icon"}
           ></wfc-weather-condition-icon-provider>
           <div class="wfc-name-state">
-            <div class="wfc-current-state">
+            <span class="wfc-current-state">
               ${this.hass.formatEntityState(this.weatherEntity)}
-            </div>
+            </span>
             ${name
               ? html`<span class="wfc-name wfc-secondary">${name}</span>`
               : nothing}

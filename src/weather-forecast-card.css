@@ -143,10 +143,8 @@ ha-card {
 
 .wfc-name-state {
   flex: 1;
-}
-
-.wfc-current-temperature-high-low {
-  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
 }
 
 .wfc-weather-condition-icon-slot.wfc-current-icon {
