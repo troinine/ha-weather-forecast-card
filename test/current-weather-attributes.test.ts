@@ -396,9 +396,7 @@ describe("secondary_info_attribute", () => {
       html`<wfc-current-weather
         .hass=${testHass}
         .weatherEntity=${weatherEntity}
-        .config=${{
-          baseConfig,
-        }}
+        .config=${baseConfig}
         .hourlyForecast=${mockHass.hourlyForecast}
       ></wfc-current-weather>`
     );
