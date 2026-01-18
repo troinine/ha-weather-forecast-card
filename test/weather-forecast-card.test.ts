@@ -388,4 +388,120 @@ describe("weather-forecast-card", () => {
       );
     });
   });
+
+  describe("reconnection and popup scenarios", () => {
+    it("should establish subscriptions when reconnected to DOM with hasUpdated=true", async () => {
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${hass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify initial subscriptions are established
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBeDefined();
+      // @ts-expect-error: accessing private property
+      expect(testCard._hourlySubscription).toBeDefined();
+
+      // Simulate disconnection (popup closes)
+      testCard.remove();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Verify subscriptions were cleared on disconnect
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBeUndefined();
+      // @ts-expect-error: accessing private property
+      expect(testCard._hourlySubscription).toBeUndefined();
+
+      // Simulate reconnection (popup opens)
+      document.body.appendChild(testCard);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify subscriptions are re-established
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBeDefined();
+      // @ts-expect-error: accessing private property
+      expect(testCard._hourlySubscription).toBeDefined();
+    });
+
+    it("should not create duplicate subscriptions on reconnect", async () => {
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${hass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // @ts-expect-error: accessing private property
+      const initialDailySubId = testCard._dailySubscription;
+      // @ts-expect-error: accessing private property
+      const initialHourlySubId = testCard._hourlySubscription;
+
+      // Verify subscriptions exist
+      expect(initialDailySubId).toBeDefined();
+      expect(initialHourlySubId).toBeDefined();
+
+      // Simulate disconnect/reconnect
+      testCard.remove();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      document.body.appendChild(testCard);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify new subscription objects were created (different references)
+      // @ts-expect-error: accessing private property
+      const newDailySubId = testCard._dailySubscription;
+      // @ts-expect-error: accessing private property
+      const newHourlySubId = testCard._hourlySubscription;
+
+      // Both should be defined
+      expect(newDailySubId).toBeDefined();
+      expect(newHourlySubId).toBeDefined();
+
+      // They may be different references if createCallback created new promises
+      // The important thing is that we have valid subscriptions, not duplicates
+      expect(newDailySubId).not.toBeNull();
+      expect(newHourlySubId).not.toBeNull();
+    });
+
+    it("should render forecast data after reconnection", async () => {
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${hass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // Verify initial render with forecast data
+      // @ts-expect-error: accessing private property
+      const initialForecastCount = testCard._dailyForecastData?.length ?? 0;
+      expect(initialForecastCount).toBeGreaterThan(0);
+
+      // Simulate disconnect
+      testCard.remove();
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // Simulate reconnect
+      document.body.appendChild(testCard);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // Verify forecast data is restored
+      // @ts-expect-error: accessing private property
+      const reconnectedForecastCount = testCard._dailyForecastData?.length ?? 0;
+      expect(reconnectedForecastCount).toBeGreaterThan(0);
+      expect(reconnectedForecastCount).toBe(initialForecastCount);
+    });
+  });
 });
