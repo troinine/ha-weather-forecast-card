@@ -151,8 +151,10 @@ export class WeatherForecastCard extends LitElement {
 
     this._minForecastItemWidth = this.getInitialMinForecastItemWidth();
     this.waitForLayout();
-    
-    this.subscribeForecastEvents();
+
+    if (this.hasUpdated && this.config && this.hass) {
+      this.subscribeForecastEvents();
+    }
   }
 
   public disconnectedCallback(): void {
