@@ -475,14 +475,14 @@ export class WeatherForecastCard extends LitElement {
       try {
         unsub();
       } catch (error) {
-        logger.debug("Error unsubscribing from daily forecast:", error);
+        logger.warn("Error unsubscribing from daily forecast:", error);
       }
     });
     this._hourlySubscription?.then((unsub) => {
       try {
         unsub();
       } catch (error) {
-        logger.debug("Error unsubscribing from hourly forecast:", error);
+        logger.warn("Error unsubscribing from hourly forecast:", error);
       }
     });
 
