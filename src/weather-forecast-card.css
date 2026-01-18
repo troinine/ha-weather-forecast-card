@@ -68,6 +68,7 @@
     --weather-forecast-card-day-indicator-text-color,
     #ffffff
   );
+  --wfc-component-gap: var(--ha-space-3, 12px);
   --forecast-item-width: 50px; /* Initial minimum value. Updated in JS */
   --forecast-item-gap: 0px; /* Initial minimum value. Updated in JS */
   --forecast-precipitation-bar-max-height: calc(
@@ -103,7 +104,7 @@ ha-card {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--ha-space-4, 16px);
+  gap: var(--wfc-component-gap);
   container-type: inline-size;
   container-name: wfc-container;
 }
@@ -116,7 +117,7 @@ ha-card {
   display: flex;
   flex-wrap: nowrap;
   flex-direction: column;
-  gap: var(--ha-space-4, 16px);
+  gap: var(--wfc-component-gap);
   user-select: none;
   -webkit-user-select: none;
   cursor: pointer;
