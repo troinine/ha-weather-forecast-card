@@ -190,6 +190,21 @@ export class WeatherForecastCardEditor
           },
         },
       },
+      {
+        name: "current.secondary_info_attribute",
+        default: "none",
+        optional: true,
+        selector: {
+          select: {
+            options: CURRENT_WEATHER_ATTRIBUTES.map((attribute) => ({
+              value: attribute,
+              label:
+                localize(`ui.card.weather.attributes.${attribute}`) ||
+                capitalize(attribute).replace(/_/g, " "),
+            })),
+          },
+        },
+      },
     ] as const;
 
   private _forecastSchema = (localize: LocalizeFunc): HaFormSchema[] =>
@@ -433,6 +448,12 @@ export class WeatherForecastCardEditor
             "ui.panel.lovelace.editor.card.generic.attribute"
           ) || "attribute"
         );
+      case "current.secondary_info_attribute":
+        return (
+          this.hass.localize(
+            "ui.panel.lovelace.editor.card.generic.secondary_info_attribute"
+          ) || "Secondary info attribute"
+        );
       case "forecast.extra_attribute":
         return `Extra ${(
           this.hass!.localize("ui.card.weather.forecast") || "forecast"
@@ -486,6 +507,8 @@ export class WeatherForecastCardEditor
         return "Select the default forecast type to show when forecasts are enabled. Users can still toggle between hourly and daily forecasts if both are available.";
       case "current.show_attributes":
         return "Select which weather attributes to display in the current weather section.";
+      case "current.secondary_info_attribute":
+        return "Select a weather attribute to display as secondary information in the current weather section.";
       case "forecast.extra_attribute":
         return "Select an extra attribute to display below each forecast.";
       case "forecast_interactions":
