@@ -1,4 +1,6 @@
 import { formatNumber, HomeAssistant } from "custom-card-helpers";
+import memoizeOne from "memoize-one";
+import { average } from "../helpers";
 import type {
   HassEntityAttributeBase,
   HassEntityBase,
@@ -8,8 +10,6 @@ import {
   ExtendedHomeAssistant,
   WeatherForecastCardConfig,
 } from "../types";
-import memoizeOne from "memoize-one";
-import { average } from "../helpers";
 
 export enum WeatherEntityFeature {
   FORECAST_DAILY = 1,
@@ -554,8 +554,9 @@ export const formatWeatherEntityAttributeValue = (
   // hass.formatEntityAttributeValue does not support wind_gust_speed yet
   if (attribute === "wind_gust_speed") {
     const unit = getWeatherUnit(hass, weatherEntity, "wind_gust_speed");
+    const windGustSpeed = formatNumber(value, hass.locale);
 
-    return `${value} ${unit}`;
+    return `${windGustSpeed} ${unit}`;
   }
 
   // hass.formatEntityAttributeValue does not support ozone yet
