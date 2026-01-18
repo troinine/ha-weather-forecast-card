@@ -170,7 +170,10 @@ export interface MockHassOptions {
 }
 
 export class MockHass {
-  private subscriptions = new Map<string, ForecastSubscriptionCallback>();
+  private subscriptions = new Map<
+    string,
+    { callback: ForecastSubscriptionCallback; forecastType: "hourly" | "daily" }
+  >();
   public hourlyForecast: ForecastAttribute[] = [];
   public dailyForecast: ForecastAttribute[] = [];
 
@@ -213,7 +216,7 @@ export class MockHass {
       states: {
         "sensor.temperature_outdoor": {
           entity_id: "sensor.temperature_outdoor",
-          state: currentForecast.temperature.toString(),
+          state: currentForecast.temperature?.toString(),
           attributes: {
             friendly_name: "Outdoor Temperature",
             unit_of_measurement: this.options.unitOfMeasurement,
@@ -424,9 +427,12 @@ export class MockHass {
         ) => {
           console.log("Mock forecast subscription:", message);
 
-          // Store subscription
+          // Store subscription with forecast type
           const subscriptionId = crypto.randomUUID();
-          this.subscriptions.set(subscriptionId, callback);
+          this.subscriptions.set(subscriptionId, {
+            callback,
+            forecastType: message.forecast_type,
+          });
 
           // Use stored forecast data
           const mockForecast =
@@ -481,9 +487,14 @@ export class MockHass {
     return round(result, 1);
   }
 
-  // Update forecast data for all subscriptions
+  // Update forecast data for matching subscriptions only
   updateForecasts(type: "hourly" | "daily") {
-    this.subscriptions.forEach((callback) => {
+    this.subscriptions.forEach(({ callback, forecastType }) => {
+      // Only send to subscriptions that match the forecast type
+      if (forecastType !== type) {
+        return;
+      }
+
       const mockForecast =
         type === "hourly" ? this.hourlyForecast : this.dailyForecast;
 
@@ -492,7 +503,7 @@ export class MockHass {
         forecast: mockForecast as [ForecastAttribute],
       };
 
-      callback(forecastEvent);
+      setTimeout(() => callback(forecastEvent), 100);
     });
   }
 }
