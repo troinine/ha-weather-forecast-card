@@ -487,11 +487,19 @@ ha-card {
   width: 100%;
 }
 
-.wfc-forecast-time-row,
-.wfc-forecast-span-row {
+.wfc-forecast-time-row {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
+  column-gap: var(--forecast-item-gap);
+  width: 100%;
+  min-width: var(--wfc-forecast-chart-width, auto);
+}
+
+.wfc-forecast-span-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--forecast-item-width);
   column-gap: var(--forecast-item-gap);
   width: 100%;
   min-width: var(--wfc-forecast-chart-width, auto);

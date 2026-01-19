@@ -121,7 +121,12 @@ export class WfcForecastSimple extends LitElement {
       forecastTemplates.push(html`
         <div class="wfc-forecast-grouped-wrapper">
           <div class="wfc-forecast-time-row">${timeRow}</div>
-          <div class="wfc-forecast-span-row">${spanRow}</div>
+          <div 
+            class="wfc-forecast-span-row"
+            style="grid-template-columns: repeat(${this.forecast.length}, var(--forecast-item-width));"
+          >
+            ${spanRow}
+          </div>
           <div class="wfc-forecast-row">${detailRow}</div>
         </div>
       `);
