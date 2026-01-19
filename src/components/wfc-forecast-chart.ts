@@ -620,6 +620,20 @@ export class WfcForecastChart extends LitElement {
         return;
       }
 
+      // Always render a per-slot time label so hours stay visible even when conditions are grouped
+      parts.push(html`
+        <div class="wfc-forecast-slot">
+          <wfc-forecast-header-items
+            .hass=${this.hass}
+            .forecast=${item}
+            .forecastType=${this.forecastType}
+            .config=${this.config}
+            .hideIcon=${true}
+            .hideTime=${false}
+          ></wfc-forecast-header-items>
+        </div>
+      `);
+
       if (this.forecastType === "hourly") {
         const forecastDay = formatDay(this.hass, item.datetime);
         if (currentDay !== forecastDay) {
@@ -649,7 +663,8 @@ export class WfcForecastChart extends LitElement {
               .forecast=${item}
               .forecastType=${this.forecastType}
               .config=${this.config}
-              .hideTime=${false}
+              .hideTime=${true}
+              .hideIcon=${false}
             ></wfc-forecast-header-items>
           </div>
         `);

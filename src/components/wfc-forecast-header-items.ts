@@ -28,6 +28,7 @@ export class WfcForecastHeaderItems extends LitElement {
   @property({ attribute: false }) forecastType!: ForecastType;
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
   @property({ attribute: false }) hideTime: boolean = false;
+  @property({ attribute: false }) hideIcon: boolean = false;
 
   private suntimesInfo?: SuntimesInfo | null;
 
@@ -68,12 +69,14 @@ export class WfcForecastHeaderItems extends LitElement {
           ${label}
         </div>
       ` : nothing}
-      <wfc-weather-condition-icon-provider
-        .hass=${this.hass}
-        .config=${this.config}
-        .state=${this.forecast.condition}
-        .isNightTime=${isNightTime}
-      ></wfc-weather-condition-icon-provider>
+      ${!this.hideIcon ? html`
+        <wfc-weather-condition-icon-provider
+          .hass=${this.hass}
+          .config=${this.config}
+          .state=${this.forecast.condition}
+          .isNightTime=${isNightTime}
+        ></wfc-weather-condition-icon-provider>
+      ` : nothing}
     `;
   }
 
