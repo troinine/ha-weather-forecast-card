@@ -38,6 +38,12 @@ export class WfcForecastSimple extends LitElement {
   protected createRenderRoot() {
     return this;
   }
+  render(): TemplateResult | typeof nothing {
+    if (!this.forecast?.length) {
+      return nothing;
+    }
+
+    const useGroupedIcons = this.config.forecast?.group_condition_icons ?? false;
     const forecastTemplates: TemplateResult[] = [];
     const maxPrecipitation = getMaxPrecipitationForUnit(
       getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
