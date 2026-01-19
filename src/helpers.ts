@@ -141,32 +141,11 @@ export const groupForecastByCondition = (
     const condition = forecast[i]?.condition || "";
     const isNight = hass ? getSuntimesInfo(hass, forecast[i].datetime)?.isNightTime : false;
 
-    // Force a split when sunrise or sunset happens between consecutive forecast entries
-    let crossedSunEvent = false;
-    if (hass) {
-      const prevSun = getSuntimesInfo(hass, forecast[i - 1].datetime);
-      if (prevSun?.sunrise || prevSun?.sunset) {
-        const start = toDate(
-          forecast[i - 1].groupEndtime ?? forecast[i - 1].datetime
-        ).getTime();
-        const end = toDate(forecast[i].datetime).getTime();
-
-        const between = (eventDate?: Date) => {
-          if (!eventDate) return false;
-          const t = eventDate.getTime();
-          return t > start && t <= end;
-        };
-
-        crossedSunEvent = between(prevSun.sunrise) || between(prevSun.sunset);
-      }
-    }
-
     // Break grouping if condition changes OR day/night changes
     const conditionChanged = condition !== currentCondition;
     const dayNightChanged = isNight !== currentIsNight;
-    const sunBoundaryReached = crossedSunEvent;
 
-    if (conditionChanged || dayNightChanged || sunBoundaryReached) {
+    if (conditionChanged || dayNightChanged) {
       // End of current span, create entry
       conditionSpans.push({
         condition: currentCondition,

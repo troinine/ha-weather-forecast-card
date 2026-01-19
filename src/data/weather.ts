@@ -458,17 +458,12 @@ export const aggregateHourlyForecastData = (
   let i = 0;
 
   while (i < forecast.length) {
-    const startCondition = forecast[i]?.condition;
     const group: ForecastAttribute[] = [];
 
+    // Group consecutive entries up to groupSize (condition-based grouping handled later)
     while (i < forecast.length && group.length < groupSize) {
       const nextEntry = forecast[i];
       if (!nextEntry) break;
-
-      // Stop grouping when the condition changes to keep spans condition-based
-      if (group.length > 0 && nextEntry.condition !== startCondition) {
-        break;
-      }
 
       group.push(nextEntry);
       i += 1;
