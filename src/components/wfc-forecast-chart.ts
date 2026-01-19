@@ -657,14 +657,16 @@ export class WfcForecastChart extends LitElement {
             class="wfc-forecast-condition-span" 
             style="grid-column: span ${conditionSpan.count};"
           >
-            <wfc-forecast-header-items
-              .hass=${this.hass}
-              .forecast=${item}
-              .forecastType=${this.forecastType}
-              .config=${this.config}
-              .hideTime=${true}
-              .hideIcon=${false}
-            ></wfc-forecast-header-items>
+            <div class="wfc-condition-icon-sticky">
+              <wfc-forecast-header-items
+                .hass=${this.hass}
+                .forecast=${item}
+                .forecastType=${this.forecastType}
+                .config=${this.config}
+                .hideTime=${true}
+                .hideIcon=${false}
+              ></wfc-forecast-header-items>
+            </div>
           </div>
         `);
       }

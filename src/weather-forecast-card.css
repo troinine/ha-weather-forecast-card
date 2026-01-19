@@ -527,6 +527,17 @@ ha-card {
   background: color-mix(in srgb, var(--primary-color, #03a9f4) 10%, transparent);
   border-radius: 8px;
   padding: var(--ha-space-1, 4px);
+  overflow: visible;
+}
+
+.wfc-condition-icon-sticky {
+  position: sticky;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ha-space-1, 4px);
 }
 
 wfc-wind-indicator,
