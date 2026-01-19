@@ -611,7 +611,8 @@ export class WfcForecastChart extends LitElement {
   }
 
   private renderGroupedHeaderItems(forecast: ForecastAttribute[]): TemplateResult[] {
-    const parts: TemplateResult[] = [];
+    const timeRow: TemplateResult[] = [];
+    const spanRow: TemplateResult[] = [];
     let currentDay: string | undefined;
     const conditionSpans = groupForecastByCondition(forecast, this.hass);
 
@@ -620,8 +621,8 @@ export class WfcForecastChart extends LitElement {
         return;
       }
 
-      // Always render a per-slot time label so hours stay visible even when conditions are grouped
-      parts.push(html`
+      // Time label per hour (no icon)
+      timeRow.push(html`
         <div class="wfc-forecast-slot">
           <wfc-forecast-header-items
             .hass=${this.hass}
@@ -638,7 +639,7 @@ export class WfcForecastChart extends LitElement {
         const forecastDay = formatDay(this.hass, item.datetime);
         if (currentDay !== forecastDay) {
           currentDay = forecastDay;
-          parts.push(
+          spanRow.push(
             html`<div class="wfc-day-indicator-container">
               <div class="wfc-day-indicator wfc-label">${forecastDay}</div>
             </div>`
@@ -653,7 +654,7 @@ export class WfcForecastChart extends LitElement {
         // Render condition bar spanning multiple slots
         const spanWidth = `calc(${conditionSpan.count} * var(--forecast-item-width) + ${conditionSpan.count - 1} * var(--forecast-item-gap))`;
 
-        parts.push(html`
+        spanRow.push(html`
           <div 
             class="wfc-forecast-condition-span" 
             style="width: ${spanWidth}; grid-column: span ${conditionSpan.count};"
@@ -671,7 +672,12 @@ export class WfcForecastChart extends LitElement {
       }
     });
 
-    return parts;
+    return [
+      html`<div class="wfc-forecast-grouped-wrapper">
+        <div class="wfc-forecast-time-row">${timeRow}</div>
+        <div class="wfc-forecast-span-row">${spanRow}</div>
+      </div>`,
+    ];
   }
 
   /**
