@@ -529,7 +529,7 @@ ha-card {
   background: color-mix(in srgb, var(--primary-color, #03a9f4) 10%, transparent);
   border-radius: 8px;
   padding: var(--ha-space-1, 4px);
-  overflow: visible;
+  overflow: visible !important;
 }
 
 .wfc-condition-icon-sticky {
