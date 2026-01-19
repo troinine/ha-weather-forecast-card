@@ -613,7 +613,7 @@ export class WfcForecastChart extends LitElement {
   private renderGroupedHeaderItems(forecast: ForecastAttribute[]): TemplateResult[] {
     const parts: TemplateResult[] = [];
     let currentDay: string | undefined;
-    const conditionSpans = groupForecastByCondition(forecast);
+    const conditionSpans = groupForecastByCondition(forecast, this.hass);
 
     forecast.forEach((item, index) => {
       if (!item.datetime) {

@@ -125,7 +125,8 @@ export const endOfHour = (input: Date | string): Date => {
  * @returns Array of condition spans with start/end indices and counts
  */
 export const groupForecastByCondition = (
-  forecast: ForecastAttribute[]
+  forecast: ForecastAttribute[],
+  hass?: HomeAssistant
 ): ConditionSpan[] => {
   if (!forecast || forecast.length === 0) {
     return [];
@@ -134,11 +135,17 @@ export const groupForecastByCondition = (
   const conditionSpans: ConditionSpan[] = [];
   let currentCondition = forecast[0]?.condition || "";
   let startIndex = 0;
+  let currentIsNight = hass ? getSuntimesInfo(hass, forecast[0].datetime)?.isNightTime : false;
 
   for (let i = 1; i < forecast.length; i++) {
     const condition = forecast[i]?.condition || "";
+    const isNight = hass ? getSuntimesInfo(hass, forecast[i].datetime)?.isNightTime : false;
+    
+    // Break grouping if condition changes OR day/night changes
+    const conditionChanged = condition !== currentCondition;
+    const dayNightChanged = isNight !== currentIsNight;
 
-    if (condition !== currentCondition) {
+    if (conditionChanged || dayNightChanged) {
       // End of current span, create entry
       conditionSpans.push({
         condition: currentCondition,
@@ -149,6 +156,7 @@ export const groupForecastByCondition = (
 
       // Start new span
       currentCondition = condition;
+      currentIsNight = isNight;
       startIndex = i;
     }
   }
