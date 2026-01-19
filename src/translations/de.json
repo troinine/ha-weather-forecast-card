@@ -1,0 +1,10 @@
+{
+  "editor": {
+    "group_condition_icons": "Wetter-Icons gruppieren",
+    "group_condition_icons_helper": "Gruppierte Wettersymbole verwenden, wenn mehrere Vorhersageeinträge denselben visuellen Zustand haben.",
+    "condition_colors": "Zustandsfarben verwenden",
+    "condition_colors_helper": "Hintergrund- und Symbolfarben basierend auf dem Wetterzustand aktivieren.",
+    "condition_color_map": "Benutzerdefinierte Zustandsfarbzuordnung",
+    "condition_color_map_helper": "Optionale JSON-Zuordnung, um Vorder- und Hintergrundfarben für bestimmte Bedingungen zu überschreiben."
+  }
+}

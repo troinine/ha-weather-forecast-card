@@ -20,6 +20,7 @@ import {
   WeatherForecastCardForecastConfig,
 } from "../types";
 import en from "../translations/en.json";
+import de from "../translations/de.json";
 
 type HaFormSelector =
   | { entity: { domain?: string; device_class?: string | string[] } }
@@ -67,6 +68,7 @@ type EditorTranslationKey = keyof typeof en.editor;
 
 const EDITOR_TRANSLATIONS: Record<string, typeof en> = {
   en,
+  de,
 };
 
 const translateEditor = (
