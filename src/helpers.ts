@@ -5,6 +5,25 @@ import memoizeOne from "memoize-one";
 import { ConditionSpan, SuntimesInfo } from "./types";
 import { ForecastAttribute } from "./data/weather";
 
+// Map condition to night-aware version for grouping
+const mapConditionForNight = (condition: string, isNightTime: boolean): string => {
+  if (!isNightTime) return condition;
+  const normalized = condition.toLowerCase().replace(/_/g, "-");
+  
+  const NIGHT_SAFE_CONDITIONS = new Set([
+    "clear-night", "cloudy", "fog", "hail", "lightning", "lightning-rainy",
+    "pouring", "rainy", "snowy", "snowy-rainy"
+  ]);
+  
+  const NIGHT_FALLBACK_CONDITIONS = new Set([
+    "sunny", "clear", "windy", "windy-variant", "partlycloudy", "exceptional"
+  ]);
+  
+  if (NIGHT_SAFE_CONDITIONS.has(normalized)) return normalized;
+  if (NIGHT_FALLBACK_CONDITIONS.has(normalized)) return "clear-night";
+  return normalized;
+};
+
 export const createWarningText = (
   hass: HomeAssistant | undefined,
   entity: string
@@ -138,21 +157,22 @@ export const groupForecastByCondition = (
   let currentCondition = forecast[0]?.condition || "";
   let startIndex = 0;
   let currentIsNight = hass ? getSuntimesInfo(hass, forecast[0].datetime)?.isNightTime : false;
+  let currentNightAwareCondition = mapConditionForNight(currentCondition, currentIsNight);
 
-  console.log(`[GroupByCondition] Initial: datetime=${forecast[0].datetime}, condition=${currentCondition}, isNight=${currentIsNight}`);
+  console.log(`[GroupByCondition] Initial: datetime=${forecast[0].datetime}, condition=${currentCondition}, isNight=${currentIsNight}, nightAware=${currentNightAwareCondition}`);
 
   for (let i = 1; i < forecast.length; i++) {
     const condition = forecast[i]?.condition || "";
     const isNight = hass ? getSuntimesInfo(hass, forecast[i].datetime)?.isNightTime : false;
+    const nightAwareCondition = mapConditionForNight(condition, isNight);
 
-    console.log(`[GroupByCondition] i=${i}, datetime=${forecast[i].datetime}, condition=${condition}, isNight=${isNight}`);
+    console.log(`[GroupByCondition] i=${i}, datetime=${forecast[i].datetime}, condition=${condition}, isNight=${isNight}, nightAware=${nightAwareCondition}`);
 
-    // Break grouping if condition changes OR day/night changes
-    const conditionChanged = condition !== currentCondition;
-    const dayNightChanged = isNight !== currentIsNight;
+    // Break grouping if NIGHT-AWARE condition changes (visual appearance changes)
+    const conditionChanged = nightAwareCondition !== currentNightAwareCondition;
 
-    if (conditionChanged || dayNightChanged) {
-      console.log(`[GroupByCondition] Split! conditionChanged=${conditionChanged}, dayNightChanged=${dayNightChanged}`);
+    if (conditionChanged) {
+      console.log(`[GroupByCondition] Split! nightAware changed: ${currentNightAwareCondition} → ${nightAwareCondition}`);
       // End of current span, create entry
       conditionSpans.push({
         condition: currentCondition,
@@ -164,6 +184,7 @@ export const groupForecastByCondition = (
       // Start new span
       currentCondition = condition;
       currentIsNight = isNight;
+      currentNightAwareCondition = nightAwareCondition;
       startIndex = i;
     }
   }
