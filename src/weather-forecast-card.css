@@ -498,7 +498,7 @@ ha-card {
 
 .wfc-forecast-span-row {
   display: grid;
-  grid-auto-flow: column;
+  grid-auto-flow: column dense;
   grid-auto-columns: var(--forecast-item-width);
   column-gap: var(--forecast-item-gap);
   width: 100%;

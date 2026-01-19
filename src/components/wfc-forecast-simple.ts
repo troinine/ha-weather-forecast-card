@@ -85,11 +85,10 @@ export class WfcForecastSimple extends LitElement {
         // Condition spans
         const conditionSpan = conditionSpans.find(span => span.startIndex === index);
         if (conditionSpan) {
-          const spanWidth = `calc(${conditionSpan.count} * var(--forecast-item-width) + ${conditionSpan.count - 1} * var(--forecast-item-gap))`;
           spanRow.push(html`
             <div 
               class="wfc-forecast-condition-span" 
-              style="width: ${spanWidth}; grid-column: span ${conditionSpan.count};"
+              style="grid-column: span ${conditionSpan.count};"
             >
               <wfc-forecast-header-items
                 .hass=${this.hass}
