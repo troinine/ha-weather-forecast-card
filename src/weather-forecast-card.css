@@ -391,6 +391,8 @@ ha-card {
   padding: 2px 0;
   pointer-events: none;
   cursor: grab;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
 .wfc-weather-condition-icon-slot .rain {
