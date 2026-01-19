@@ -322,15 +322,15 @@ export class WfcForecastSimple extends LitElement {
       const spanRect = span.getBoundingClientRect();
       const iconWidth = icon.getBoundingClientRect().width || icon.offsetWidth || 48;
 
-      const centerInContainer =
-        spanRect.left + spanRect.width / 2 - containerRect.left;
+      const spanStartInContainer = spanRect.left - containerRect.left;
+      const centerInContainer = spanStartInContainer + spanRect.width / 2;
 
       const minCenter = iconWidth / 2;
       const maxCenter = containerRect.width - iconWidth / 2;
       const clampedCenter = Math.min(Math.max(centerInContainer, minCenter), maxCenter);
 
-      const offset = clampedCenter - iconWidth / 2;
-      icon.style.setProperty("--icon-offset", `${offset}px`);
+      const offsetWithinSpan = clampedCenter - spanStartInContainer - iconWidth / 2;
+      icon.style.setProperty("--icon-offset", `${offsetWithinSpan}px`);
     });
   }
 }
