@@ -658,7 +658,6 @@ export class WfcForecastChart extends LitElement {
 
     return parts;
   }
-  }
 
   /**
    * Returns a subset of the forecast that fits within the hardware canvas limit.
