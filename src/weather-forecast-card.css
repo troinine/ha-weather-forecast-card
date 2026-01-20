@@ -334,8 +334,6 @@ ha-card {
   border-radius: 12px;
   display: block;
   text-align: center;
-  /* Add a small shadow/backdrop so indicators are readable when they overlap */
-  box-shadow: 0 0 4px 2px var(--ha-card-background, var(--card-background-color, white));
 }
 
 .wfc-forecast-slot-time.wfc-sunrise {
