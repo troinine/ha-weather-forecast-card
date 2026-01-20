@@ -7,7 +7,6 @@ import { styleMap } from "lit/directives/style-map.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { getRelativePosition } from "chart.js/helpers";
 import { actionHandler } from "../hass";
-import { logger } from "../logger";
 import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
 import {
   ExtendedHomeAssistant,
