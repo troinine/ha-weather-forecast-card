@@ -54,7 +54,6 @@ export class WfcForecastSimple extends LitElement {
     let currentDay: string | undefined;
 
     if (useGroupedIcons) {
-      const dayIndicators: TemplateResult[] = [];
       const timeRow: TemplateResult[] = [];
       const spanRow: TemplateResult[] = [];
       const detailRow: TemplateResult[] = [];
@@ -70,7 +69,7 @@ export class WfcForecastSimple extends LitElement {
           const forecastDay = formatDay(this.hass, forecast.datetime);
           if (currentDay !== forecastDay) {
             currentDay = forecastDay;
-            dayIndicators.push(
+            timeRow.push(
               html`<div class="wfc-day-indicator-container">
                 <div class="wfc-day-indicator wfc-label">${forecastDay}</div>
               </div>`
@@ -152,15 +151,16 @@ export class WfcForecastSimple extends LitElement {
 
       forecastTemplates.push(html`
         <div class="wfc-forecast-grouped-wrapper">
-          <div class="wfc-day-indicators-row">${dayIndicators}</div>
-          <div class="wfc-forecast-time-row">${timeRow}</div>
-          <div 
-            class="wfc-forecast-span-row"
-            style="grid-template-columns: repeat(${this.forecast.length}, var(--forecast-item-width));"
-          >
-            ${spanRow}
+          <div class="wfc-forecast-grouped-rows">
+            <div class="wfc-forecast-time-row">${timeRow}</div>
+            <div 
+              class="wfc-forecast-span-row"
+              style="grid-template-columns: repeat(${this.forecast.length}, var(--forecast-item-width));"
+            >
+              ${spanRow}
+            </div>
+            <div class="wfc-forecast-row">${detailRow}</div>
           </div>
-          <div class="wfc-forecast-row">${detailRow}</div>
         </div>
       `);
     } else {
