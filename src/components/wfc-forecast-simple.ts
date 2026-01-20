@@ -60,9 +60,7 @@ export class WfcForecastSimple extends LitElement {
       const detailRow: TemplateResult[] = [];
       const conditionSpans = groupForecastByCondition(this.forecast, this.hass);
 
-      logger.info(
-        `simple: grouping enabled, forecastType=${this.forecastType}, spans=${conditionSpans.length}, items=${this.forecast.length}`
-      );
+      let dayIndicatorCount = 0;
 
       this.forecast.forEach((forecast, index) => {
         if (!forecast.datetime) {
@@ -74,6 +72,10 @@ export class WfcForecastSimple extends LitElement {
           const forecastDay = formatDay(this.hass, forecast.datetime);
           if (currentDay !== forecastDay) {
             currentDay = forecastDay;
+            dayIndicatorCount++;
+            logger.debug(
+              `Day indicator #${dayIndicatorCount}: "${forecastDay}" at index ${index} (timeRow position ${timeRow.length})`
+            );
             timeRow.push(
               html`<div class="wfc-day-indicator-container">
                 <div class="wfc-day-indicator wfc-label">${forecastDay}</div>
@@ -154,6 +156,10 @@ export class WfcForecastSimple extends LitElement {
         `);
       });
 
+      logger.debug(
+        `Grouped mode: ${dayIndicatorCount} day indicators, ${timeRow.length} time slots, ${this.forecast.length} forecast items`
+      );
+
       forecastTemplates.push(html`
         <div class="wfc-forecast-grouped-wrapper">
           <div class="wfc-forecast-time-row">${timeRow}</div>
@@ -167,6 +173,7 @@ export class WfcForecastSimple extends LitElement {
         </div>
       `);
     } else {
+      let dayIndicatorCount = 0;
       this.forecast.forEach((forecast, index) => {
         if (!forecast.datetime) {
           return;
@@ -176,6 +183,10 @@ export class WfcForecastSimple extends LitElement {
           const forecastDay = formatDay(this.hass, forecast.datetime);
           if (currentDay !== forecastDay) {
             currentDay = forecastDay;
+            dayIndicatorCount++;
+            logger.debug(
+              `Non-grouped day indicator #${dayIndicatorCount}: "${forecastDay}" at index ${index}`
+            );
             forecastTemplates.push(
               html`<div class="wfc-day-indicator-container">
                 <div class="wfc-day-indicator wfc-label">${forecastDay}</div>
@@ -207,6 +218,10 @@ export class WfcForecastSimple extends LitElement {
           </div>
         `);
       });
+      
+      logger.debug(
+        `Non-grouped mode: ${dayIndicatorCount} day indicators, ${forecastTemplates.length} total items`
+      );
     }
 
     return html`

@@ -718,10 +718,6 @@ export class WfcForecastChart extends LitElement {
     );
 
     if (this.forecast.length > maxItems) {
-      logger.debug(
-        `Truncating forecast to ${maxItems} items to stay under ${MAX_CANVAS_WIDTH}px (including ${gap}px gaps).`
-      );
-
       return this.forecast.slice(0, maxItems);
     }
 
