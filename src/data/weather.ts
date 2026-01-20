@@ -465,9 +465,6 @@ export const aggregateHourlyForecastData = (
       const nextEntry = forecast[i];
       if (!nextEntry) break;
 
-      // Debug logging
-      console.log(`[Aggregation] i=${i}, datetime=${nextEntry.datetime}, condition=${nextEntry.condition}`);
-
       group.push(nextEntry);
       i += 1;
     }
@@ -505,8 +502,6 @@ export const aggregateHourlyForecastData = (
       condition: getWorstCondition(group),
       temperature: parseFloat(average(temperatures).toFixed(1)),
     };
-
-    console.log(`[Aggregation] Created group: datetime=${aggregatedEntry.datetime}, endtime=${aggregatedEntry.groupEndtime}, condition=${aggregatedEntry.condition}, size=${group.length}`);
 
     if (validHumidity.length > 0) {
       aggregatedEntry.humidity = Math.round(average(validHumidity));

@@ -151,28 +151,21 @@ export const groupForecastByCondition = (
     return [];
   }
 
-  console.log('[GroupByCondition] Starting with forecast length:', forecast.length);
-
   const conditionSpans: ConditionSpan[] = [];
   let currentCondition = forecast[0]?.condition || "";
   let startIndex = 0;
   let currentIsNight = hass ? getSuntimesInfo(hass, forecast[0].datetime)?.isNightTime : false;
   let currentNightAwareCondition = mapConditionForNight(currentCondition, currentIsNight);
 
-  console.log(`[GroupByCondition] Initial: datetime=${forecast[0].datetime}, condition=${currentCondition}, isNight=${currentIsNight}, nightAware=${currentNightAwareCondition}`);
-
   for (let i = 1; i < forecast.length; i++) {
     const condition = forecast[i]?.condition || "";
     const isNight = hass ? getSuntimesInfo(hass, forecast[i].datetime)?.isNightTime : false;
     const nightAwareCondition = mapConditionForNight(condition, isNight);
 
-    console.log(`[GroupByCondition] i=${i}, datetime=${forecast[i].datetime}, condition=${condition}, isNight=${isNight}, nightAware=${nightAwareCondition}`);
-
     // Break grouping if NIGHT-AWARE condition changes (visual appearance changes)
     const conditionChanged = nightAwareCondition !== currentNightAwareCondition;
 
     if (conditionChanged) {
-      console.log(`[GroupByCondition] Split! nightAware changed: ${currentNightAwareCondition} → ${nightAwareCondition}`);
       // End of current span, create entry
       conditionSpans.push({
         condition: currentCondition,
