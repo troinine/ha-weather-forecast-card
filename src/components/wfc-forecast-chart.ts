@@ -668,6 +668,7 @@ export class WfcForecastChart extends LitElement {
             )
           : {};
         const bgStyle = colors.background ? `background-color: ${colors.background};` : '';
+        const fgStyle = colors.foreground ? `color: ${colors.foreground};` : '';
         const showLabels = this.config.forecast?.show_condition_labels ?? false;
         const conditionLabel = showLabels ? getLocalizedConditionName(this.hass, item.condition || '') : '';
         
@@ -687,7 +688,7 @@ export class WfcForecastChart extends LitElement {
                 .hideIcon=${false}
               ></wfc-forecast-header-items>
               ${showLabels && conditionLabel ? html`
-                <span class="wfc-condition-label">${conditionLabel}</span>
+                <span class="wfc-condition-label" style="${fgStyle}">${conditionLabel}</span>
               ` : nothing}
             </div>
           </div>

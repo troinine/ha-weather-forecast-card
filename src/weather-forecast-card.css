@@ -532,7 +532,8 @@ ha-card {
   background: color-mix(in srgb, var(--primary-color, #03a9f4) 10%, transparent);
   border-radius: 8px;
   padding: var(--ha-space-1, 4px);
-  overflow: visible;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .wfc-condition-icon-sticky {
@@ -544,16 +545,18 @@ ha-card {
   gap: var(--ha-space-1, 4px);
   padding-inline-start: var(--ha-space-2, 8px);
   z-index: 1;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .wfc-condition-label {
   font-size: var(--ha-font-size-m, 14px);
-  color: var(--primary-text-color, #212121);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
   padding-inline-start: var(--ha-space-1, 4px);
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 wfc-wind-indicator,
