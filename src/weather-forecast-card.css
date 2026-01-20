@@ -234,15 +234,7 @@ ha-card {
 }
 
 .wfc-forecast-container.is-scrollable {
-  --mask: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0) 0,
-    rgba(0, 0, 0, 1) var(--fade-width),
-    rgba(0, 0, 0, 1) calc(100% - var(--fade-width)),
-    rgba(0, 0, 0, 0) 100%
-  );
-  -webkit-mask: var(--mask);
-  mask: var(--mask);
+  position: relative;
 }
 
 .wfc-scroll-container {
@@ -261,6 +253,16 @@ ha-card {
   touch-action: pan-x;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  
+  /* CSS-only scroll fade effect */
+  background:
+    linear-gradient(90deg, var(--card-background-color, white) 0%, transparent var(--fade-width)) 0 0,
+    linear-gradient(90deg, transparent calc(100% - var(--fade-width)), var(--card-background-color, white) 100%) 100% 0,
+    linear-gradient(90deg, rgba(0,0,0,0.15) 0%, transparent var(--fade-width)) 0 0,
+    linear-gradient(90deg, transparent calc(100% - var(--fade-width)), rgba(0,0,0,0.15) 100%) 100% 0;
+  background-repeat: no-repeat;
+  background-size: var(--fade-width) 100%, var(--fade-width) 100%, var(--fade-width) 100%, var(--fade-width) 100%;
+  background-attachment: local, local, scroll, scroll;
 }
 
 .wfc-scroll-container.is-dragging {
