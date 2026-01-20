@@ -9,6 +9,7 @@ import {
 import { styleMap } from "lit/directives/style-map.js";
 import { customElement, property } from "lit/decorators.js";
 import { WeatherForecastCardConfig } from "../types";
+import { getConditionColor } from "../data/condition-colors";
 
 @customElement("wfc-weather-condition-icon-provider")
 export class WfcWeatherConditionIconProvider extends LitElement {
@@ -16,6 +17,7 @@ export class WfcWeatherConditionIconProvider extends LitElement {
   @property({ attribute: false }) public classes?: string;
   @property({ attribute: false }) public isNightTime: boolean = false;
   @property({ attribute: false }) public state: string = "exceptional";
+  @property({ attribute: false }) public showTooltip: boolean = true;
 
   protected createRenderRoot() {
     return this;
@@ -27,12 +29,38 @@ export class WfcWeatherConditionIconProvider extends LitElement {
     }
 
     const classes = this.getClasses();
-
     const icon = this.getWeatherStateIcon();
+    const tooltip = this.showTooltip ? this.getTooltipText() : "";
+    
+    // Only apply foreground color if configured
+    const useColors = this.config.forecast?.condition_colors ?? true;
+    const colors = useColors ? getConditionColor(this.state, this.config.forecast?.condition_color_map) : {};
+    
+    const style: Record<string, string> = {};
+    if (colors.foreground) {
+      style['color'] = colors.foreground;
+    }
 
     return html`
-      <div class="${classes}" data-condition="${this.state}">${icon}</div>
+      <div 
+        class="${classes}" 
+        data-condition="${this.state}"
+        title="${tooltip}"
+        style=${styleMap(style)}
+      >
+        ${icon}
+      </div>
     `;
+  }
+
+  private getTooltipText(): string {
+    // Convert condition key to readable text
+    return this.state
+      .replace(/-/g, " ")
+      .replace(/_/g, " ")
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 
   private getClasses(): string {

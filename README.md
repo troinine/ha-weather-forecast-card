@@ -124,6 +124,9 @@ The `current` object controls the display of current weather information and att
 | `mode`                  | string  | `simple` | Forecast display mode. `simple`: Horizontal scrollable list of forecast entries. `chart`: Visualize temperature and precipitation trends on a line/bar chart.                                                                                                                         |
 | `scroll_to_selected`    | boolean | `false`  | Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back.                                                                                                                      |
 | `show_sun_times`        | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                                                                                                                                                |
+| `group_condition_icons` | boolean | `false`  | Group consecutive forecast entries that share the same visual condition into a single span with one icon. Improves readability by avoiding repeated icons when conditions remain unchanged across hours.                                     |
+| `condition_colors`      | boolean | `true`   | Colorize forecast condition spans with condition-based background colors. Defaults are provided; you can override per condition via `condition_color_map`.                                                                                      |
+| `condition_color_map`   | object  | optional | Optional map to override condition colors. Keys are condition names (lower-case, dashes, e.g., `clear-night`, `lightning-rainy`) and values can be a string (background) or an object `{ background, foreground }`.                            |
 | `temperature_precision` | number  | optional | Number of decimal places to display for temperature values (0-2). Applies to forecast temperatures shown in `chart` mode. Due to the layout limitations, this setting is not affecting `simple` mode which uses fixed precision of `0`.                                               |
 | `use_color_thresholds`  | boolean | `false`  | Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot). These thresholds are specified in degrees Celsius (°C). |
 
@@ -156,6 +159,37 @@ forecast:
   mode: chart
   extra_attribute: wind_direction
 ```
+
+## Condition Colors
+
+When `forecast.condition_colors` is enabled, the card colors the background of grouped condition spans to visually convey weather changes across time. Colors default to sensible values, and can be customized per condition using `forecast.condition_color_map`.
+
+Notes:
+- Keys are normalized condition names: lower-case with `-` separators (e.g., `clear-night`, `lightning-rainy`, `partlycloudy`).
+- A value can be a background color string (e.g., `"#44739d"`) or an object with `background` and optional `foreground`.
+- If `forecast.show_sun_times` is enabled, daytime-only conditions at night (e.g., `sunny` before sunrise) are treated as `clear-night` for coloring and grouping.
+
+### Example: Customizing condition colors
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+forecast:
+  group_condition_icons: true
+  condition_colors: true
+  condition_color_map:
+    clear-night: "#000000"           # deep night sky
+    sunny:
+      background: "#ffd166"         # warm sunny day
+      foreground: "#000000"         # dark icon for contrast
+    partlycloudy: "#b3dbff"         # light blue
+    rainy: "#44739d"                # classic rainy blue
+    lightning-rainy:
+      background: "#374151"         # stormy gray
+      foreground: "#fbbf24"         # highlight lightning
+```
+
+With grouping enabled, the card renders a single icon and a colored span across consecutive hours sharing the same visual condition, improving scanability of changing weather.
 
 ## Weather Condition Effects
 

@@ -1,12 +1,12 @@
 import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { DragScrollController } from "../controllers/drag-scroll-controller";
-import { formatDay } from "../helpers";
+import { formatDay, getSuntimesInfo, groupForecastByCondition, getLocalizedConditionName } from "../helpers";
+import { getConditionColorNightAware, getContrastingTextColor } from "../data/condition-colors";
 import { styleMap } from "lit/directives/style-map.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { getRelativePosition } from "chart.js/helpers";
 import { actionHandler } from "../hass";
-import { logger } from "../logger";
 import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
 import {
   ExtendedHomeAssistant,
@@ -565,6 +565,16 @@ export class WfcForecastChart extends LitElement {
   }
 
   private renderHeaderItems(forecast: ForecastAttribute[]): TemplateResult[] {
+    const useGroupedIcons = this.config.forecast?.group_condition_icons ?? false;
+
+    if (useGroupedIcons) {
+      return this.renderGroupedHeaderItems(forecast);
+    }
+
+    return this.renderStandardHeaderItems(forecast);
+  }
+
+  private renderStandardHeaderItems(forecast: ForecastAttribute[]): TemplateResult[] {
     const parts: TemplateResult[] = [];
     let currentDay: string | undefined;
 
@@ -600,6 +610,106 @@ export class WfcForecastChart extends LitElement {
     return parts;
   }
 
+  private renderGroupedHeaderItems(forecast: ForecastAttribute[]): TemplateResult[] {
+    const timeRow: TemplateResult[] = [];
+    const spanRow: TemplateResult[] = [];
+    let currentDay: string | undefined;
+    const conditionSpans = groupForecastByCondition(forecast, this.hass);
+
+    forecast.forEach((item, index) => {
+      if (!item.datetime) {
+        return;
+      }
+
+      // Check for day change and add day indicator to time row
+      if (this.forecastType === "hourly") {
+        const forecastDay = formatDay(this.hass, item.datetime);
+        if (currentDay !== forecastDay) {
+          currentDay = forecastDay;
+          timeRow.push(
+            html`<div class="wfc-day-indicator-container">
+              <div class="wfc-day-indicator wfc-label">${forecastDay}</div>
+            </div>`
+          );
+        }
+      }
+
+      // Time label per hour (no icon)
+      timeRow.push(html`
+        <div class="wfc-forecast-slot">
+          <wfc-forecast-header-items
+            .hass=${this.hass}
+            .forecast=${item}
+            .forecastType=${this.forecastType}
+            .config=${this.config}
+            .hideIcon=${true}
+            .hideTime=${false}
+          ></wfc-forecast-header-items>
+        </div>
+      `);
+
+      // Check if this is the start of a condition span
+      const conditionSpan = conditionSpans.find(span => span.startIndex === index);
+
+      if (conditionSpan) {
+        // Get background color for this condition
+        const useColors = this.config.forecast?.condition_colors ?? true;
+        const isNightTime =
+          this.forecastType === "hourly" &&
+          this.config.forecast?.show_sun_times
+            ? getSuntimesInfo(this.hass, item.datetime)?.isNightTime ?? false
+            : false;
+
+        const colors = useColors
+          ? getConditionColorNightAware(
+              item.condition,
+              isNightTime,
+              this.config.forecast?.condition_color_map
+            )
+          : {};
+        const bgStyle = colors.background ? `background-color: ${colors.background};` : '';
+        const textColor = colors.background ? getContrastingTextColor(colors.background) : '';
+        const fgStyle = textColor ? `color: ${textColor};` : '';
+        const showLabels = this.config.forecast?.show_condition_labels ?? false;
+        const conditionLabel = showLabels ? getLocalizedConditionName(this.hass, item.condition || '') : '';
+        
+        // Render condition bar spanning multiple slots
+        spanRow.push(html`
+          <div 
+            class="wfc-forecast-condition-span" 
+            style="grid-column: span ${conditionSpan.count}; ${bgStyle}"
+          >
+            <div class="wfc-condition-icon-sticky">
+              <wfc-forecast-header-items
+                .hass=${this.hass}
+                .forecast=${item}
+                .forecastType=${this.forecastType}
+                .config=${this.config}
+                .hideTime=${true}
+                .hideIcon=${false}
+              ></wfc-forecast-header-items>
+              ${showLabels && conditionLabel ? html`
+                <span class="wfc-condition-label" style="${fgStyle}">${conditionLabel}</span>
+              ` : nothing}
+            </div>
+          </div>
+        `);
+      }
+    });
+
+    return [
+      html`<div class="wfc-forecast-grouped-wrapper">
+        <div class="wfc-forecast-time-row">${timeRow}</div>
+        <div 
+          class="wfc-forecast-span-row"
+          style="grid-template-columns: repeat(${forecast.length}, var(--forecast-item-width));"
+        >
+          ${spanRow}
+        </div>
+      </div>`,
+    ];
+  }
+
   /**
    * Returns a subset of the forecast that fits within the hardware canvas limit.
    * This calculation includes the gap width to ensure exact layout synchronization.
@@ -614,10 +724,6 @@ export class WfcForecastChart extends LitElement {
     );
 
     if (this.forecast.length > maxItems) {
-      logger.debug(
-        `Truncating forecast to ${maxItems} items to stay under ${MAX_CANVAS_WIDTH}px (including ${gap}px gaps).`
-      );
-
       return this.forecast.slice(0, maxItems);
     }
 

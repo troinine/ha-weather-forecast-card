@@ -55,6 +55,13 @@ export interface ForecastToggleActionConfig extends BaseActionConfig {
   action: "toggle-forecast";
 }
 
+export type ConditionColorValue = string | {
+  foreground?: string;
+  background?: string;
+};
+
+export type ConditionColorMap = Partial<Record<string, ConditionColorValue>>;
+
 export interface WeatherForecastCardForecastConfig {
   extra_attribute?: string;
   mode?: ForecastMode;
@@ -65,6 +72,10 @@ export interface WeatherForecastCardForecastConfig {
   scroll_to_selected?: boolean;
   use_color_thresholds?: boolean;
   temperature_precision?: number;
+  group_condition_icons?: boolean;
+  show_condition_labels?: boolean;
+  condition_colors?: boolean;
+  condition_color_map?: ConditionColorMap;
 }
 
 export interface WeatherForecastCardCurrentConfig {
@@ -123,4 +134,11 @@ export type SuntimesInfo = {
   sunrise: Date;
   sunset: Date;
   isNightTime: boolean;
+};
+
+export type ConditionSpan = {
+  condition: string;
+  startIndex: number;
+  endIndex: number;
+  count: number;
 };

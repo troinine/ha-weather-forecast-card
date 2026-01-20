@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/**]
   pull_request:
     branches: [main]
 
@@ -38,3 +38,9 @@ jobs:
 
       - name: Test
         run: pnpm run test
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-forecast-card-${{ github.sha }}
+          path: dist/weather-forecast-card.js
+          retention-days: 30

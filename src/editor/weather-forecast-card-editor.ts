@@ -19,6 +19,8 @@ import {
   WeatherForecastCardForecastActionConfig,
   WeatherForecastCardForecastConfig,
 } from "../types";
+import en from "../translations/en.json";
+import de from "../translations/de.json";
 
 type HaFormSelector =
   | { entity: { domain?: string; device_class?: string | string[] } }
@@ -61,6 +63,23 @@ type WeatherForecastCardEditorConfig = {
   interactions?: unknown;
   advanced_settings?: unknown;
 } & WeatherForecastCardConfig;
+
+type EditorTranslationKey = keyof typeof en.editor;
+
+const EDITOR_TRANSLATIONS: Record<string, typeof en> = {
+  en,
+  de,
+};
+
+const translateEditor = (
+  key: EditorTranslationKey,
+  hass?: ExtendedHomeAssistant
+): string | undefined => {
+  const language = hass?.locale?.language || hass?.language || "en";
+  const translations = EDITOR_TRANSLATIONS[language]?.editor;
+
+  return translations?.[key] ?? EDITOR_TRANSLATIONS.en.editor[key];
+};
 
 @customElement("weather-forecast-card-editor")
 export class WeatherForecastCardEditor
@@ -278,6 +297,29 @@ export class WeatherForecastCardEditor
         optional: true,
       },
       {
+        name: "forecast.group_condition_icons",
+        selector: { boolean: {} },
+        default: false,
+        optional: true,
+      },
+      {
+        name: "forecast.show_condition_labels",
+        selector: { boolean: {} },
+        default: false,
+        optional: true,
+      },
+      {
+        name: "forecast.condition_colors",
+        selector: { boolean: {} },
+        default: true,
+        optional: true,
+      },
+      {
+        name: "forecast.condition_color_map",
+        selector: { text: {} },
+        optional: true,
+      },
+      {
         name: "forecast.use_color_thresholds",
         selector: { boolean: {} },
         default: false,
@@ -472,6 +514,26 @@ export class WeatherForecastCardEditor
         return "Scroll to selected forecast";
       case "forecast.show_sun_times":
         return "Show sunrise and sunset times";
+      case "forecast.group_condition_icons":
+        return (
+          translateEditor("group_condition_icons", this.hass) ||
+          "Group condition icons"
+        );
+      case "forecast.show_condition_labels":
+        return (
+          translateEditor("show_condition_labels", this.hass) ||
+          "Show condition labels"
+        );
+      case "forecast.condition_colors":
+        return (
+          translateEditor("condition_colors", this.hass) ||
+          "Use condition colors"
+        );
+      case "forecast.condition_color_map":
+        return (
+          translateEditor("condition_color_map", this.hass) ||
+          "Custom condition color map"
+        );
       case "forecast.use_color_thresholds":
         return "Use color thresholds";
       case "forecast.hourly_group_size":
@@ -521,6 +583,26 @@ export class WeatherForecastCardEditor
         return "Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back.";
       case "forecast.show_sun_times":
         return "Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.";
+      case "forecast.group_condition_icons":
+        return (
+          translateEditor("group_condition_icons_helper", this.hass) ||
+          "Use grouped condition icons when multiple entries share the same visual condition."
+        );
+      case "forecast.show_condition_labels":
+        return (
+          translateEditor("show_condition_labels_helper", this.hass) ||
+          "Display weather condition names next to icons in grouped mode. Labels are hidden if there is insufficient space."
+        );
+      case "forecast.condition_colors":
+        return (
+          translateEditor("condition_colors_helper", this.hass) ||
+          "Enable condition-based background and icon coloring."
+        );
+      case "forecast.condition_color_map":
+        return (
+          translateEditor("condition_color_map_helper", this.hass) ||
+          "Optional JSON map to override foreground/background colors by condition key."
+        );
       case "forecast.use_color_thresholds":
         return "Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode.";
       case "forecast.hourly_group_size":

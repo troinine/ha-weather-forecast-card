@@ -1,0 +1,12 @@
+{
+  "editor": {
+    "group_condition_icons": "Group condition icons",
+    "group_condition_icons_helper": "Use grouped weather condition icons when multiple forecast entries share the same visual condition.",
+    "show_condition_labels": "Show condition labels",
+    "show_condition_labels_helper": "Display weather condition names next to icons in grouped mode. Labels are hidden if there is insufficient space.",
+    "condition_colors": "Use condition colors",
+    "condition_colors_helper": "Enable condition-based background and icon coloring for forecasts.",
+    "condition_color_map": "Custom condition color map",
+    "condition_color_map_helper": "Optional JSON map to override foreground/background colors for specific conditions."
+  }
+}
