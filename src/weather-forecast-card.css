@@ -544,7 +544,7 @@ ha-card {
   gap: var(--ha-space-1, 4px);
   padding-inline-start: var(--ha-space-2, 8px);
   z-index: 1;
-  width: 100%;
+  max-width: 100%;
   overflow: hidden;
 }
 
@@ -558,7 +558,7 @@ ha-card {
   overflow: hidden;
   text-overflow: ellipsis;
   padding-inline-start: var(--ha-space-1, 4px);
-  flex-shrink: 1;
+  flex: 1 1 0;
   min-width: 0;
 }
 
