@@ -488,10 +488,26 @@ ha-card {
 
 /* Shared grouped layout for chart & simple mode */
 .wfc-forecast-grouped-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--ha-space-2, 8px);
   width: 100%;
+}
+
+.wfc-day-indicators-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  column-gap: var(--forecast-item-gap);
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
 }
 
 .wfc-forecast-time-row {
