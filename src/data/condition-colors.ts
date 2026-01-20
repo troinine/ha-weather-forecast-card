@@ -1,6 +1,38 @@
 import { ConditionColorMap } from "../types";
 
 /**
+ * Calculate relative luminance of a color (WCAG formula)
+ * Returns a value between 0 (black) and 1 (white)
+ */
+function getRelativeLuminance(hexColor: string): number {
+  // Remove # if present
+  const hex = hexColor.replace('#', '');
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  
+  // Apply gamma correction
+  const rsRGB = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+  const gsRGB = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+  const bsRGB = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+  
+  // Calculate luminance
+  return 0.2126 * rsRGB + 0.7152 * gsRGB + 0.0722 * bsRGB;
+}
+
+/**
+ * Get contrasting text color (black or white) for a given background color
+ * Uses WCAG relative luminance to ensure readability
+ */
+export function getContrastingTextColor(backgroundColor: string): string {
+  const luminance = getRelativeLuminance(backgroundColor);
+  // Use white text for dark backgrounds (luminance < 0.5), black for light backgrounds
+  return luminance < 0.5 ? '#ffffff' : '#000000';
+}
+
+/**
  * Default condition colors based on hourly-weather card.
  * These represent the color of the sky/weather condition.
  */

@@ -2,7 +2,7 @@ import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { DragScrollController } from "../controllers/drag-scroll-controller";
 import { formatDay, getSuntimesInfo, groupForecastByCondition, getLocalizedConditionName } from "../helpers";
-import { getConditionColorNightAware } from "../data/condition-colors";
+import { getConditionColorNightAware, getContrastingTextColor } from "../data/condition-colors";
 import { styleMap } from "lit/directives/style-map.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { getRelativePosition } from "chart.js/helpers";
@@ -668,7 +668,8 @@ export class WfcForecastChart extends LitElement {
             )
           : {};
         const bgStyle = colors.background ? `background-color: ${colors.background};` : '';
-        const fgStyle = colors.foreground ? `color: ${colors.foreground};` : '';
+        const textColor = colors.background ? getContrastingTextColor(colors.background) : '';
+        const fgStyle = textColor ? `color: ${textColor};` : '';
         const showLabels = this.config.forecast?.show_condition_labels ?? false;
         const conditionLabel = showLabels ? getLocalizedConditionName(this.hass, item.condition || '') : '';
         

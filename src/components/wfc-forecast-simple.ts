@@ -10,7 +10,7 @@ import {
   WeatherForecastCardConfig,
 } from "../types";
 import { formatDay, getSuntimesInfo, groupForecastByCondition, getLocalizedConditionName } from "../helpers";
-import { getConditionColorNightAware } from "../data/condition-colors";
+import { getConditionColorNightAware, getContrastingTextColor } from "../data/condition-colors";
 import {
   ForecastAttribute,
   ForecastType,
@@ -111,7 +111,8 @@ export class WfcForecastSimple extends LitElement {
               )
             : {};
           const bgStyle = colors.background ? `background-color: ${colors.background};` : '';
-          const fgStyle = colors.foreground ? `color: ${colors.foreground};` : '';
+          const textColor = colors.background ? getContrastingTextColor(colors.background) : '';
+          const fgStyle = textColor ? `color: ${textColor};` : '';
           const showLabels = this.config.forecast?.show_condition_labels ?? false;
           const conditionLabel = showLabels ? getLocalizedConditionName(this.hass, forecast.condition || '') : '';
           
