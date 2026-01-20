@@ -544,9 +544,12 @@ ha-card {
   gap: var(--ha-space-1, 4px);
   padding-inline-start: var(--ha-space-2, 8px);
   z-index: 1;
-  width: fit-content;
-  max-width: 100%;
+  width: 100%;
   overflow: hidden;
+}
+
+.wfc-condition-icon-sticky > wfc-forecast-header-items {
+  flex-shrink: 0;
 }
 
 .wfc-condition-label {
@@ -555,6 +558,8 @@ ha-card {
   overflow: hidden;
   text-overflow: ellipsis;
   padding-inline-start: var(--ha-space-1, 4px);
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 wfc-wind-indicator,
