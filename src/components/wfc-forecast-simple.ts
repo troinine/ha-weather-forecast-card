@@ -164,7 +164,6 @@ export class WfcForecastSimple extends LitElement {
         </div>
       `);
     } else {
-      let dayIndicatorCount = 0;
       this.forecast.forEach((forecast, index) => {
         if (!forecast.datetime) {
           return;
@@ -174,7 +173,6 @@ export class WfcForecastSimple extends LitElement {
           const forecastDay = formatDay(this.hass, forecast.datetime);
           if (currentDay !== forecastDay) {
             currentDay = forecastDay;
-            dayIndicatorCount++;
             forecastTemplates.push(
               html`<div class="wfc-day-indicator-container">
                 <div class="wfc-day-indicator wfc-label">${forecastDay}</div>
