@@ -596,7 +596,17 @@ export const formatTemperature = (
 
   const unit = getWeatherUnit(hass, weatherEntity, "temperature");
 
-  const formattedValue = formatNumber(value, hass.locale, options);
+  // Convert string values to numbers to ensure formatNumber works correctly
+  // with precision options. Sensor states are returned as strings, and
+  // Intl.NumberFormat doesn't apply precision options to strings properly.
+  const numericValue = typeof value === "string" ? parseFloat(value) : value;
+
+  // If the value couldn't be parsed, return the original value with unit
+  if (isNaN(numericValue)) {
+    return `${value}${excludeUnit ? "" : unit}`;
+  }
+
+  const formattedValue = formatNumber(numericValue, hass.locale, options);
 
   return `${formattedValue}${excludeUnit ? "" : unit}`;
 };

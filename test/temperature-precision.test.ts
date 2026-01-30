@@ -199,6 +199,41 @@ describe("temperature_precision", () => {
       const tempText = tempElement?.textContent?.trim();
       expect(tempText).toBe("18.8°C");
     });
+
+    it("should format temperature with precision 0 when using temperature_entity", async () => {
+      hass.states["sensor.outdoor_temp"] = {
+        entity_id: "sensor.outdoor_temp",
+        state: "18.789",
+        attributes: {},
+        last_changed: "",
+        last_updated: "",
+        context: { id: "", parent_id: null, user_id: null },
+      };
+
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        temperature_entity: "sensor.outdoor_temp",
+        current: {
+          temperature_precision: 0,
+        },
+      };
+
+      const el = await fixture<WfcCurrentWeather>(
+        html`<wfc-current-weather
+          .hass=${hass}
+          .weatherEntity=${weatherEntity}
+          .config=${config}
+        ></wfc-current-weather>`
+      );
+
+      await el.updateComplete;
+
+      const tempElement = el.querySelector(".wfc-current-temperature");
+      expect(tempElement).not.toBeNull();
+      const tempText = tempElement?.textContent?.trim();
+      expect(tempText).toBe("19°C");
+    });
   });
 
   describe("current weather attributes temperature_precision", () => {
