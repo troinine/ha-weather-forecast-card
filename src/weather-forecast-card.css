@@ -258,7 +258,7 @@ ha-card {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
 }
