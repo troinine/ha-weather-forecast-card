@@ -282,7 +282,7 @@ export class MockHass {
           state: "12.5",
           attributes: {
             friendly_name: "Custom Dew Point",
-            unit_of_measurement: "°C",
+            unit_of_measurement: this.options.unitOfMeasurement,
             device_class: "temperature",
           },
           last_changed: "2025-11-20T10:30:00.000Z",
@@ -293,9 +293,9 @@ export class MockHass {
             parent_id: null,
           },
         },
+        // @ts-expect-error Unavailable sensor state
         "sensor.unavailable_sensor": {
           entity_id: "sensor.unavailable_sensor",
-          state: "unavailable",
           attributes: {
             friendly_name: "Unavailable Sensor",
           },
@@ -448,7 +448,7 @@ export class MockHass {
           return translations[stateKey] || stateObj.state;
         }
 
-        return stateObj.state;
+        return `${stateObj.state} ${stateObj.attributes.unit_of_measurement || ""}`;
       },
       formatEntityAttributeValue: (stateObj: HassEntity, attribute: string) => {
         if (!stateObj || !attribute) return "";

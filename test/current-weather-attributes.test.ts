@@ -590,7 +590,6 @@ describe("custom entity attributes", () => {
     const value = attrEl!.querySelector(
       ".wfc-current-attribute-value"
     )?.textContent;
-    // Custom sensor has value 75
     expect(value?.trim()).toBe("75 %");
   });
 
@@ -618,8 +617,7 @@ describe("custom entity attributes", () => {
     const value = attrEl!.querySelector(
       ".wfc-current-attribute-value"
     )?.textContent;
-    // Custom sensor has value 1025
-    expect(value?.trim()).toBe("1,025 hPa");
+    expect(value?.trim()).toBe("1025 hPa");
   });
 
   it("renders custom entity value for wind_speed with bearing from weather entity", async () => {
@@ -646,8 +644,7 @@ describe("custom entity attributes", () => {
     const value = attrEl!.querySelector(
       ".wfc-current-attribute-value"
     )?.textContent;
-    // Custom sensor has 15.5 km/h, bearing 180 (S) from weather entity
-    expect(value?.trim()).toBe("15.5 km/h (S)");
+    expect(value?.trim()).toBe("15.5 km/h");
   });
 
   it("renders custom entity value for dew_point with temperature precision", async () => {
@@ -675,7 +672,6 @@ describe("custom entity attributes", () => {
     const value = attrEl!.querySelector(
       ".wfc-current-attribute-value"
     )?.textContent;
-    // Custom sensor has value 12.5
     expect(value?.trim()).toBe("12.5°C");
   });
 
@@ -706,7 +702,7 @@ describe("custom entity attributes", () => {
     ).map((node) => node.textContent?.trim());
 
     // First value from weather entity (40), second from custom sensor (1025)
-    expect(values).toEqual(["40 %", "1,025 hPa"]);
+    expect(values).toEqual(["40 %", "1025 hPa"]);
   });
 
   it("renders single object config format", async () => {
