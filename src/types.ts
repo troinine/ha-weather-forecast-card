@@ -44,6 +44,11 @@ export const WEATHER_EFFECTS = [
 export type CurrentWeatherAttributes =
   (typeof CURRENT_WEATHER_ATTRIBUTES)[number];
 
+export interface CurrentWeatherAttributeConfig {
+  name: CurrentWeatherAttributes;
+  entity?: string;
+}
+
 export type WeatherEffect = (typeof WEATHER_EFFECTS)[number];
 
 export enum ForecastMode {
@@ -71,7 +76,9 @@ export interface WeatherForecastCardCurrentConfig {
   show_attributes?:
     | boolean
     | CurrentWeatherAttributes
-    | CurrentWeatherAttributes[];
+    | CurrentWeatherAttributes[]
+    | CurrentWeatherAttributeConfig
+    | (CurrentWeatherAttributes | CurrentWeatherAttributeConfig)[];
   temperature_precision?: number;
   secondary_info_attribute?: CurrentWeatherAttributes;
 }

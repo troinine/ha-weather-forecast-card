@@ -11,6 +11,7 @@ import {
 import {
   CURRENT_WEATHER_ATTRIBUTES,
   CurrentWeatherAttributes,
+  CurrentWeatherAttributeConfig,
   ExtendedHomeAssistant,
   WeatherForecastCardConfig,
 } from "../types";
@@ -24,6 +25,11 @@ import {
 
 import "./wfc-weather-condition-icon-provider";
 import "./wfc-current-weather-attributes";
+
+export type NormalizedAttributeConfig = {
+  name: CurrentWeatherAttributes;
+  entity?: string;
+};
 
 type SecondaryInfo = {
   icon?: string;
@@ -133,7 +139,7 @@ export class WfcCurrentWeather extends LitElement {
               .hass=${this.hass}
               .weatherEntity=${this.weatherEntity}
               .config=${this.config}
-              .weatherAttributes=${attributes}
+              .attributeConfigs=${attributes}
             ></wfc-current-weather-attributes>`
           : nothing}
       </div>
@@ -148,23 +154,38 @@ export class WfcCurrentWeather extends LitElement {
       : false;
   }
 
-  private getConfiguredAttributes(): CurrentWeatherAttributes[] {
+  private getConfiguredAttributes(): NormalizedAttributeConfig[] {
     const showAttr = this.config.current?.show_attributes;
 
     if (showAttr === undefined || showAttr === null) {
       return [];
     }
 
-    if (Array.isArray(showAttr)) {
-      return showAttr;
-    }
-
+    // Handle boolean: true means all attributes, false means none
     if (typeof showAttr === "boolean") {
-      return showAttr ? [...CURRENT_WEATHER_ATTRIBUTES] : [];
+      return showAttr
+        ? CURRENT_WEATHER_ATTRIBUTES.map((name) => ({ name }))
+        : [];
     }
 
+    // Handle single string: "humidity"
     if (typeof showAttr === "string") {
-      return [showAttr as CurrentWeatherAttributes];
+      return [{ name: showAttr as CurrentWeatherAttributes }];
+    }
+
+    // Handle single object: { name: "humidity", entity: "sensor.my_humidity" }
+    if (!Array.isArray(showAttr) && typeof showAttr === "object") {
+      return [showAttr as CurrentWeatherAttributeConfig];
+    }
+
+    // Handle array: mixed strings and objects
+    if (Array.isArray(showAttr)) {
+      return showAttr.map((item) => {
+        if (typeof item === "string") {
+          return { name: item as CurrentWeatherAttributes };
+        }
+        return item as CurrentWeatherAttributeConfig;
+      });
     }
 
     return [];

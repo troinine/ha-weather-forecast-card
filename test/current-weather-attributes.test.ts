@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { fixture } from "@open-wc/testing";
 import { html } from "lit";
 import { MockHass } from "./mocks/hass";
-import { ExtendedHomeAssistant } from "../src/types";
+import {
+  CurrentWeatherAttributeConfig,
+  ExtendedHomeAssistant,
+} from "../src/types";
 import { WeatherEntity } from "../src/data/weather";
 import { WfcCurrentWeather } from "../src/components/wfc-current-weather";
 import { NumberFormat } from "custom-card-helpers";
@@ -536,5 +539,309 @@ describe("secondary_info_attribute", () => {
 
     expect(icon).not.toBeNull();
     expect(value).not.toBeNull();
+  });
+});
+
+describe("custom entity attributes", () => {
+  let hass: ExtendedHomeAssistant;
+  let weatherEntity: WeatherEntity;
+
+  beforeEach(() => {
+    const mockHass = new MockHass();
+    hass = mockHass.getHass() as ExtendedHomeAssistant;
+
+    const original = hass.states["weather.demo"] as WeatherEntity;
+    weatherEntity = {
+      ...original,
+      attributes: {
+        ...original.attributes,
+        humidity: 40,
+        pressure: 1000,
+        wind_speed: 5,
+        wind_bearing: 180,
+        dew_point: 8,
+      },
+    } as WeatherEntity;
+
+    hass.states["weather.demo"] = weatherEntity;
+  });
+
+  it("renders custom entity value for humidity attribute", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { name: "humidity", entity: "sensor.custom_humidity" },
+            ],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const value = attrEl!.querySelector(
+      ".wfc-current-attribute-value"
+    )?.textContent;
+    // Custom sensor has value 75
+    expect(value?.trim()).toBe("75 %");
+  });
+
+  it("renders custom entity value for pressure attribute", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { name: "pressure", entity: "sensor.custom_pressure" },
+            ],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const value = attrEl!.querySelector(
+      ".wfc-current-attribute-value"
+    )?.textContent;
+    // Custom sensor has value 1025
+    expect(value?.trim()).toBe("1,025 hPa");
+  });
+
+  it("renders custom entity value for wind_speed with bearing from weather entity", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { name: "wind_speed", entity: "sensor.custom_wind_speed" },
+            ],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const value = attrEl!.querySelector(
+      ".wfc-current-attribute-value"
+    )?.textContent;
+    // Custom sensor has 15.5 km/h, bearing 180 (S) from weather entity
+    expect(value?.trim()).toBe("15.5 km/h (S)");
+  });
+
+  it("renders custom entity value for dew_point with temperature precision", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { name: "dew_point", entity: "sensor.custom_dew_point" },
+            ],
+            temperature_precision: 1,
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const value = attrEl!.querySelector(
+      ".wfc-current-attribute-value"
+    )?.textContent;
+    // Custom sensor has value 12.5
+    expect(value?.trim()).toBe("12.5°C");
+  });
+
+  it("renders mixed format config (strings and objects)", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              "humidity", // simple string, uses weather entity
+              { name: "pressure", entity: "sensor.custom_pressure" }, // object with custom entity
+            ] as (string | CurrentWeatherAttributeConfig)[],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const values = Array.from(
+      attrEl!.querySelectorAll(".wfc-current-attribute-value")
+    ).map((node) => node.textContent?.trim());
+
+    // First value from weather entity (40), second from custom sensor (1025)
+    expect(values).toEqual(["40 %", "1,025 hPa"]);
+  });
+
+  it("renders single object config format", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: {
+              name: "humidity",
+              entity: "sensor.custom_humidity",
+            } as CurrentWeatherAttributeConfig,
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const value = attrEl!.querySelector(
+      ".wfc-current-attribute-value"
+    )?.textContent;
+    expect(value?.trim()).toBe("75 %");
+  });
+
+  it("skips attribute when custom entity is unavailable", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { name: "humidity", entity: "sensor.unavailable_sensor" },
+              "pressure", // This should still render
+            ] as (string | CurrentWeatherAttributeConfig)[],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const items = attrEl?.querySelectorAll(".wfc-current-attribute");
+    // Only pressure should render since humidity sensor is unavailable
+    expect(items?.length).toBe(1);
+
+    const value = attrEl!.querySelector(
+      ".wfc-current-attribute-value"
+    )?.textContent;
+    expect(value?.trim()).toBe("1000 hPa");
+  });
+
+  it("skips attribute when custom entity does not exist", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { name: "humidity", entity: "sensor.non_existent" },
+              "pressure",
+            ] as (string | CurrentWeatherAttributeConfig)[],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const items = attrEl?.querySelectorAll(".wfc-current-attribute");
+    // Only pressure should render
+    expect(items?.length).toBe(1);
+  });
+
+  it("maintains backwards compatibility with boolean config", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { show_attributes: true },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    // Should show all available attributes from weather entity
+    const items = attrEl?.querySelectorAll(".wfc-current-attribute");
+    expect(items?.length).toBeGreaterThan(0);
+  });
+
+  it("maintains backwards compatibility with string array config", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: { show_attributes: ["humidity", "pressure"] },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const items = attrEl?.querySelectorAll(".wfc-current-attribute");
+    expect(items?.length).toBe(2);
+
+    const values = Array.from(
+      attrEl!.querySelectorAll(".wfc-current-attribute-value")
+    ).map((node) => node.textContent?.trim());
+
+    expect(values).toEqual(["40 %", "1000 hPa"]);
   });
 });

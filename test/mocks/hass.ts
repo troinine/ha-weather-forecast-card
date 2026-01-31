@@ -229,6 +229,84 @@ export class MockHass {
             parent_id: null,
           },
         },
+        "sensor.custom_humidity": {
+          entity_id: "sensor.custom_humidity",
+          state: "75",
+          attributes: {
+            friendly_name: "Custom Humidity Sensor",
+            unit_of_measurement: "%",
+            device_class: "humidity",
+          },
+          last_changed: "2025-11-20T10:30:00.000Z",
+          last_updated: "2025-11-20T10:30:00.000Z",
+          context: {
+            id: "mock-context-id",
+            user_id: null,
+            parent_id: null,
+          },
+        },
+        "sensor.custom_pressure": {
+          entity_id: "sensor.custom_pressure",
+          state: "1025",
+          attributes: {
+            friendly_name: "Custom Pressure Sensor",
+            unit_of_measurement: "hPa",
+            device_class: "pressure",
+          },
+          last_changed: "2025-11-20T10:30:00.000Z",
+          last_updated: "2025-11-20T10:30:00.000Z",
+          context: {
+            id: "mock-context-id",
+            user_id: null,
+            parent_id: null,
+          },
+        },
+        "sensor.custom_wind_speed": {
+          entity_id: "sensor.custom_wind_speed",
+          state: "15.5",
+          attributes: {
+            friendly_name: "Custom Wind Speed",
+            unit_of_measurement: "km/h",
+            device_class: "wind_speed",
+          },
+          last_changed: "2025-11-20T10:30:00.000Z",
+          last_updated: "2025-11-20T10:30:00.000Z",
+          context: {
+            id: "mock-context-id",
+            user_id: null,
+            parent_id: null,
+          },
+        },
+        "sensor.custom_dew_point": {
+          entity_id: "sensor.custom_dew_point",
+          state: "12.5",
+          attributes: {
+            friendly_name: "Custom Dew Point",
+            unit_of_measurement: "°C",
+            device_class: "temperature",
+          },
+          last_changed: "2025-11-20T10:30:00.000Z",
+          last_updated: "2025-11-20T10:30:00.000Z",
+          context: {
+            id: "mock-context-id",
+            user_id: null,
+            parent_id: null,
+          },
+        },
+        "sensor.unavailable_sensor": {
+          entity_id: "sensor.unavailable_sensor",
+          state: "unavailable",
+          attributes: {
+            friendly_name: "Unavailable Sensor",
+          },
+          last_changed: "2025-11-20T10:30:00.000Z",
+          last_updated: "2025-11-20T10:30:00.000Z",
+          context: {
+            id: "mock-context-id",
+            user_id: null,
+            parent_id: null,
+          },
+        },
         "weather.demo": {
           entity_id: "weather.demo",
           state:

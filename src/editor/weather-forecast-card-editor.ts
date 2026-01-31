@@ -11,6 +11,8 @@ import {
 } from "custom-card-helpers";
 import {
   CURRENT_WEATHER_ATTRIBUTES,
+  CurrentWeatherAttributes,
+  CurrentWeatherAttributeConfig,
   ExtendedHomeAssistant,
   MAX_TEMPERATURE_PRECISION,
   WEATHER_EFFECTS,
@@ -19,6 +21,23 @@ import {
   WeatherForecastCardForecastActionConfig,
   WeatherForecastCardForecastConfig,
 } from "../types";
+
+// Device class mapping for attribute entity selectors
+const ATTRIBUTE_DEVICE_CLASS_MAP: Record<
+  CurrentWeatherAttributes,
+  string | string[] | undefined
+> = {
+  humidity: "humidity",
+  pressure: ["pressure", "atmospheric_pressure"],
+  wind_speed: "wind_speed",
+  wind_gust_speed: "wind_speed",
+  visibility: "distance",
+  dew_point: "temperature",
+  apparent_temperature: "temperature",
+  uv_index: undefined, // any sensor
+  ozone: undefined, // any sensor
+  cloud_coverage: undefined, // any sensor
+};
 
 type HaFormSelector =
   | { entity: { domain?: string; device_class?: string | string[] } }
@@ -42,6 +61,8 @@ type HaFormSchema = {
     | `forecast.${keyof WeatherForecastCardForecastConfig}`
     | `current.${keyof WeatherForecastCardCurrentConfig}`
     | `forecast_action.${keyof WeatherForecastCardForecastActionConfig}`
+    | `current.attribute_entity_${CurrentWeatherAttributes}`
+    | "attribute_entities"
     | "";
   type?: string;
   iconPath?: TemplateResult;
@@ -75,12 +96,16 @@ export class WeatherForecastCardEditor
   }
 
   private _schema = memoizeOne(
-    (localize: LocalizeFunc): HaFormSchema[] =>
+    (
+      localize: LocalizeFunc,
+      selectedAttributes: CurrentWeatherAttributes[]
+    ): HaFormSchema[] =>
       [
         ...this._genericSchema(localize),
         ...this._currentWeatherSchema(localize),
         ...this._forecastSchema(localize),
         ...this._interactionsSchema(),
+        ...this._attributeEntitiesSchema(selectedAttributes),
         ...this._advancedSchema(),
       ] as const
   );
@@ -365,6 +390,36 @@ export class WeatherForecastCardEditor
       },
     ] as const;
 
+  private _attributeEntitiesSchema = (
+    selectedAttributes: CurrentWeatherAttributes[]
+  ): HaFormSchema[] => {
+    if (selectedAttributes.length === 0) {
+      return [];
+    }
+
+    const attributeEntitySchemas: HaFormSchema[] = selectedAttributes.map(
+      (attribute) => {
+        const deviceClass = ATTRIBUTE_DEVICE_CLASS_MAP[attribute];
+        return {
+          name: `current.attribute_entity_${attribute}`,
+          optional: true,
+          selector: deviceClass
+            ? { entity: { domain: "sensor", device_class: deviceClass } }
+            : { entity: { domain: "sensor" } },
+        };
+      }
+    );
+
+    return [
+      {
+        name: "attribute_entities",
+        type: "expandable",
+        flatten: true,
+        schema: attributeEntitySchemas,
+      },
+    ];
+  };
+
   private _advancedSchema = (): HaFormSchema[] =>
     [
       {
@@ -396,9 +451,9 @@ export class WeatherForecastCardEditor
       return nothing;
     }
 
-    const schema = this._schema(this.localize.bind(this));
-
     const data = denormalizeConfig(this._config);
+    const selectedAttributes = this._getSelectedAttributes(data);
+    const schema = this._schema(this.localize.bind(this), selectedAttributes);
 
     return html`
       <ha-form
@@ -413,7 +468,42 @@ export class WeatherForecastCardEditor
     `;
   }
 
+  private _getSelectedAttributes(
+    data: Record<string, any>
+  ): CurrentWeatherAttributes[] {
+    const showAttributes = data["current.show_attributes"];
+
+    if (!showAttributes) {
+      return [];
+    }
+
+    if (Array.isArray(showAttributes)) {
+      // Handle mixed array of strings and objects
+      return showAttributes.map(
+        (item: string | CurrentWeatherAttributeConfig) =>
+          (typeof item === "string"
+            ? item
+            : item.name) as CurrentWeatherAttributes
+      );
+    }
+
+    return [];
+  }
+
   private _computeLabel = (schema: HaFormSchema): string | undefined => {
+    if (schema.name.startsWith("current.attribute_entity_")) {
+      const attribute = schema.name.replace("current.attribute_entity_", "");
+      const attributeLabel =
+        this.localize(`ui.card.weather.attributes.${attribute}`) ||
+        capitalize(attribute).replace(/_/g, " ");
+      const entityLabel = (
+        this.hass!.localize("ui.panel.lovelace.editor.card.generic.entity") ||
+        "entity"
+      ).toLocaleLowerCase();
+
+      return `${attributeLabel} ${entityLabel}`;
+    }
+
     const name = schema.name.startsWith("forecast_action.")
       ? schema.name.split(".")[1]
       : schema.name;
@@ -492,6 +582,12 @@ export class WeatherForecastCardEditor
         );
       case "show_condition_effects":
         return "Show condition effects";
+      case "attribute_entities":
+        return `${
+          this.hass!.localize(
+            "ui.panel.lovelace.editor.card.generic.attribute"
+          ) || "attribute"
+        } ${(this.hass!.localize("ui.panel.lovelace.editor.card.generic.entities") || "entities").toLocaleLowerCase()}`;
       default:
         return this.hass!.localize(
           `ui.panel.lovelace.editor.card.generic.${name}`
@@ -537,6 +633,8 @@ export class WeatherForecastCardEditor
         return "Overrides the friendly name of the entity.";
       case "show_condition_effects":
         return "Select which weather conditions initiate visual effects and animations on the card.";
+      case "attribute_entities":
+        return "Override weather attribute values with custom sensor entities.";
       default:
         return undefined;
     }
@@ -576,13 +674,43 @@ export class WeatherForecastCardEditor
       }
     }
 
-    if (
-      Array.isArray(newConfig?.current?.show_attributes) &&
-      CURRENT_WEATHER_ATTRIBUTES.every((attribute) =>
-        newConfig.current.show_attributes.includes(attribute)
-      )
-    ) {
-      newConfig.current.show_attributes = true;
+    // Convert show_attributes to object format if custom entities are specified
+    if (newConfig?.current) {
+      const attributeEntities: Record<string, string> = {};
+
+      for (const key of Object.keys(newConfig.current)) {
+        if (key.startsWith("attribute_entity_")) {
+          const attribute = key.replace(
+            "attribute_entity_",
+            ""
+          ) as CurrentWeatherAttributes;
+          const entity = newConfig.current[key];
+          if (entity) {
+            attributeEntities[attribute] = entity;
+          }
+          delete newConfig.current[key];
+        }
+      }
+
+      if (Array.isArray(newConfig.current.show_attributes)) {
+        const hasCustomEntities = Object.keys(attributeEntities).length > 0;
+        const allSelected = CURRENT_WEATHER_ATTRIBUTES.every((attribute) =>
+          newConfig.current.show_attributes.includes(attribute)
+        );
+
+        if (hasCustomEntities) {
+          newConfig.current.show_attributes =
+            newConfig.current.show_attributes.map((attr: string) => {
+              const entity = attributeEntities[attr];
+              if (entity) {
+                return { name: attr, entity };
+              }
+              return attr;
+            });
+        } else if (allSelected) {
+          newConfig.current.show_attributes = true;
+        }
+      }
     }
 
     fireEvent(this, "config-changed", { config: newConfig });
@@ -654,6 +782,27 @@ const denormalizeConfig = (obj: Record<string, any>) => {
 
   if (result["current.show_attributes"] === true) {
     result["current.show_attributes"] = [...CURRENT_WEATHER_ATTRIBUTES];
+  }
+
+  // Handle show_attributes that may contain objects with entity references
+  const showAttrs = result["current.show_attributes"];
+  if (Array.isArray(showAttrs)) {
+    // Extract attribute entities and normalize the array
+    const normalizedAttrs: string[] = [];
+
+    for (const item of showAttrs) {
+      if (typeof item === "string") {
+        normalizedAttrs.push(item);
+      } else if (typeof item === "object" && item.name) {
+        normalizedAttrs.push(item.name);
+        // Store entity in flattened format for the form
+        if (item.entity) {
+          result[`current.attribute_entity_${item.name}`] = item.entity;
+        }
+      }
+    }
+
+    result["current.show_attributes"] = normalizedAttrs;
   }
 
   return result;

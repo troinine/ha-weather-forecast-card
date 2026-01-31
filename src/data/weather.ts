@@ -579,6 +579,40 @@ export const formatWeatherEntityAttributeValue = (
   return hass.formatEntityAttributeValue(weatherEntity, attribute);
 };
 
+export const formatCustomEntityAttributeValue = (
+  hass: ExtendedHomeAssistant,
+  weatherEntity: WeatherEntity,
+  config: WeatherForecastCardConfig,
+  attribute: CurrentWeatherAttributes,
+  customEntityId: string
+): string | undefined => {
+  const customEntity = hass.states[customEntityId];
+
+  if (!customEntity) {
+    return undefined;
+  }
+
+  const value = customEntity.state;
+
+  if (value === undefined) {
+    return undefined;
+  }
+
+  // Temperature related attributes need special handling for precision
+  if (attribute === "apparent_temperature" || attribute === "dew_point") {
+    return formatTemperature(
+      hass,
+      weatherEntity,
+      value,
+      config.current?.temperature_precision
+    );
+  }
+
+  const formattedValue = hass.formatEntityState(customEntity);
+
+  return formattedValue;
+};
+
 export const formatTemperature = (
   hass: ExtendedHomeAssistant,
   weatherEntity: WeatherEntity,

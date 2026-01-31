@@ -2,23 +2,21 @@ import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { capitalize } from "lodash-es";
 import memoizeOne from "memoize-one";
+import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../types";
 import {
-  CurrentWeatherAttributes,
-  ExtendedHomeAssistant,
-  WeatherForecastCardConfig,
-} from "../types";
-import {
+  formatCustomEntityAttributeValue,
   formatWeatherEntityAttributeValue,
   WEATHER_ATTRIBUTE_ICON_MAP,
   WeatherEntity,
 } from "../data/weather";
+import type { NormalizedAttributeConfig } from "./wfc-current-weather";
 
 @customElement("wfc-current-weather-attributes")
 export class WfcCurrentWeatherAttributes extends LitElement {
   @property({ attribute: false }) hass!: ExtendedHomeAssistant;
   @property({ attribute: false }) weatherEntity!: WeatherEntity;
   @property({ attribute: false })
-  weatherAttributes: CurrentWeatherAttributes[] = [];
+  attributeConfigs: NormalizedAttributeConfig[] = [];
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
   protected createRenderRoot() {
@@ -29,13 +27,13 @@ export class WfcCurrentWeatherAttributes extends LitElement {
     if (
       !this.hass ||
       !this.weatherEntity ||
-      this.weatherAttributes.length === 0
+      this.attributeConfigs.length === 0
     ) {
       return nothing;
     }
 
-    const attributeTemplates = this.weatherAttributes
-      .map((attr) => this._renderAttribute(attr))
+    const attributeTemplates = this.attributeConfigs
+      .map((attrConfig) => this._renderAttribute(attrConfig))
       .filter((template) => template !== nothing);
 
     if (attributeTemplates.length === 0) {
@@ -48,27 +46,46 @@ export class WfcCurrentWeatherAttributes extends LitElement {
   }
 
   private _renderAttribute(
-    attribute: CurrentWeatherAttributes
+    attrConfig: NormalizedAttributeConfig
   ): TemplateResult | typeof nothing {
-    const value = formatWeatherEntityAttributeValue(
-      this.hass,
-      this.weatherEntity,
-      this.config,
-      attribute
-    );
+    const { name: attribute, entity: customEntityId } = attrConfig;
+
+    // Use custom entity value if specified, otherwise use weather entity
+    const value = customEntityId
+      ? formatCustomEntityAttributeValue(
+          this.hass,
+          this.weatherEntity,
+          this.config,
+          attribute,
+          customEntityId
+        )
+      : formatWeatherEntityAttributeValue(
+          this.hass,
+          this.weatherEntity,
+          this.config,
+          attribute
+        );
 
     if (!value) {
       return nothing;
     }
+
+    const stateObj = customEntityId
+      ? this.hass.states[customEntityId] || this.weatherEntity
+      : this.weatherEntity;
+    const icon =
+      customEntityId && this.hass.states[customEntityId]?.attributes?.icon
+        ? this.hass.states[customEntityId]?.attributes.icon
+        : WEATHER_ATTRIBUTE_ICON_MAP[attribute];
 
     return html`
       <div class="wfc-current-attribute">
         <ha-attribute-icon
           class="wfc-current-attribute-icon"
           .hass=${this.hass}
-          .stateObj=${this.weatherEntity}
+          .stateObj=${stateObj}
           .attribute=${attribute}
-          .icon=${WEATHER_ATTRIBUTE_ICON_MAP[attribute]}
+          .icon=${icon}
         ></ha-attribute-icon>
         <span class="wfc-current-attribute-name">
           ${this.localize(attribute)}
