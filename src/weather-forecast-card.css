@@ -351,6 +351,30 @@ ha-card {
   text-align: center;
 }
 
+.wfc-forecast-slot-time.wfc-two-rows {
+  flex-direction: column;
+  height: auto;
+  gap: 2px;
+}
+
+.wfc-forecast-slot-time-primary {
+  color: var(--primary-text-color, #212121);
+  font-size: var(--ha-font-size-m, 14px);
+  height: 20px;
+  line-height: 20px;
+}
+
+.wfc-forecast-slot-time-secondary {
+  color: var(--secondary-text-color, #9b9b9b);
+  font-size: var(--ha-font-size-s, 12px);
+  line-height: var(--ha-line-height-condensed, 1.2);
+}
+
+.wfc-forecast-slot-time.wfc-sunrise .wfc-forecast-slot-time-primary,
+.wfc-forecast-slot-time.wfc-sunset .wfc-forecast-slot-time-primary {
+  color: inherit;
+}
+
 .wfc-forecast-slot-temperature {
   display: flex;
   align-items: center;

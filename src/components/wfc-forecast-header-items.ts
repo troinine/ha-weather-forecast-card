@@ -16,9 +16,14 @@ import { ForecastAttribute, ForecastType } from "../data/weather";
 import {
   endOfHour,
   formatDay,
+  formatDayOfMonth,
   formatHour,
+  formatHourParts,
   formatTime,
+  formatTimeParts,
   getSuntimesInfo,
+  HourParts,
+  TimeParts,
 } from "../helpers";
 
 @customElement("wfc-forecast-header-items")
@@ -53,7 +58,7 @@ export class WfcForecastHeaderItems extends LitElement {
       return nothing;
     }
 
-    const { label, className } = this.getDateInfo();
+    const dateInfo = this.getDateInfo();
     const isNightTime =
       this.forecastType === "hourly" &&
       this.config.forecast?.show_sun_times &&
@@ -61,9 +66,20 @@ export class WfcForecastHeaderItems extends LitElement {
         ? this.suntimesInfo.isNightTime
         : false;
 
+    const hasTwoRows = dateInfo.secondaryLabel !== undefined;
+
     return html`
-      <div class="wfc-forecast-slot-time wfc-label ${className || ""}">
-        ${label}
+      <div
+        class="wfc-forecast-slot-time ${dateInfo.className || ""} ${hasTwoRows
+          ? "wfc-two-rows"
+          : ""}"
+      >
+        <span class="wfc-forecast-slot-time-primary">${dateInfo.label}</span>
+        ${hasTwoRows
+          ? html`<span class="wfc-forecast-slot-time-secondary"
+              >${dateInfo.secondaryLabel}</span
+            >`
+          : nothing}
       </div>
       <wfc-weather-condition-icon-provider
         .hass=${this.hass}
@@ -74,13 +90,25 @@ export class WfcForecastHeaderItems extends LitElement {
     `;
   }
 
-  private getDateInfo(): { label: string; className?: string } {
+  private getDateInfo(): {
+    label: string;
+    secondaryLabel?: string;
+    className?: string;
+  } {
     if (this.forecastType !== "hourly") {
+      const hourParts = formatHourParts(this.hass, this.forecast.datetime);
+      if (hourParts.suffix) {
+        return {
+          label: formatDay(this.hass, this.forecast.datetime),
+          secondaryLabel: formatDayOfMonth(this.hass, this.forecast.datetime),
+        };
+      }
       return {
         label: formatDay(this.hass, this.forecast.datetime),
       };
     }
 
+    // Hourly view
     const startDate = new Date(this.forecast.datetime);
 
     const endDate = this.forecast.groupEndtime
@@ -115,13 +143,42 @@ export class WfcForecastHeaderItems extends LitElement {
       }
     }
 
-    const label = className
-      ? formatTime(this.hass, displayDate, true)
-      : formatHour(this.hass, displayDate, true);
+    // For sunrise/sunset times
+    if (className) {
+      const parts: TimeParts = formatTimeParts(this.hass, displayDate);
+      if (parts.suffix) {
+        return {
+          label: parts.time,
+          secondaryLabel: parts.suffix,
+          className,
+        };
+      }
 
-    return { label, className };
+      // No suffix: single row
+      return {
+        label: formatTime(this.hass, displayDate, true),
+        className,
+      };
+    }
+
+    // For regular hourly forecast
+    const parts: HourParts = formatHourParts(this.hass, displayDate);
+    if (parts.suffix) {
+      return {
+        label: parts.hour,
+        secondaryLabel: parts.suffix,
+        className,
+      };
+    }
+
+    // No suffix: single row
+    return {
+      label: formatHour(this.hass, displayDate, true),
+      className,
+    };
   }
 }
+
 declare global {
   interface HTMLElementTagNameMap {
     "wfc-forecast-header-items": WfcForecastHeaderItems;
