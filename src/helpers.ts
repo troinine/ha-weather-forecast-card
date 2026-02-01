@@ -53,12 +53,6 @@ export const formatHourParts = (
   const locale = getLocale(hass);
   const isAmPm = useAmPm(hass);
 
-  // Format respecting user's time format preference
-  const fullTime = date.toLocaleTimeString(locale, {
-    hour: "numeric",
-    hour12: isAmPm,
-  });
-
   // Try to extract parts using Intl.DateTimeFormat for proper locale handling
   try {
     const formatter = new Intl.DateTimeFormat(locale, {
@@ -95,10 +89,14 @@ export const formatHourParts = (
       return { hour: hourPart.value };
     }
   } catch {
-    // Fallback: just return the numeric hour without suffix
+    // Fallback below
   }
 
-  // Fallback: extract numeric portion
+  // Fallback: extract numeric portion from formatted string
+  const fullTime = date.toLocaleTimeString(locale, {
+    hour: "numeric",
+    hour12: isAmPm,
+  });
   const numericMatch = fullTime.match(/\d+/);
   const hour = numericMatch ? numericMatch[0] : fullTime;
   const suffix = fullTime.replace(/\d+\s*/, "").trim();
@@ -113,13 +111,6 @@ export const formatTimeParts = (
   const date = toDate(datetime);
   const locale = getLocale(hass);
   const isAmPm = useAmPm(hass);
-
-  // Format respecting user's time format preference
-  const fullTime = date.toLocaleTimeString(locale, {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: isAmPm,
-  });
 
   // Try to extract parts using Intl.DateTimeFormat for proper locale handling
   try {
@@ -167,10 +158,15 @@ export const formatTimeParts = (
       return { time };
     }
   } catch {
-    // Fallback: just return the full time without suffix
+    // Fallback below
   }
 
-  // Fallback: extract time portion (HH:MM)
+  // Fallback: extract time portion from formatted string
+  const fullTime = date.toLocaleTimeString(locale, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: isAmPm,
+  });
   const timeMatch = fullTime.match(/\d+[:.]\d+/);
   const time = timeMatch ? timeMatch[0] : fullTime;
   const suffix = fullTime.replace(/\d+[:.]\d+\s*/, "").trim();
