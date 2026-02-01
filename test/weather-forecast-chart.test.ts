@@ -8,7 +8,7 @@ import {
   ForecastMode,
   WeatherForecastCardConfig,
 } from "../src/types";
-import { formatDay, formatHour } from "../src/helpers";
+import { formatDay, formatHourParts } from "../src/helpers";
 import { TEST_FORECAST_DAILY, TEST_FORECAST_HOURLY } from "./mocks/test-data";
 import { WfcForecastChart } from "../src/components/wfc-forecast-chart";
 import { merge } from "lodash-es";
@@ -180,7 +180,7 @@ describe("weather-forecast-card chart", () => {
       const timeLabel = item.querySelector(".wfc-forecast-slot-time");
       expect(timeLabel).not.toBeNull();
       expect(timeLabel?.textContent?.trim()).toBe(
-        formatHour(hass, TEST_FORECAST_HOURLY[index].datetime)
+        formatHourParts(hass, TEST_FORECAST_HOURLY[index].datetime).hour
       );
 
       const iconProvider = item.querySelector(

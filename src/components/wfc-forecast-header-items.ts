@@ -17,13 +17,10 @@ import {
   endOfHour,
   formatDay,
   formatDayOfMonth,
-  formatHour,
   formatHourParts,
-  formatTime,
   formatTimeParts,
   getSuntimesInfo,
-  HourParts,
-  TimeParts,
+  useAmPm,
 } from "../helpers";
 
 @customElement("wfc-forecast-header-items")
@@ -95,9 +92,11 @@ export class WfcForecastHeaderItems extends LitElement {
     secondaryLabel?: string;
     className?: string;
   } {
+    // Use two-row layout only for 12-hour (AM/PM) clock format
+    const isAmPm = useAmPm(this.hass);
+
     if (this.forecastType !== "hourly") {
-      const hourParts = formatHourParts(this.hass, this.forecast.datetime);
-      if (hourParts.suffix) {
+      if (isAmPm) {
         return {
           label: formatDay(this.hass, this.forecast.datetime),
           secondaryLabel: formatDayOfMonth(this.hass, this.forecast.datetime),
@@ -143,38 +142,21 @@ export class WfcForecastHeaderItems extends LitElement {
       }
     }
 
-    // For sunrise/sunset times
+    // Sunrise/sunset times (with minutes)
     if (className) {
-      const parts: TimeParts = formatTimeParts(this.hass, displayDate);
-      if (parts.suffix) {
-        return {
-          label: parts.time,
-          secondaryLabel: parts.suffix,
-          className,
-        };
-      }
-
-      // No suffix: single row
+      const timeParts = formatTimeParts(this.hass, displayDate);
       return {
-        label: formatTime(this.hass, displayDate, true),
+        label: timeParts.time,
+        secondaryLabel: isAmPm ? timeParts.suffix : undefined,
         className,
       };
     }
 
-    // For regular hourly forecast
-    const parts: HourParts = formatHourParts(this.hass, displayDate);
-    if (parts.suffix) {
-      return {
-        label: parts.hour,
-        secondaryLabel: parts.suffix,
-        className,
-      };
-    }
-
-    // No suffix: single row
+    // Regular hourly forecast
+    const hourParts = formatHourParts(this.hass, displayDate);
     return {
-      label: formatHour(this.hass, displayDate, true),
-      className,
+      label: hourParts.hour,
+      secondaryLabel: isAmPm ? hourParts.suffix : undefined,
     };
   }
 }

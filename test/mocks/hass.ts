@@ -168,6 +168,7 @@ export interface MockHassOptions {
   darkMode?: boolean;
   currentCondition?: string | null;
   use12HourClock?: boolean;
+  language?: string;
 }
 
 export class MockHass {
@@ -492,9 +493,9 @@ export class MockHass {
         // Return undefined to let the component use fallback localization
         return undefined;
       },
-      language: "en",
+      language: this.options.language || "en",
       locale: {
-        language: "en",
+        language: this.options.language || "en",
         time_format: this.options.use12HourClock
           ? TimeFormat.am_pm
           : TimeFormat.twenty_four,

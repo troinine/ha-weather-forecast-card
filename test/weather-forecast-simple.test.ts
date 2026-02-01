@@ -9,7 +9,7 @@ import {
   WeatherForecastCardConfig,
 } from "../src/types";
 import { TEST_FORECAST_DAILY, TEST_FORECAST_HOURLY } from "./mocks/test-data";
-import { formatDay, formatHour } from "../src/helpers";
+import { formatDay, formatHourParts } from "../src/helpers";
 
 import "../src/index";
 
@@ -140,7 +140,7 @@ describe("weather-forecast-card simple", () => {
       const timeLabel = item.querySelector(".wfc-forecast-slot-time");
       expect(timeLabel).not.toBeNull();
       expect(timeLabel?.textContent?.trim()).toBe(
-        formatHour(hass, TEST_FORECAST_HOURLY[index].datetime)
+        formatHourParts(hass, TEST_FORECAST_HOURLY[index].datetime).hour
       );
 
       const temperatureHigh = item.querySelector(

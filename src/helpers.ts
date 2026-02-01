@@ -27,29 +27,6 @@ export const createWarningText = (
     : hass.localize("ui.panel.lovelace.warning.starting");
 };
 
-export const formatHour = (
-  hass: HomeAssistant | undefined,
-  datetime: string | Date,
-  force24Hour = false
-): string => {
-  return toDate(datetime).toLocaleTimeString(getLocale(hass), {
-    hour: "numeric",
-    hour12: force24Hour ? false : useAmPm(hass),
-  });
-};
-
-export const formatTime = (
-  hass: HomeAssistant | undefined,
-  datetime: string | Date,
-  force24Hour = false
-): string => {
-  return toDate(datetime).toLocaleTimeString(getLocale(hass), {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: force24Hour ? false : useAmPm(hass),
-  });
-};
-
 export const formatDay = (
   hass: HomeAssistant | undefined,
   datetime: string | Date
