@@ -1,5 +1,5 @@
 import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
-import { customElement, property, query } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { DragScrollController } from "../controllers/drag-scroll-controller";
 import { formatDay } from "../helpers";
 import { styleMap } from "lit/directives/style-map.js";
@@ -9,6 +9,9 @@ import { actionHandler } from "../hass";
 import { logger } from "../logger";
 import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
 import {
+  CHART_ATTRIBUTES,
+  ChartAttributes,
+  CurrentWeatherAttributes,
   ExtendedHomeAssistant,
   ForecastActionDetails,
   WeatherForecastCardConfig,
@@ -20,6 +23,7 @@ import {
   formatTemperature,
   getMaxPrecipitationForUnit,
   getWeatherUnit,
+  WEATHER_ATTRIBUTE_ICON_MAP,
   WeatherEntity,
 } from "../data/weather";
 import {
@@ -35,9 +39,12 @@ import {
   ScriptableContext,
   Color,
   ChartDataset,
+  ChartOptions,
 } from "chart.js";
 
 import "./wfc-forecast-header-items";
+import "./dropdown/chart-settings-dropdown";
+import { merge } from "lodash-es";
 
 Chart.register(
   BarController,
@@ -67,6 +74,9 @@ type ForecastLineStyle = Pick<
 // which should be more than enough to provide a reliable forecast view.
 const MAX_CANVAS_WIDTH = 16384;
 
+// If the label value is longer than this, only render every second label to avoid clutter.
+const MIN_RENDER_EVERY_SECOND_LABEL = 6;
+
 /**
  * A chart component to display weather forecast data.
  *
@@ -85,6 +95,10 @@ export class WfcForecastChart extends LitElement {
   @property({ attribute: false }) forecastType!: ForecastType;
   @property({ attribute: false }) itemWidth: number = 0;
   @query("canvas") private _canvas?: HTMLCanvasElement;
+
+  @state() private _settingsOpen = false;
+  @state() private _selectedAttribute: ChartAttributes =
+    "temperature_and_precipitation";
 
   private _lastChartEvent: PointerEvent | null = null;
   private _chart: Chart | null = null;
@@ -156,6 +170,36 @@ export class WfcForecastChart extends LitElement {
     };
 
     return html`
+      <div class="wfc-forecast-chart-settings">
+        <span>${this.hass.localize("ui.card.weather.forecast")}</span>
+        <div class="wfc-chart-settings-wrapper">
+          <ha-button
+            class="wfc-settings-toggle-button"
+            size="small"
+            appearance="filled"
+            variant="brand"
+            @click=${this._onSettingsToggle}
+          >
+            <ha-icon
+              .icon=${this._settingsOpen
+                ? "mdi:close"
+                : this._selectedAttribute === "temperature_and_precipitation"
+                  ? "mdi:water-thermometer"
+                  : WEATHER_ATTRIBUTE_ICON_MAP[
+                      this
+                        ._selectedAttribute as keyof typeof WEATHER_ATTRIBUTE_ICON_MAP
+                    ]}
+            ></ha-icon>
+          </ha-button>
+          <chart-settings-dropdown
+            .open=${this._settingsOpen}
+            .options=${this._getChartOptions()}
+            .value=${this._selectedAttribute}
+            @selected=${this._onAttributesSelected}
+            @closed=${this._onSettingsClosed}
+          ></chart-settings-dropdown>
+        </div>
+      </div>
       <div
         class="wfc-scroll-container"
         style=${styleMap(scrollContainerStyle)}
@@ -242,6 +286,63 @@ export class WfcForecastChart extends LitElement {
     const data = this.safeForecast;
     const style = getComputedStyle(this);
     const gridColor = style.getPropertyValue("--wfc-chart-grid-color");
+
+    const baseOptions: ChartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        autoPadding: false,
+        padding: {
+          top: 10,
+          bottom: 10,
+          left: 0,
+          right: 0,
+        },
+      },
+      elements: {
+        line: {
+          tension: 0.3,
+        },
+      },
+      scales: {
+        x: {
+          offset: true,
+          border: {
+            color: gridColor,
+            dash: [4, 4],
+          },
+          grid: {
+            offset: true,
+            display: true,
+            color: gridColor,
+            drawTicks: true,
+          },
+          ticks: {
+            display: false,
+          },
+        },
+      },
+    };
+
+    switch (this._selectedAttribute) {
+      case "uv_index":
+        return this._getUVIndexConfig(data, style, baseOptions);
+      case "humidity":
+      case "pressure":
+      case "apparent_temperature":
+        return this._getSelectedAttributeConfig(data, style, baseOptions);
+      case "temperature_and_precipitation":
+      default:
+        return this._getDefaultWeatherConfig(data, style, baseOptions);
+    }
+  }
+
+  private _getDefaultWeatherConfig(
+    data: ForecastAttribute[],
+    style: CSSStyleDeclaration,
+    options: ChartOptions
+  ): ChartConfiguration {
+    const { minTemp, maxTemp } = this.computeScaleLimits(data);
     const highTempLabelColor = style.getPropertyValue(
       "--wfc-chart-temp-high-label-color"
     );
@@ -252,8 +353,6 @@ export class WfcForecastChart extends LitElement {
       "--wfc-chart-precipitation-label-color"
     );
     const precipColor = style.getPropertyValue("--wfc-precipitation-bar-color");
-
-    const { minTemp, maxTemp } = this.computeScaleLimits(data);
 
     const maxPrecip = getMaxPrecipitationForUnit(
       getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
@@ -297,11 +396,11 @@ export class WfcForecastChart extends LitElement {
             ...templowLineStyle,
           },
           {
+            type: "bar",
             data: data.map((f) =>
               f.precipitation && f.precipitation !== 0 ? f.precipitation : null
             ),
             backgroundColor: precipColor,
-            type: "bar",
             yAxisID: "yPrecip",
             borderWidth: 0,
             borderRadius: {
@@ -325,40 +424,8 @@ export class WfcForecastChart extends LitElement {
           },
         ],
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: {
-          autoPadding: false,
-          padding: {
-            top: 10,
-            bottom: 10,
-            left: 0,
-            right: 0,
-          },
-        },
-        elements: {
-          line: {
-            tension: 0.3,
-          },
-        },
+      options: merge({}, options, {
         scales: {
-          x: {
-            offset: true,
-            border: {
-              color: gridColor,
-              dash: [4, 4],
-            },
-            grid: {
-              offset: true,
-              display: true,
-              color: gridColor,
-              drawTicks: true,
-            },
-            ticks: {
-              display: false,
-            },
-          },
           yTemp: {
             type: "linear",
             display: false,
@@ -388,7 +455,145 @@ export class WfcForecastChart extends LitElement {
             },
           },
         },
+      }),
+    };
+  }
+
+  private _getUVIndexConfig(
+    data: ForecastAttribute[],
+    style: CSSStyleDeclaration,
+    options: ChartOptions
+  ): ChartConfiguration {
+    const defaultColor = style
+      .getPropertyValue("--wfc-chart-uv-bar-color")
+      .trim();
+    const labelColor = style.getPropertyValue("--wfc-chart-label-color");
+
+    const uvColors = {
+      low: style.getPropertyValue("--wfc-uv-low").trim(),
+      moderate: style.getPropertyValue("--wfc-uv-moderate").trim(),
+      high: style.getPropertyValue("--wfc-uv-high").trim(),
+      veryHigh: style.getPropertyValue("--wfc-uv-very-high").trim(),
+      extreme: style.getPropertyValue("--wfc-uv-extreme").trim(),
+    };
+
+    const getUvColor = (value: number | null) => {
+      if (value === null) return defaultColor;
+      if (value >= 11) return uvColors.extreme;
+      if (value >= 8) return uvColors.veryHigh;
+      if (value >= 6) return uvColors.high;
+      if (value >= 3) return uvColors.moderate;
+      return uvColors.low;
+    };
+
+    return {
+      type: "bar",
+      data: {
+        labels: data.map((f) => f.datetime),
+        datasets: [
+          {
+            type: "bar",
+            data: data.map((f) => f.uv_index ?? null),
+            backgroundColor: data.map((f) => getUvColor(f.uv_index ?? null)),
+            borderWidth: 0,
+            borderRadius: {
+              topLeft: 5,
+              topRight: 5,
+            },
+            categoryPercentage: 0.6,
+            barPercentage: 0.8,
+            order: 0,
+            datalabels: {
+              anchor: "start",
+              align: "end",
+              offset: -22,
+              color: labelColor,
+              formatter: (value: number) => value ?? "",
+            },
+          },
+        ],
       },
+      options: merge({}, options, {
+        scales: {
+          y: {
+            display: false,
+            beginAtZero: true,
+            suggestedMax: 11,
+          },
+        },
+      }),
+    };
+  }
+
+  private _getSelectedAttributeConfig(
+    data: ForecastAttribute[],
+    style: CSSStyleDeclaration,
+    options: ChartOptions
+  ): ChartConfiguration {
+    const attr = this._selectedAttribute as keyof ForecastAttribute;
+    const colorVar =
+      attr === "humidity"
+        ? "--wfc-chart-humidity-line-color"
+        : attr === "pressure"
+          ? "--wfc-chart-pressure-line-color"
+          : "--wfc-chart-temp-high-line-color";
+
+    const color =
+      style.getPropertyValue(colorVar) ||
+      style.getPropertyValue("--wfc-chart-default-line-color");
+    const labelColor = style.getPropertyValue("--wfc-chart-label-color");
+    const unit = getWeatherUnit(this.hass, this.weatherEntity, attr);
+
+    const values = data.map((f) => (f[attr] as number) ?? 0);
+    const dataMax = Math.max(...values);
+    const dataMin = Math.min(...values);
+
+    const topPadding = (dataMax - dataMin) * 0.2;
+    const chartMax = dataMax + (topPadding || dataMax * 0.1); // Fallback to 10% if no range.
+
+    const bottomPadding = (dataMax - dataMin) * 0.1;
+    const chartMin = dataMin - (bottomPadding || dataMax * 0.05); // Fallback to 5% if no range.
+
+    return {
+      type: "line",
+      data: {
+        labels: data.map((f) => f.datetime),
+        datasets: [
+          {
+            data: data.map((f) => (f[attr] as number) ?? null),
+            borderColor: color,
+            pointBackgroundColor: color,
+            fill: false,
+            datalabels: {
+              anchor: "end",
+              align: "top",
+              color: labelColor,
+              formatter: (value: number | null, context) => {
+                if (value === null) return null;
+
+                const formattedValue = `${value} ${unit}`;
+                if (
+                  formattedValue.length > MIN_RENDER_EVERY_SECOND_LABEL &&
+                  context.dataIndex % 2 !== 0
+                ) {
+                  return null;
+                }
+
+                return formattedValue;
+              },
+            },
+          },
+        ],
+      },
+      options: merge({}, options, {
+        scales: {
+          y: {
+            display: false,
+            min: chartMin,
+            max: chartMax,
+          },
+        },
+      }),
     };
   }
 
@@ -459,6 +664,13 @@ export class WfcForecastChart extends LitElement {
 
     const yTemp = scales.yTemp;
     const { min, max } = yTemp;
+
+    if (
+      !Number.isFinite(min) ||
+      !Number.isFinite(max) ||
+    ) {
+      return defaultColor;
+    }
 
     const gradient = ctx.createLinearGradient(
       0,
@@ -673,6 +885,55 @@ export class WfcForecastChart extends LitElement {
 
     fireEvent(this, "action", actionDetails);
   };
+
+  private _onSettingsToggle(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+
+    this._settingsOpen = !this._settingsOpen;
+  }
+
+  private _getChartOptions(): {
+    label: string;
+    value: ChartAttributes;
+    icon: string;
+  }[] {
+    const forecast = this.forecast;
+
+    const hasData = (attr: string): boolean => {
+      if (attr === "temperature_and_precipitation") {
+        return true;
+      }
+
+      return forecast.some((f) => {
+        const value = f[attr as keyof ForecastAttribute];
+        return value != null;
+      });
+    };
+
+    return CHART_ATTRIBUTES.filter(hasData).map((attr) => ({
+      label:
+        attr === "temperature_and_precipitation"
+          ? `${this.hass.formatEntityAttributeName(this.weatherEntity, "temperature")}, ${this.hass.localize("ui.card.weather.attributes.precipitation")}`
+          : this.hass.formatEntityAttributeName(this.weatherEntity, attr) ||
+            attr,
+      icon:
+        attr === "temperature_and_precipitation"
+          ? "mdi:water-thermometer"
+          : WEATHER_ATTRIBUTE_ICON_MAP[attr as CurrentWeatherAttributes],
+      value: attr,
+    }));
+  }
+
+  private _onAttributesSelected(e: CustomEvent): void {
+    this._settingsOpen = false;
+    this._selectedAttribute = e.detail.value;
+    this.updateChartData(false);
+  }
+
+  private _onSettingsClosed(): void {
+    this._settingsOpen = false;
+  }
 }
 
 declare global {

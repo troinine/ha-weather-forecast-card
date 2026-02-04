@@ -44,6 +44,16 @@ export const WEATHER_EFFECTS = [
 export type CurrentWeatherAttributes =
   (typeof CURRENT_WEATHER_ATTRIBUTES)[number];
 
+export const CHART_ATTRIBUTES = [
+  "temperature_and_precipitation",
+  "apparent_temperature",
+  "humidity",
+  "pressure",
+  "uv_index",
+];
+
+export type ChartAttributes = (typeof CHART_ATTRIBUTES)[number];
+
 export interface CurrentWeatherAttributeConfig {
   name: CurrentWeatherAttributes;
   entity?: string;

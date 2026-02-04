@@ -52,6 +52,23 @@
     --weather-forecast-card-precipitation-bar-color,
     color-mix(in srgb, var(--blue-color, #2196f3) 40%, transparent)
   );
+  --wfc-chart-humidity-line-color: var(
+    --weather-forecast-card-chart-humidity-line-color,
+    var(--cyan-color, #00bcd4)
+  );
+  --wfc-chart-pressure-line-color: var(
+    --weather-forecast-card-chart-pressure-line-color,
+    var(--purple-color, #9c27b0)
+  );
+  --wfc-chart-uv-bar-color: var(
+    --weather-forecast-card-chart-uv-bar-color,
+    var(--amber-color, #ffc107)
+  );
+  --wfc-uv-low: var(--weather-forecast-card-uv-low-color, #289500);
+  --wfc-uv-moderate: var(--weather-forecast-card-uv-moderate-color, #f7e400);
+  --wfc-uv-high: var(--weather-forecast-card-uv-high-color, #f85900);
+  --wfc-uv-very-high: var(--weather-forecast-card-uv-very-high-color, #d8001d);
+  --wfc-uv-extreme: var(--weather-forecast-card-uv-extreme-color, #6b49c8);
   --wfc-sunrise-color: var(
     --weather-forecast-card-sunrise-color,
     var(--orange-color, #ff9800)
@@ -501,6 +518,45 @@ ha-card {
   column-gap: var(--forecast-item-gap);
   width: 100% !important;
   min-width: var(--wfc-forecast-chart-width, auto);
+}
+
+.wfc-forecast-chart-settings {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 5;
+  padding-bottom: var(--wfc-component-gap);
+}
+
+.wfc-forecast-chart-settings span {
+  font-size: var(--ha-font-size-xl, 16px);
+  line-height: var(--ha-line-height-condensed, 1.2);
+  color: var(--primary-text-color, #212121);
+  user-select: none;
+  -webkit-user-select: none;
+  padding-left: var(--ha-space-2, 8px);
+}
+
+.wfc-chart-settings-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wfc-settings-toggle-button {
+  /* background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: var(--primary-text-color, #212121);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: var(--ha-space-2, 8px);
+  padding-bottom: var(--wfc-component-gap);*/
 }
 
 wfc-wind-indicator,

@@ -42,6 +42,8 @@ export interface ForecastAttribute {
   pressure?: number;
   wind_speed?: number;
   wind_bearing?: number | string;
+  uv_index?: number;
+  apparent_temperature?: number;
 }
 
 export interface WeatherEntityAttributes extends HassEntityAttributeBase {

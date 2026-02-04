@@ -5,7 +5,7 @@ import {
 } from "custom-card-helpers";
 import type { ForecastAttribute, ForecastEvent } from "../../src/data/weather";
 import { HassEntity } from "home-assistant-js-websocket";
-import { merge, round } from "lodash-es";
+import { capitalize, merge, round } from "lodash-es";
 
 export type ForecastSubscriptionCallback = (
   forecastevent: ForecastEvent
@@ -69,6 +69,17 @@ const generateRandomHourlyForecast = (
         ? Math.random() < 0.7
         : Math.random() < 0.2;
 
+    const hour = forecastTime.getHours();
+    let uv_index = 0;
+    if (hour > 6 && hour < 21) {
+      uv_index = Math.max(
+        0,
+        Math.round(8 - Math.abs(13 - hour) * 0.8 + (Math.random() - 0.5) * 2)
+      );
+    }
+    // Prevent UV index from being negative just in case
+    uv_index = Math.max(0, uv_index);
+
     forecast.push({
       datetime: forecastTime.toISOString(),
       temperature,
@@ -82,6 +93,8 @@ const generateRandomHourlyForecast = (
       wind_speed: Math.round((1 + Math.random() * 9) * 10) / 10,
       wind_bearing: Math.round(Math.random() * 360),
       humidity: Math.round(40 + Math.random() * 40),
+      uv_index,
+      pressure: Math.round(1013 + (Math.random() - 0.5) * 20),
     });
   }
 
@@ -156,6 +169,8 @@ const generateRandomDailyForecast = (
       wind_speed: Math.round((1 + Math.random() * 9) * 10) / 10,
       wind_bearing: Math.round(Math.random() * 360),
       humidity: Math.round(35 + Math.random() * 50),
+      uv_index: Math.round(Math.random() * 11),
+      pressure: Math.round(1013 + (Math.random() - 0.5) * 30),
       is_daytime: true,
     });
   }
@@ -490,8 +505,32 @@ export class MockHass {
       },
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       formatEntityAttributeName: (stateObj: HassEntity, attribute: string) => {
-        // Return undefined to let the component use fallback localization
-        return undefined;
+        switch (attribute) {
+          case "humidity":
+            return "Humidity";
+          case "pressure":
+            return "Pressure";
+          case "wind_speed":
+            return "Wind speed";
+          case "wind_gust_speed":
+            return "Wind gust speed";
+          case "wind_bearing":
+            return "Wind bearing";
+          case "visibility":
+            return "Visibility";
+          case "ozone":
+            return "Ozone";
+          case "uv_index":
+            return "UV index";
+          case "dew_point":
+            return "Dew point";
+          case "apparent_temperature":
+            return "Apparent temperature";
+          case "cloud_coverage":
+            return "Cloud coverage";
+          default:
+            return capitalize(attribute.replace(/_/g, " "));
+        }
       },
       language: this.options.language || "en",
       locale: {
