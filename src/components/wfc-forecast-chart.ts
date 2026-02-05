@@ -505,7 +505,7 @@ export class WfcForecastChart extends LitElement {
         datasets: [
           {
             type: "bar",
-            data: data.map((f) => f.uv_index ?? null),
+            data: data.map((f) => (f.uv_index ? Math.round(f.uv_index) : 0)),
             backgroundColor: data.map((f) => getUvColor(f.uv_index ?? null)),
             borderWidth: 0,
             borderRadius: {
@@ -520,7 +520,6 @@ export class WfcForecastChart extends LitElement {
               align: "end",
               offset: -22,
               color: labelColor,
-              formatter: (value: number) => value ?? "",
             },
           },
         ],

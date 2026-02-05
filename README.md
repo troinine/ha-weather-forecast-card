@@ -202,7 +202,7 @@ When using chart mode (`mode: chart`), an interactive attribute selector allows 
 - `apparent_temperature` - Visualizes apparent temperature as line graph
 - `humidity` - Visualizes relative humidity as a line graph
 - `pressure` - Visualizes athmospheric pressure as lien graph
-- `uv_index` - Visualizes UV index as a bar graph
+- `uv_index` - Visualizes UV index as a bar graph. Decimal values are rounded to integers as per WHO international standards for public health reporting, ensuring clear risk-category communication.
 
 > [!NOTE]
 > Attributes are only shown in the selector if the data is available from your weather entity. If an attribute is not provided by your weather integration, it will not appear in the dropdown.
