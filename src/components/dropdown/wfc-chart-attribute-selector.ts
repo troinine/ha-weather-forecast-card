@@ -14,8 +14,8 @@ interface SelectOption {
   icon: string;
 }
 
-@customElement("chart-settings-dropdown")
-export class ChartSettingsDropdown extends LitElement {
+@customElement("wfc-chart-attribute-selector")
+export class WfcChartAttributeSelector extends LitElement {
   @property({ type: Boolean }) open: boolean = false;
   @property({ attribute: false }) public options: SelectOption[] = [];
 

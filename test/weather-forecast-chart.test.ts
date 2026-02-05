@@ -644,7 +644,7 @@ describe("weather-forecast-card chart", () => {
       expect(settingsButton).not.toBeNull();
 
       // Initially dropdown should not be visible
-      let dropdown = chartElement!.querySelector("chart-settings-dropdown");
+      let dropdown = chartElement!.querySelector("wfc-chart-attribute-selector");
       expect(dropdown).not.toBeNull();
       // @ts-expect-error: open is a property
       expect(dropdown!.open).toBe(false);
@@ -653,7 +653,7 @@ describe("weather-forecast-card chart", () => {
       settingsButton.click();
       await chartElement.updateComplete;
 
-      dropdown = chartElement!.querySelector("chart-settings-dropdown");
+      dropdown = chartElement!.querySelector("wfc-chart-attribute-selector");
       // @ts-expect-error: open is a property
       expect(dropdown!.open).toBe(true);
     });
@@ -672,7 +672,7 @@ describe("weather-forecast-card chart", () => {
       await chartElement.updateComplete;
 
       // Simulate attribute selection
-      const dropdown = chartElement.querySelector("chart-settings-dropdown");
+      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
       expect(dropdown).not.toBeNull();
 
       dropdown!.dispatchEvent(
@@ -707,7 +707,7 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("chart-settings-dropdown");
+      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
       dropdown!.dispatchEvent(
         new CustomEvent("selected", { detail: { value: "pressure" } })
       );
@@ -736,7 +736,7 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("chart-settings-dropdown");
+      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
       dropdown!.dispatchEvent(
         new CustomEvent("selected", { detail: { value: "uv_index" } })
       );
@@ -768,7 +768,7 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("chart-settings-dropdown");
+      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
       dropdown!.dispatchEvent(
         new CustomEvent("selected", {
           detail: { value: "apparent_temperature" },
@@ -799,7 +799,7 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("chart-settings-dropdown");
+      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
 
       // First switch to humidity
       dropdown!.dispatchEvent(
@@ -875,7 +875,7 @@ describe("weather-forecast-card chart", () => {
       settingsButton.click();
       await chartElement.updateComplete;
 
-      const dropdown = chartElement!.querySelector("chart-settings-dropdown");
+      const dropdown = chartElement!.querySelector("wfc-chart-attribute-selector");
       // @ts-expect-error: open is a property
       expect(dropdown!.open).toBe(true);
 
@@ -899,7 +899,7 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("chart-settings-dropdown");
+      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
 
       // UV index should use bar dataset type
       dropdown!.dispatchEvent(

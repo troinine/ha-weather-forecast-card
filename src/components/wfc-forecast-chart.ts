@@ -44,7 +44,7 @@ import {
 } from "chart.js";
 
 import "./wfc-forecast-header-items";
-import "./dropdown/chart-settings-dropdown";
+import "./dropdown/wfc-chart-attribute-selector";
 import { merge } from "lodash-es";
 
 Chart.register(
@@ -197,13 +197,13 @@ export class WfcForecastChart extends LitElement {
                 </ha-button>
               </div>`
           : nothing}
-        <chart-settings-dropdown
+        <wfc-chart-attribute-selector
           .open=${this._settingsOpen}
           .options=${this._getChartOptions()}
           .value=${this._selectedAttribute}
           @selected=${this._onAttributesSelected}
           @closed=${this._onSettingsClosed}
-        ></chart-settings-dropdown>
+        ></wfc-chart-attribute-selector>
       </div>
       <div
         class="${classMap({
