@@ -27,7 +27,7 @@ This card takes inspiration from [Weather Forecast Extended Card](https://github
 - **Scrollable forecast** – View more forecast entries than fit on screen
 - **Toggle views** – Switch between hourly and daily forecasts with a tap
 - **Visualize precipitation** – See precipitation amounts for each forecast entry
-- **Chart mode** – Visualize temperature and precipitation trends
+- **Chart mode** – Visualize temperature, precipitation, and other weather attributes with interactive selector
 - **Extra attributes** – Display extra attributes, like wind direction, wind bearing, or precipitation probability
 - **Group hourly data** - Aggregate multiple hours of forecast data for easier viewing
 - **Custom icons** – Use your own weather icons
@@ -172,21 +172,57 @@ current:
 | `show_sun_times`        | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                                                                                                                                                |
 | `temperature_precision` | number  | optional | Number of decimal places to display for temperature values (0-2). Applies to forecast temperatures shown in `chart` mode. Due to the layout limitations, this setting is not affecting `simple` mode which uses fixed precision of `0`.                                               |
 | `use_color_thresholds`  | boolean | `false`  | Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot). These thresholds are specified in degrees Celsius (°C). |
+| `show_attribute_selector` | boolean | `false` | Displays a settings icon in the top-right corner of the chart for quick access to the attribute selector. The attribute selector is also accessible via hold action by default. See [Chart Attribute Selector](#chart-attribute-selector). |
 
 > [!IMPORTANT]
 > **Canvas width limit:** To ensure cross-browser compatibility and prevent rendering issues, the canvas width is capped at 16384 pixels in `chart` mode. At a standard item width of 50px, this supports approximately 320 entries (roughly two weeks of data) which is more than enough to cover reliable weather data from most forecast services. Any data exceeding this limit will be truncated.
 
 ### Forecast Actions
 
-Actions support standard Home Assistant card actions. However, one additional action has been defined: `toggle-forecast` will toggle the forecast between daily and hourly forecast.
+Actions support standard Home Assistant card actions. However, two additional actions have been defined:
+- `toggle-forecast` - Toggles the forecast between daily and hourly views
+- `select-forecast-attribute` - Opens the attribute selector dropdown in chart mode (default hold action)
 
 Forecast actions have the following options
 
 | Name                | Type     | Default action    | Description                                                                                                                             |
 | :------------------ | :------- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
 | `tap_action`        | `object` | `toggle-forecast` | Defines the type action to perform on tap. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).             |
-| `hold_action`       | `object` | `none`            | Defines the type of action to perform on hold. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).         |
+| `hold_action`       | `object` | `select-forecast-attribute` | Defines the type of action to perform on hold. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).         |
 | `double_tap_action` | `object` | `none`            | Defines the type of action to perform on double click. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
+
+### Chart Attribute Selector
+
+When using chart mode (`mode: chart`), an interactive attribute selector allows switching between different weather data visualizations.
+
+**Available chart attributes:**
+
+| Attribute                       | Description                              |
+| :------------------------------ | :--------------------------------------- |
+| `temperature_and_precipitation` | Default view showing temperature curves and precipitation bars |
+| `apparent_temperature`          | Feels-like temperature                   |
+| `humidity`                      | Relative humidity percentage             |
+| `pressure`                      | Atmospheric pressure                     |
+| `uv_index`                      | UV index                                 |
+
+> [!NOTE]
+> Attributes are only shown in the selector if the data is available from your weather entity. If an attribute is not provided by your weather integration, it will not appear in the dropdown.
+
+**Usage:**
+
+The attribute selector can be accessed via:
+- **Hold action** (default): Press and hold on the chart area to open the attribute dropdown. This works by default without any additional configuration.
+- **Settings icon**: Set `show_attribute_selector: true` to display a settings icon in the top-right corner of the chart for quick access.
+
+**Example configuration with settings icon:**
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+forecast:
+  mode: chart
+  show_attribute_selector: true
+```
 
 ## Example
 
