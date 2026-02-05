@@ -100,7 +100,8 @@ export class WfcForecastChart extends LitElement {
   @query("canvas") private _canvas?: HTMLCanvasElement;
 
   @state() private _settingsOpen = false;
-  @state() private _selectedAttribute: ChartAttributes = DEFAULT_CHART_ATTRIBUTE;
+  @state() private _selectedAttribute: ChartAttributes =
+    DEFAULT_CHART_ATTRIBUTE;
 
   private _lastChartEvent: PointerEvent | null = null;
   private _chart: Chart | null = null;
@@ -871,16 +872,6 @@ export class WfcForecastChart extends LitElement {
       event.stopPropagation();
 
       this._settingsOpen = true;
-
-      return;
-    }
-
-    // Close settings if click happens outside of the dropdown, but only if the click is not part of opening the dropdown itself.
-    if (this._settingsOpen) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      this._settingsOpen = false;
 
       return;
     }

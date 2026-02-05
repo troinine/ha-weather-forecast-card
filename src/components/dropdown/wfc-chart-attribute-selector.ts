@@ -90,7 +90,7 @@ export class WfcChartAttributeSelector extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    document.removeEventListener("click", this._boundOnClickOutside);
+    document.removeEventListener("pointerdown", this._boundOnClickOutside, true);
   }
 
   protected updated(changedProps: PropertyValues): void {
@@ -99,10 +99,18 @@ export class WfcChartAttributeSelector extends LitElement {
     if (changedProps.has("open")) {
       if (this.open) {
         requestAnimationFrame(() => {
-          document.addEventListener("click", this._boundOnClickOutside);
+          document.addEventListener(
+            "pointerdown",
+            this._boundOnClickOutside,
+            true
+          );
         });
       } else {
-        document.removeEventListener("click", this._boundOnClickOutside);
+        document.removeEventListener(
+          "pointerdown",
+          this._boundOnClickOutside,
+          true
+        );
       }
     }
   }
@@ -139,6 +147,7 @@ export class WfcChartAttributeSelector extends LitElement {
     ev.stopPropagation();
 
     if (this.value === value) {
+      this.dispatchEvent(new CustomEvent("closed"));
       return;
     }
 
@@ -153,10 +162,8 @@ export class WfcChartAttributeSelector extends LitElement {
   private _onClickOutside(ev: Event): void {
     const path = ev.composedPath();
 
-    // Make sure we are not blocking clicks that action something outside of the dropdown
+    // Clicks inside the dropdown should not close it
     if (path.includes(this)) {
-      ev.stopPropagation();
-      ev.preventDefault();
       return;
     }
 
