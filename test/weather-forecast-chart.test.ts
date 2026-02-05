@@ -937,5 +937,81 @@ describe("weather-forecast-card chart", () => {
       expect(chartInstance!.data.datasets.length).toBe(3);
       expect(chartInstance!.data.datasets[2].type).toBe("bar"); // Precipitation is bar
     });
+
+    it("should use temperature_and_precipitation as default when default_chart_attribute is not set", async () => {
+      const { card } = await createCardFixture({
+        forecast: { mode: ForecastMode.Chart },
+      });
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      chartElement.forecast = forecastWithAllAttributes;
+      await chartElement.updateComplete;
+
+      // @ts-expect-error: _selectedAttribute is private
+      expect(chartElement._selectedAttribute).toBe(
+        "temperature_and_precipitation"
+      );
+
+      // @ts-expect-error: _chart is private
+      const chartInstance = chartElement._chart;
+      // Default view has 3 datasets: high temp, low temp, precipitation
+      expect(chartInstance!.data.datasets.length).toBe(3);
+    });
+
+    it("should use configured default_chart_attribute on initial render", async () => {
+      const { card } = await createCardFixture({
+        forecast: {
+          mode: ForecastMode.Chart,
+          default_chart_attribute: "humidity",
+        },
+      });
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      chartElement.forecast = forecastWithAllAttributes;
+      await chartElement.updateComplete;
+
+      // @ts-expect-error: _selectedAttribute is private
+      expect(chartElement._selectedAttribute).toBe("humidity");
+
+      // @ts-expect-error: _chart is private
+      const chartInstance = chartElement._chart;
+      // Humidity uses single dataset
+      expect(chartInstance!.data.datasets.length).toBe(1);
+
+      const humidityData = chartInstance!.data.datasets[0].data;
+      forecastWithAllAttributes.forEach((f, i) => {
+        expect(humidityData[i]).toBe(f.humidity);
+      });
+    });
+
+    it("should use configured default_chart_attribute for uv_index", async () => {
+      const { card } = await createCardFixture({
+        forecast: {
+          mode: ForecastMode.Chart,
+          default_chart_attribute: "uv_index",
+        },
+      });
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      chartElement.forecast = forecastWithAllAttributes;
+      await chartElement.updateComplete;
+
+      // @ts-expect-error: _selectedAttribute is private
+      expect(chartElement._selectedAttribute).toBe("uv_index");
+
+      // @ts-expect-error: _chart is private
+      const chartInstance = chartElement._chart;
+      // UV index uses bar chart
+      expect(chartInstance!.data.datasets[0].type).toBe("bar");
+    });
   });
 });

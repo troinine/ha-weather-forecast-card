@@ -54,6 +54,9 @@ export const CHART_ATTRIBUTES = [
 
 export type ChartAttributes = (typeof CHART_ATTRIBUTES)[number];
 
+export const DEFAULT_CHART_ATTRIBUTE: ChartAttributes =
+  "temperature_and_precipitation";
+
 export interface CurrentWeatherAttributeConfig {
   name: CurrentWeatherAttributes;
   entity?: string;
@@ -85,6 +88,7 @@ export interface WeatherForecastCardForecastConfig {
   use_color_thresholds?: boolean;
   temperature_precision?: number;
   show_attribute_selector?: boolean;
+  default_chart_attribute?: ChartAttributes;
 }
 
 export interface WeatherForecastCardCurrentConfig {

@@ -13,6 +13,7 @@ import {
   CHART_ATTRIBUTES,
   ChartAttributes,
   CurrentWeatherAttributes,
+  DEFAULT_CHART_ATTRIBUTE,
   ExtendedHomeAssistant,
   ForecastActionDetails,
   WeatherForecastCardConfig,
@@ -99,8 +100,7 @@ export class WfcForecastChart extends LitElement {
   @query("canvas") private _canvas?: HTMLCanvasElement;
 
   @state() private _settingsOpen = false;
-  @state() private _selectedAttribute: ChartAttributes =
-    "temperature_and_precipitation";
+  @state() private _selectedAttribute: ChartAttributes = DEFAULT_CHART_ATTRIBUTE;
 
   private _lastChartEvent: PointerEvent | null = null;
   private _chart: Chart | null = null;
@@ -121,6 +121,9 @@ export class WfcForecastChart extends LitElement {
   }
 
   protected firstUpdated(): void {
+    if (this.config?.forecast?.default_chart_attribute) {
+      this._selectedAttribute = this.config.forecast.default_chart_attribute;
+    }
     this.initChart();
   }
 

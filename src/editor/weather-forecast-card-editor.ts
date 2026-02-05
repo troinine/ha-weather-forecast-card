@@ -10,6 +10,7 @@ import {
   LocalizeFunc,
 } from "custom-card-helpers";
 import {
+  CHART_ATTRIBUTES,
   CURRENT_WEATHER_ATTRIBUTES,
   CurrentWeatherAttributes,
   CurrentWeatherAttributeConfig,
@@ -250,6 +251,23 @@ export class WeatherForecastCardEditor
                 label: "Chart",
               },
             ],
+          },
+        },
+        optional: true,
+      },
+      {
+        name: "forecast.default_chart_attribute",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: CHART_ATTRIBUTES.map((attribute) => ({
+              value: attribute,
+              label:
+                attribute === "temperature_and_precipitation"
+                  ? `${localize("ui.card.weather.attributes.temperature") || "Temperature"}, ${localize("ui.card.weather.attributes.precipitation") || "Precipitation"}`
+                  : localize(`ui.card.weather.attributes.${attribute}`) ||
+                    capitalize(attribute).replace(/_/g, " "),
+            })),
           },
         },
         optional: true,
@@ -595,6 +613,8 @@ export class WeatherForecastCardEditor
         return "Use color thresholds";
       case "forecast.show_attribute_selector":
         return "Show forecast attribute selector";
+      case "forecast.default_chart_attribute":
+        return "Default chart forecast attribute";
       case "forecast.hourly_group_size":
         return "Hourly forecast group size";
       case "forecast.hourly_slots":
@@ -652,6 +672,8 @@ export class WeatherForecastCardEditor
         return "Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode.";
       case "forecast.show_attribute_selector":
         return "When enabled and using chart mode, shows a selector above the forecast to choose which weather attribute to display.";
+      case "forecast.default_chart_attribute":
+        return "The forecast attribute to visualize by default in chart mode.";
       case "forecast.hourly_group_size":
         return "Aggregate hourly forecast data into groups to reduce the number of forecast entries shown.";
       case "forecast.hourly_slots":
@@ -752,7 +774,11 @@ export class WeatherForecastCardEditor
   private localize = (key: string): string => {
     let result: string | undefined;
 
-    if (this._config?.entity && key.startsWith("ui.card.weather.attributes")) {
+    if (
+      this._config?.entity &&
+      key !== "ui.card.weather.attributes.precipitation" && // Precipitation is not yet supported as entity attribute
+      key.startsWith("ui.card.weather.attributes")
+    ) {
       const entity = this.hass.states[this._config.entity];
 
       if (entity) {
