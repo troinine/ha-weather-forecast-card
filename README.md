@@ -198,13 +198,11 @@ When using chart mode (`mode: chart`), an interactive attribute selector allows 
 
 **Available chart attributes:**
 
-| Attribute                       | Description                                                    |
-| :------------------------------ | :------------------------------------------------------------- |
-| `temperature_and_precipitation` | Default view showing temperature curves and precipitation bars |
-| `apparent_temperature`          | Feels-like temperature                                         |
-| `humidity`                      | Relative humidity percentage                                   |
-| `pressure`                      | Atmospheric pressure                                           |
-| `uv_index`                      | UV index                                                       |
+- `temperature_and_precipitation` - Default dataset visualizing temperature curves (high/low) and precipitation bars
+- `apparent_temperature` - Visualizes apparent temperature as line graph
+- `humidity` - Visualizes relative humidity as a line graph
+- `pressure` - Visualizes athmospheric pressure as lien graph
+- `uv_index` - Visualizes UV index as a bar graph
 
 > [!NOTE]
 > Attributes are only shown in the selector if the data is available from your weather entity. If an attribute is not provided by your weather integration, it will not appear in the dropdown.
