@@ -161,18 +161,18 @@ current:
 
 ### Forecast Object
 
-| Name                    | Type    | Default  | Description                                                                                                                                                                                                                                                                           |
-| :---------------------- | :------ | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `extra_attribute`       | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing`                                                                                                                                          |
-| `hourly_group_size`     | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                                                                                                                                                           |
-| `hourly_slots`          | number  | optional | Limit the number of hourly forecast entries to show. Defaults to unlimited. Value must be greater than 0.                                                                                                                                                                             |
-| `daily_slots`           | number  | optional | Limit the number of daily forecast entries to show. Defaults to unlimited. Value must be greater than 0.                                                                                                                                                                              |
-| `mode`                  | string  | `simple` | Forecast display mode. `simple`: Horizontal scrollable list of forecast entries. `chart`: Visualize temperature and precipitation trends on a line/bar chart.                                                                                                                         |
-| `scroll_to_selected`    | boolean | `false`  | Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back.                                                                                                                      |
-| `show_sun_times`        | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                                                                                                                                                |
-| `temperature_precision` | number  | optional | Number of decimal places to display for temperature values (0-2). Applies to forecast temperatures shown in `chart` mode. Due to the layout limitations, this setting is not affecting `simple` mode which uses fixed precision of `0`.                                               |
-| `use_color_thresholds`  | boolean | `false`  | Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot). These thresholds are specified in degrees Celsius (°C). |
-| `show_attribute_selector` | boolean | `false` | Displays a settings icon in the top-right corner of the chart for quick access to the attribute selector. The attribute selector is also accessible via hold action by default. See [Chart Attribute Selector](#chart-attribute-selector). |
+| Name                      | Type    | Default  | Description                                                                                                                                                                                                                                                                                                 |
+| :------------------------ | :------ | :------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extra_attribute`         | string  | optional | The extra attribute to show below the weather forecast. Currently supports, `precipitation_probability`, `wind_direction` and `wind_bearing`                                                                                                                                                                |
+| `hourly_group_size`       | number  | `1`      | Number of hours to group together in hourly forecast. Group data will be aggregated per forecast attribute.                                                                                                                                                                                                 |
+| `hourly_slots`            | number  | optional | Limit the number of hourly forecast entries to show. Defaults to unlimited. Value must be greater than 0.                                                                                                                                                                                                   |
+| `daily_slots`             | number  | optional | Limit the number of daily forecast entries to show. Defaults to unlimited. Value must be greater than 0.                                                                                                                                                                                                    |
+| `mode`                    | string  | `simple` | Forecast display mode. `simple`: Horizontal scrollable list of forecast entries. `chart`: Visualize temperature and precipitation trends on a line/bar chart.                                                                                                                                               |
+| `scroll_to_selected`      | boolean | `false`  | Automatically scrolls to the first hourly forecast of the selected date when switching to hourly view, and returns to the first daily entry when switching back.                                                                                                                                            |
+| `show_sun_times`          | boolean | `true`   | Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.                                                                                                                                                                                      |
+| `temperature_precision`   | number  | optional | Number of decimal places to display for temperature values (0-2). Applies to forecast temperatures shown in `chart` mode. Due to the layout limitations, this setting is not affecting `simple` mode which uses fixed precision of `0`.                                                                     |
+| `use_color_thresholds`    | boolean | `false`  | Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot). These thresholds are specified in degrees Celsius (°C).                       |
+| `show_attribute_selector` | boolean | `false`  | When using `chart` mode, displays currently selected weather attribute and an icon button in the top-right corner of the chart for quick access to the attribute selector. The attribute selector is also accessible via hold action by default. See [Chart Attribute Selector](#chart-attribute-selector). |
 
 > [!IMPORTANT]
 > **Canvas width limit:** To ensure cross-browser compatibility and prevent rendering issues, the canvas width is capped at 16384 pixels in `chart` mode. At a standard item width of 50px, this supports approximately 320 entries (roughly two weeks of data) which is more than enough to cover reliable weather data from most forecast services. Any data exceeding this limit will be truncated.
@@ -180,16 +180,17 @@ current:
 ### Forecast Actions
 
 Actions support standard Home Assistant card actions. However, two additional actions have been defined:
+
 - `toggle-forecast` - Toggles the forecast between daily and hourly views
 - `select-forecast-attribute` - Opens the attribute selector dropdown in chart mode (default hold action)
 
 Forecast actions have the following options
 
-| Name                | Type     | Default action    | Description                                                                                                                             |
-| :------------------ | :------- | :---------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
-| `tap_action`        | `object` | `toggle-forecast` | Defines the type action to perform on tap. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).             |
+| Name                | Type     | Default action              | Description                                                                                                                             |
+| :------------------ | :------- | :-------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| `tap_action`        | `object` | `toggle-forecast`           | Defines the type action to perform on tap. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).             |
 | `hold_action`       | `object` | `select-forecast-attribute` | Defines the type of action to perform on hold. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).         |
-| `double_tap_action` | `object` | `none`            | Defines the type of action to perform on double click. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
+| `double_tap_action` | `object` | `none`                      | Defines the type of action to perform on double click. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/). |
 
 ### Chart Attribute Selector
 
@@ -197,20 +198,24 @@ When using chart mode (`mode: chart`), an interactive attribute selector allows 
 
 **Available chart attributes:**
 
-| Attribute                       | Description                              |
-| :------------------------------ | :--------------------------------------- |
+| Attribute                       | Description                                                    |
+| :------------------------------ | :------------------------------------------------------------- |
 | `temperature_and_precipitation` | Default view showing temperature curves and precipitation bars |
-| `apparent_temperature`          | Feels-like temperature                   |
-| `humidity`                      | Relative humidity percentage             |
-| `pressure`                      | Atmospheric pressure                     |
-| `uv_index`                      | UV index                                 |
+| `apparent_temperature`          | Feels-like temperature                                         |
+| `humidity`                      | Relative humidity percentage                                   |
+| `pressure`                      | Atmospheric pressure                                           |
+| `uv_index`                      | UV index                                                       |
 
 > [!NOTE]
 > Attributes are only shown in the selector if the data is available from your weather entity. If an attribute is not provided by your weather integration, it will not appear in the dropdown.
 
+> [!NOTE]
+> Currently, only `chart` mode supports selecting the weather attribute.
+
 **Usage:**
 
 The attribute selector can be accessed via:
+
 - **Hold action** (default): Press and hold on the chart area to open the attribute dropdown. This works by default without any additional configuration.
 - **Settings icon**: Set `show_attribute_selector: true` to display a settings icon in the top-right corner of the chart for quick access.
 
