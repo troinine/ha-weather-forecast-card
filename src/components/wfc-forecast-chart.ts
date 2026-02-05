@@ -559,12 +559,10 @@ export class WfcForecastChart extends LitElement {
     const values = data.map((f) => (f[attr] as number) ?? 0);
     const dataMax = Math.max(...values);
     const dataMin = Math.min(...values);
+    const range = dataMax - dataMin || 1; // Fallback to 1 if all values are the same
 
-    const topPadding = (dataMax - dataMin) * 0.2;
-    const chartMax = dataMax + (topPadding || dataMax * 0.1); // Fallback to 10% if no range.
-
-    const bottomPadding = (dataMax - dataMin) * 0.1;
-    const chartMin = dataMin - (bottomPadding || dataMax * 0.05); // Fallback to 5% if no range.
+    const chartMax = dataMax + range * 0.2;
+    const chartMin = dataMin - range * 0.1;
 
     return {
       type: "line",

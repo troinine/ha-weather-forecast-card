@@ -6,7 +6,7 @@ import {
   PropertyValues,
   nothing,
 } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 
 interface SelectOption {
   value: string;
@@ -19,7 +19,7 @@ export class ChartSettingsDropdown extends LitElement {
   @property({ type: Boolean }) open: boolean = false;
   @property({ attribute: false }) public options: SelectOption[] = [];
 
-  @state() private value?: string;
+  @property({ attribute: false }) public value?: string;
 
   private _boundOnClickOutside = this._onClickOutside.bind(this);
 
