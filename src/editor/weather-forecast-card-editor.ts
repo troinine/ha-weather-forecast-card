@@ -98,13 +98,14 @@ export class WeatherForecastCardEditor
   private _schema = memoizeOne(
     (
       localize: LocalizeFunc,
-      selectedAttributes: CurrentWeatherAttributes[]
+      selectedAttributes: CurrentWeatherAttributes[],
+      mode?: string
     ): HaFormSchema[] =>
       [
         ...this._genericSchema(localize),
         ...this._currentWeatherSchema(localize),
         ...this._forecastSchema(localize),
-        ...this._interactionsSchema(),
+        ...this._interactionsSchema(mode),
         ...this._attributeEntitiesSchema(selectedAttributes),
         ...this._advancedSchema(),
       ] as const
@@ -309,6 +310,12 @@ export class WeatherForecastCardEditor
         optional: true,
       },
       {
+        name: "forecast.show_attribute_selector",
+        selector: { boolean: {} },
+        default: false,
+        optional: true,
+      },
+      {
         name: "forecast.hourly_group_size",
         optional: true,
         selector: { number: { min: 1, max: 4 } },
@@ -326,37 +333,54 @@ export class WeatherForecastCardEditor
       },
     ] as const;
 
-  private _interactionsSchema = (): HaFormSchema[] =>
-    [
+  private _interactionsSchema = (mode?: string): HaFormSchema[] => {
+    const optionalActions: (keyof WeatherForecastCardForecastActionConfig)[] =
+      [];
+    const forecastActionSchema: HaFormSchema[] = [
+      {
+        name: "forecast_action.tap_action",
+        selector: {
+          ui_action: {
+            default_action: "toggle-forecast",
+          },
+        },
+      },
+    ];
+
+    if (mode === "chart") {
+      optionalActions.push("double_tap_action");
+      forecastActionSchema.push({
+        name: "forecast_action.hold_action",
+        selector: {
+          ui_action: {
+            default_action: "select-attribute",
+          },
+        },
+      });
+    } else {
+      optionalActions.push("hold_action", "double_tap_action");
+    }
+
+    forecastActionSchema.push({
+      name: "",
+      type: "optional_actions",
+      flatten: true,
+      schema: optionalActions.map((action) => ({
+        name: `forecast_action.${action}` as const,
+        selector: {
+          ui_action: {
+            default_action: "none" as const,
+          },
+        },
+      })),
+    });
+
+    return [
       {
         name: "forecast_interactions",
         type: "expandable",
         flatten: true,
-        schema: [
-          {
-            name: "forecast_action.tap_action",
-            selector: {
-              ui_action: {
-                default_action: "toggle-forecast",
-              },
-            },
-          },
-          {
-            name: "",
-            type: "optional_actions",
-            flatten: true,
-            schema: (["hold_action", "double_tap_action"] as const).map(
-              (action) => ({
-                name: `forecast_action.${action}`,
-                selector: {
-                  ui_action: {
-                    default_action: "none" as const,
-                  },
-                },
-              })
-            ),
-          },
-        ],
+        schema: forecastActionSchema,
       },
       {
         name: "interactions",
@@ -389,6 +413,7 @@ export class WeatherForecastCardEditor
         ],
       },
     ] as const;
+  };
 
   private _attributeEntitiesSchema = (
     selectedAttributes: CurrentWeatherAttributes[]
@@ -453,7 +478,11 @@ export class WeatherForecastCardEditor
 
     const data = denormalizeConfig(this._config);
     const selectedAttributes = this._getSelectedAttributes(data);
-    const schema = this._schema(this.localize.bind(this), selectedAttributes);
+    const schema = this._schema(
+      this.localize.bind(this),
+      selectedAttributes,
+      data["forecast.mode"]
+    );
 
     return html`
       <ha-form
@@ -564,6 +593,8 @@ export class WeatherForecastCardEditor
         return "Show sunrise and sunset times";
       case "forecast.use_color_thresholds":
         return "Use color thresholds";
+      case "forecast.show_attribute_selector":
+        return "Show forecast attribute selector";
       case "forecast.hourly_group_size":
         return "Hourly forecast group size";
       case "forecast.hourly_slots":
@@ -619,6 +650,8 @@ export class WeatherForecastCardEditor
         return "Displays sunrise and sunset times in the hourly forecast, and uses specific icons to visualize clear night conditions.";
       case "forecast.use_color_thresholds":
         return "Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode.";
+      case "forecast.show_attribute_selector":
+        return "When enabled and using chart mode, shows a selector above the forecast to choose which weather attribute to display.";
       case "forecast.hourly_group_size":
         return "Aggregate hourly forecast data into groups to reduce the number of forecast entries shown.";
       case "forecast.hourly_slots":
