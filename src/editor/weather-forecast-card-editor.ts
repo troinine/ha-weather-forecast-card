@@ -353,7 +353,7 @@ export class WeatherForecastCardEditor
         name: "forecast_action.hold_action",
         selector: {
           ui_action: {
-            default_action: "select-attribute",
+            default_action: "select-forecast-attribute",
           },
         },
       });
