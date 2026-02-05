@@ -116,15 +116,15 @@ describe("weather-forecast-card simple", () => {
   });
 
   it("should toggle to hourly on tap and render hourly forecast", async () => {
-    const forecastContainer = card.shadowRoot!.querySelector(
-      ".wfc-forecast-container"
-    );
-    expect(forecastContainer).not.toBeNull();
+    const simpleElement = card.shadowRoot!.querySelector("wfc-forecast-simple");
+    expect(simpleElement).not.toBeNull();
 
-    forecastContainer?.dispatchEvent(
-      new MouseEvent("click", {
+    // Dispatch action event directly (actionHandler directive doesn't work in test env)
+    simpleElement?.dispatchEvent(
+      new CustomEvent("action", {
         bubbles: true,
-        cancelable: true,
+        composed: true,
+        detail: { action: "tap" },
       })
     );
 

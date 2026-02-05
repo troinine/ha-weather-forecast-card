@@ -88,14 +88,14 @@ describe("wfc-current-weather attributes", () => {
     expect(labels).toEqual([
       "Humidity",
       "Pressure",
-      "Wind Speed",
-      "Wind Gust Speed",
+      "Wind speed",
+      "Wind gust speed",
       "Visibility",
       "Ozone",
-      "UV Index",
-      "Dew Point",
-      "Apparent Temperature",
-      "Cloud Coverage",
+      "UV index",
+      "Dew point",
+      "Apparent temperature",
+      "Cloud coverage",
     ]);
 
     const values = Array.from(

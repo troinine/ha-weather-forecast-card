@@ -45,12 +45,16 @@ describe("time format rendering", () => {
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      // Click to switch to hourly
-      const forecastContainer = card.shadowRoot!.querySelector(
-        ".wfc-forecast-container"
+      // Dispatch action event to switch to hourly (actionHandler doesn't work in test env)
+      const forecastElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart, wfc-forecast-simple"
       );
-      forecastContainer?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true, cancelable: true })
+      forecastElement?.dispatchEvent(
+        new CustomEvent("action", {
+          bubbles: true,
+          composed: true,
+          detail: { action: "tap" },
+        })
       );
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -120,12 +124,16 @@ describe("time format rendering", () => {
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      // Click to switch to hourly
-      const forecastContainer = card.shadowRoot!.querySelector(
-        ".wfc-forecast-container"
+      // Dispatch action event to switch to hourly (actionHandler doesn't work in test env)
+      const forecastElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart, wfc-forecast-simple"
       );
-      forecastContainer?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true, cancelable: true })
+      forecastElement?.dispatchEvent(
+        new CustomEvent("action", {
+          bubbles: true,
+          composed: true,
+          detail: { action: "tap" },
+        })
       );
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -284,12 +292,16 @@ describe("time format rendering", () => {
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      // Click to switch to hourly
-      const forecastContainer = card.shadowRoot!.querySelector(
-        ".wfc-forecast-container"
+      // Dispatch action event to switch to hourly (actionHandler doesn't work in test env)
+      const forecastElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart, wfc-forecast-simple"
       );
-      forecastContainer?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true, cancelable: true })
+      forecastElement?.dispatchEvent(
+        new CustomEvent("action", {
+          bubbles: true,
+          composed: true,
+          detail: { action: "tap" },
+        })
       );
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -326,12 +338,16 @@ describe("time format rendering", () => {
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      // Click to switch to hourly
-      const forecastContainer = card.shadowRoot!.querySelector(
-        ".wfc-forecast-container"
+      // Dispatch action event to switch to hourly (actionHandler doesn't work in test env)
+      const forecastElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart, wfc-forecast-simple"
       );
-      forecastContainer?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true, cancelable: true })
+      forecastElement?.dispatchEvent(
+        new CustomEvent("action", {
+          bubbles: true,
+          composed: true,
+          detail: { action: "tap" },
+        })
       );
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -377,12 +393,16 @@ describe("time format rendering", () => {
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      // Click to switch to hourly
-      const forecastContainer = card.shadowRoot!.querySelector(
-        ".wfc-forecast-container"
+      // Dispatch action event to switch to hourly (actionHandler doesn't work in test env)
+      const forecastElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart, wfc-forecast-simple"
       );
-      forecastContainer?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true, cancelable: true })
+      forecastElement?.dispatchEvent(
+        new CustomEvent("action", {
+          bubbles: true,
+          composed: true,
+          detail: { action: "tap" },
+        })
       );
       await card.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 150));
