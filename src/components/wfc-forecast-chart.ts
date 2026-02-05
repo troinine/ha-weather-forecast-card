@@ -173,40 +173,37 @@ export class WfcForecastChart extends LitElement {
 
     return html`
       <div class="wfc-forecast-chart-settings">
-        ${
-          this.config.forecast?.show_attribute_selector
-            ? html`<span>${this._localizeSelectedAttribute()}</span>
-                <div class="wfc-forecast-chart-attribute-selector">
-                  <ha-button
-                    class="wfc-settings-toggle-button"
-                    size="small"
-                    appearance="filled"
-                    variant="brand"
-                    @click=${this._onSettingsToggle}
-                  >
-                    <ha-icon
-                      .icon=${this._settingsOpen
-                        ? "mdi:close"
-                        : this._selectedAttribute ===
-                            "temperature_and_precipitation"
-                          ? "mdi:water-thermometer"
-                          : WEATHER_ATTRIBUTE_ICON_MAP[
-                              this
-                                ._selectedAttribute as keyof typeof WEATHER_ATTRIBUTE_ICON_MAP
-                            ]}
-                    ></ha-icon>
-                  </ha-button>
-                </div>`
-            : nothing
-        }
-          <chart-settings-dropdown
-            .open=${this._settingsOpen}
-            .options=${this._getChartOptions()}
-            .value=${this._selectedAttribute}
-            @selected=${this._onAttributesSelected}
-            @closed=${this._onSettingsClosed}
-          ></chart-settings-dropdown>
-        </div>
+        ${this.config.forecast?.show_attribute_selector
+          ? html`<span>${this._localizeSelectedAttribute()}</span>
+              <div class="wfc-forecast-chart-attribute-selector">
+                <ha-button
+                  class="wfc-settings-toggle-button"
+                  size="small"
+                  appearance="filled"
+                  variant="brand"
+                  @click=${this._onSettingsToggle}
+                >
+                  <ha-icon
+                    .icon=${this._settingsOpen
+                      ? "mdi:close"
+                      : this._selectedAttribute ===
+                          "temperature_and_precipitation"
+                        ? "mdi:water-thermometer"
+                        : WEATHER_ATTRIBUTE_ICON_MAP[
+                            this
+                              ._selectedAttribute as keyof typeof WEATHER_ATTRIBUTE_ICON_MAP
+                          ]}
+                  ></ha-icon>
+                </ha-button>
+              </div>`
+          : nothing}
+        <chart-settings-dropdown
+          .open=${this._settingsOpen}
+          .options=${this._getChartOptions()}
+          .value=${this._selectedAttribute}
+          @selected=${this._onAttributesSelected}
+          @closed=${this._onSettingsClosed}
+        ></chart-settings-dropdown>
       </div>
       <div
         class="${classMap({
