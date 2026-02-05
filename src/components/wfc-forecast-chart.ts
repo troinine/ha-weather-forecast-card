@@ -3,6 +3,7 @@ import { customElement, property, query, state } from "lit/decorators.js";
 import { DragScrollController } from "../controllers/drag-scroll-controller";
 import { formatDay } from "../helpers";
 import { styleMap } from "lit/directives/style-map.js";
+import { classMap } from "lit/directives/class-map.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { getRelativePosition } from "chart.js/helpers";
 import { actionHandler } from "../hass";
@@ -94,6 +95,7 @@ export class WfcForecastChart extends LitElement {
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
   @property({ attribute: false }) forecastType!: ForecastType;
   @property({ attribute: false }) itemWidth: number = 0;
+  @property({ attribute: false }) isScrollable = false;
   @query("canvas") private _canvas?: HTMLCanvasElement;
 
   @state() private _settingsOpen = false;
@@ -171,26 +173,32 @@ export class WfcForecastChart extends LitElement {
 
     return html`
       <div class="wfc-forecast-chart-settings">
-        <span>${this.hass.localize("ui.card.weather.forecast")}</span>
-        <div class="wfc-chart-settings-wrapper">
-          <ha-button
-            class="wfc-settings-toggle-button"
-            size="small"
-            appearance="filled"
-            variant="brand"
-            @click=${this._onSettingsToggle}
-          >
-            <ha-icon
-              .icon=${this._settingsOpen
-                ? "mdi:close"
-                : this._selectedAttribute === "temperature_and_precipitation"
-                  ? "mdi:water-thermometer"
-                  : WEATHER_ATTRIBUTE_ICON_MAP[
-                      this
-                        ._selectedAttribute as keyof typeof WEATHER_ATTRIBUTE_ICON_MAP
-                    ]}
-            ></ha-icon>
-          </ha-button>
+        ${
+          this.config.forecast?.show_attribute_selector
+            ? html`<span>${this._localizeSelectedAttribute()}</span>
+                <div class="wfc-forecast-chart-attribute-selector">
+                  <ha-button
+                    class="wfc-settings-toggle-button"
+                    size="small"
+                    appearance="filled"
+                    variant="brand"
+                    @click=${this._onSettingsToggle}
+                  >
+                    <ha-icon
+                      .icon=${this._settingsOpen
+                        ? "mdi:close"
+                        : this._selectedAttribute ===
+                            "temperature_and_precipitation"
+                          ? "mdi:water-thermometer"
+                          : WEATHER_ATTRIBUTE_ICON_MAP[
+                              this
+                                ._selectedAttribute as keyof typeof WEATHER_ATTRIBUTE_ICON_MAP
+                            ]}
+                    ></ha-icon>
+                  </ha-button>
+                </div>`
+            : nothing
+        }
           <chart-settings-dropdown
             .open=${this._settingsOpen}
             .options=${this._getChartOptions()}
@@ -201,45 +209,52 @@ export class WfcForecastChart extends LitElement {
         </div>
       </div>
       <div
-        class="wfc-scroll-container"
-        style=${styleMap(scrollContainerStyle)}
-        .actionHandler=${actionHandler({
-          hasHold: this.config.forecast_action?.hold_action !== undefined,
-          hasDoubleClick:
-            this.config.forecast_action?.double_tap_action !== undefined,
-          stopPropagation: true,
-        })}
-        @pointerdown=${this._onPointerDown}
-        @action=${this._onForecastAction}
+        class="${classMap({
+          "wfc-forecast-container": true,
+          "is-scrollable": this.isScrollable,
+        })}"
       >
-        <div class="wfc-forecast-chart-header">
-          ${this.renderHeaderItems(forecast)}
-        </div>
-
-        <div class="wfc-chart-clipper" style=${styleMap(clipperStyle)}>
-          <div
-            class="wfc-forecast-chart"
-            id="chart-container"
-            style=${styleMap(canvasStyle)}
-          >
-            <canvas id="forecast-canvas"></canvas>
+        <div
+          class="wfc-scroll-container"
+          style=${styleMap(scrollContainerStyle)}
+          .actionHandler=${actionHandler({
+            hasHold: this.config.forecast_action?.hold_action !== undefined,
+            hasDoubleClick:
+              this.config.forecast_action?.double_tap_action !== undefined,
+            stopPropagation: true,
+          })}
+          @pointerdown=${this._onPointerDown}
+          @action=${this._onForecastAction}
+        >
+          <div class="wfc-forecast-chart-header">
+            ${this.renderHeaderItems(forecast)}
           </div>
-        </div>
 
-        <div class="wfc-forecast-chart-footer">
-          ${forecast.map(
-            (item) => html`
-              <div class="wfc-forecast-slot">
-                <wfc-forecast-info
-                  .hass=${this.hass}
-                  .weatherEntity=${this.weatherEntity}
-                  .forecast=${item}
-                  .config=${this.config}
-                  .hidePrecipitation=${true}
-                ></wfc-forecast-info>
-              </div>
-            `
-          )}
+          <div class="wfc-chart-clipper" style=${styleMap(clipperStyle)}>
+            <div
+              class="wfc-forecast-chart"
+              id="chart-container"
+              style=${styleMap(canvasStyle)}
+            >
+              <canvas id="forecast-canvas"></canvas>
+            </div>
+          </div>
+
+          <div class="wfc-forecast-chart-footer">
+            ${forecast.map(
+              (item) => html`
+                <div class="wfc-forecast-slot">
+                  <wfc-forecast-info
+                    .hass=${this.hass}
+                    .weatherEntity=${this.weatherEntity}
+                    .forecast=${item}
+                    .config=${this.config}
+                    .hidePrecipitation=${true}
+                  ></wfc-forecast-info>
+                </div>
+              `
+            )}
+          </div>
         </div>
       </div>
     `;
@@ -665,10 +680,7 @@ export class WfcForecastChart extends LitElement {
     const yTemp = scales.yTemp;
     const { min, max } = yTemp;
 
-    if (
-      !Number.isFinite(min) ||
-      !Number.isFinite(max) ||
-    ) {
+    if (!Number.isFinite(min) || !Number.isFinite(max)) {
       return defaultColor;
     }
 
@@ -853,6 +865,29 @@ export class WfcForecastChart extends LitElement {
       return;
     }
 
+    if (
+      this.config.forecast_action?.hold_action?.action ===
+        "select-forecast-attribute" &&
+      event.detail.action === "hold"
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      this._settingsOpen = true;
+
+      return;
+    }
+
+    // Close settings if click happens outside of the dropdown, but only if the click is not part of opening the dropdown itself.
+    if (this._settingsOpen) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      this._settingsOpen = false;
+
+      return;
+    }
+
     if (!this._chart || !this._lastChartEvent) {
       return;
     }
@@ -891,6 +926,19 @@ export class WfcForecastChart extends LitElement {
     event.preventDefault();
 
     this._settingsOpen = !this._settingsOpen;
+  }
+
+  private _localizeSelectedAttribute(): string {
+    if (this._selectedAttribute === "temperature_and_precipitation") {
+      return this.hass.localize("ui.card.weather.forecast");
+    }
+
+    return (
+      this.hass.formatEntityAttributeName(
+        this.weatherEntity,
+        this._selectedAttribute
+      ) || this.hass.localize("ui.card.weather.forecast")
+    );
   }
 
   private _getChartOptions(): {

@@ -1,4 +1,11 @@
-import { LitElement, html, TemplateResult, css } from "lit";
+import {
+  LitElement,
+  html,
+  TemplateResult,
+  css,
+  PropertyValues,
+  nothing,
+} from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 interface SelectOption {
@@ -14,39 +21,29 @@ export class ChartSettingsDropdown extends LitElement {
 
   @state() private value?: string;
 
+  private _boundOnClickOutside = this._onClickOutside.bind(this);
+
   static styles = css`
     :host {
-      display: block;
       position: absolute;
-      top: 100%;
+      top: 110%;
       right: 0;
-      z-index: 5;
-    }
-
-    .backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 998;
-      background: transparent;
-      cursor: default;
     }
 
     .dropdown {
-      position: relative;
       z-index: 999;
-      background-color: var(--mdc-theme-surface, #fff);
-      box-shadow:
+      background-color: var(--card-background-color, #fff);
+      box-shadow: var(
+        --ha-box-shadow-l,
         0 5px 5px -3px rgba(0, 0, 0, 0.2),
         0 8px 10px 1px rgba(0, 0, 0, 0.14),
-        0 3px 14px 2px rgba(0, 0, 0, 0.12);
+        0 3px 14px 2px rgba(0, 0, 0, 0.12)
+      );
       border-radius: 10px;
       border-style: solid;
       border-width: 1px;
       border-color: var(--ha-card-border-color, var(--divider-color, #e0e0e0));
-      padding: 8px 0;
+      padding: var(--ha-space-2, 8px) 0;
       width: max-content;
       display: flex;
       flex-direction: column;
@@ -91,12 +88,31 @@ export class ChartSettingsDropdown extends LitElement {
     }
   `;
 
-  protected render(): TemplateResult {
-    if (!this.open) {
-      return html``;
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("click", this._boundOnClickOutside);
+  }
+
+  protected updated(changedProps: PropertyValues): void {
+    super.updated(changedProps);
+
+    if (changedProps.has("open")) {
+      if (this.open) {
+        requestAnimationFrame(() => {
+          document.addEventListener("click", this._boundOnClickOutside);
+        });
+      } else {
+        document.removeEventListener("click", this._boundOnClickOutside);
+      }
     }
+  }
+
+  protected render(): TemplateResult | typeof nothing {
+    if (!this.open) {
+      return nothing;
+    }
+
     return html`
-      <div class="backdrop" @click=${this._handleClosed}></div>
       <div class="dropdown">
         ${this.options.map((option) => this._renderOption(option))}
       </div>
@@ -118,13 +134,6 @@ export class ChartSettingsDropdown extends LitElement {
     `;
   }
 
-  private _handleClosed(ev: Event) {
-    ev.stopPropagation();
-    ev.preventDefault();
-
-    this.dispatchEvent(new CustomEvent("closed"));
-  }
-
   private _onSelected(ev: Event, value: string): void {
     ev.preventDefault();
     ev.stopPropagation();
@@ -139,5 +148,15 @@ export class ChartSettingsDropdown extends LitElement {
         detail: { value },
       })
     );
+  }
+
+  private _onClickOutside(ev: Event): void {
+    ev.stopPropagation();
+    ev.preventDefault();
+
+    const path = ev.composedPath();
+    if (!path.includes(this)) {
+      this.dispatchEvent(new CustomEvent("closed"));
+    }
   }
 }

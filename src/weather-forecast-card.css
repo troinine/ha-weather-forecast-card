@@ -527,7 +527,6 @@ ha-card {
   justify-content: space-between;
   align-items: center;
   z-index: 5;
-  padding-bottom: var(--wfc-component-gap);
 }
 
 .wfc-forecast-chart-settings span {
@@ -538,25 +537,11 @@ ha-card {
   -webkit-user-select: none;
   padding-left: var(--ha-space-2, 8px);
 }
-
-.wfc-chart-settings-wrapper {
+.wfc-forecast-chart-attribute-selector {
   position: relative;
   display: flex;
   align-items: center;
-}
-
-.wfc-settings-toggle-button {
-  /* background: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  color: var(--primary-text-color, #212121);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding-right: var(--ha-space-2, 8px);
-  padding-bottom: var(--wfc-component-gap);*/
+  padding-bottom: var(--wfc-component-gap);
 }
 
 wfc-wind-indicator,

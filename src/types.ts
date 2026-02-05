@@ -70,6 +70,10 @@ export interface ForecastToggleActionConfig extends BaseActionConfig {
   action: "toggle-forecast";
 }
 
+export interface ForecastSelectAttributeActionConfig extends BaseActionConfig {
+  action: "select-forecast-attribute";
+}
+
 export interface WeatherForecastCardForecastConfig {
   extra_attribute?: string;
   mode?: ForecastMode;
@@ -80,6 +84,7 @@ export interface WeatherForecastCardForecastConfig {
   scroll_to_selected?: boolean;
   use_color_thresholds?: boolean;
   temperature_precision?: number;
+  show_attribute_selector?: boolean;
 }
 
 export interface WeatherForecastCardCurrentConfig {
@@ -117,7 +122,10 @@ export interface WeatherForecastCardConfig {
   double_tap_action?: ActionConfig | undefined;
 }
 
-export type ForecastActionConfig = ForecastToggleActionConfig | ActionConfig;
+export type ForecastActionConfig =
+  | ForecastToggleActionConfig
+  | ForecastSelectAttributeActionConfig
+  | ActionConfig;
 
 export type ExtendedHomeAssistant = HomeAssistant & {
   formatEntityState: (stateObj: HassEntity) => string | undefined;

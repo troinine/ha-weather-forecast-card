@@ -9,7 +9,6 @@ import {
   ForecastMode,
   MAX_TEMPERATURE_PRECISION,
 } from "./types";
-import { classMap } from "lit/directives/class-map.js";
 import {
   LitElement,
   html,
@@ -58,6 +57,7 @@ const DEFAULT_CONFIG: Partial<WeatherForecastCardConfig> = {
   },
   forecast_action: {
     tap_action: { action: "toggle-forecast" },
+    hold_action: { action: "select-forecast-attribute" },
   },
   tap_action: { action: "more-info" },
 };
@@ -254,43 +254,26 @@ export class WeatherForecastCard extends LitElement {
             : nothing}
           ${this.config.show_forecast === false
             ? nothing
-            : html`<div
-                class="${classMap({
-                  "wfc-forecast-container": true,
-                  "is-scrollable": this._isScrollable,
-                })}"
-                .actionHandler=${actionHandler({
-                  hasHold: hasAction(
-                    this.config.forecast_action?.hold_action as ActionConfig
-                  ),
-                  hasDoubleClick: hasAction(
-                    this.config.forecast_action
-                      ?.double_tap_action as ActionConfig
-                  ),
-                })}
-                @action=${this.onForecastAction}
-              >
-                ${isChartMode
-                  ? html`
-                      <wfc-forecast-chart
-                        .hass=${this.hass}
-                        .config=${this.config}
-                        .weatherEntity=${stateObject}
-                        .forecast=${currentForecast}
-                        .forecastType=${this._currentForecastType}
-                        .itemWidth=${this._currentItemWidth}
-                      ></wfc-forecast-chart>
-                    `
-                  : html`
-                      <wfc-forecast-simple
-                        .hass=${this.hass}
-                        .config=${this.config}
-                        .weatherEntity=${stateObject}
-                        .forecast=${currentForecast}
-                        .forecastType=${this._currentForecastType}
-                      ></wfc-forecast-simple>
-                    `}
-              </div>`}
+            : isChartMode
+              ? html`<wfc-forecast-chart
+                  @action=${this.onForecastAction}
+                  .hass=${this.hass}
+                  .config=${this.config}
+                  .weatherEntity=${stateObject}
+                  .forecast=${currentForecast}
+                  .forecastType=${this._currentForecastType}
+                  .itemWidth=${this._currentItemWidth}
+                  .isScrollable=${this._isScrollable}
+                ></wfc-forecast-chart>`
+              : html`<wfc-forecast-simple
+                  @action=${this.onForecastAction}
+                  .hass=${this.hass}
+                  .config=${this.config}
+                  .weatherEntity=${stateObject}
+                  .forecast=${currentForecast}
+                  .forecastType=${this._currentForecastType}
+                  .isScrollable=${this._isScrollable}
+                ></wfc-forecast-simple>`}
         </div>
       </ha-card>
     `;

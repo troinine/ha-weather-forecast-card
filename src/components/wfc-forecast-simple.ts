@@ -1,5 +1,6 @@
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { classMap } from "lit/directives/class-map.js";
 import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
 import { actionHandler } from "../hass";
 import { DragScrollController } from "../controllers/drag-scroll-controller";
@@ -28,6 +29,7 @@ export class WfcForecastSimple extends LitElement {
   @property({ attribute: false }) forecast: ForecastAttribute[] = [];
   @property({ attribute: false }) forecastType!: ForecastType;
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
+  @property({ attribute: false }) isScrollable = false;
 
   private _selectedForecastIndex: number | null = null;
   private _scrollController = new DragScrollController(this, {
@@ -95,17 +97,24 @@ export class WfcForecastSimple extends LitElement {
 
     return html`
       <div
-        class="wfc-forecast wfc-scroll-container"
-        .actionHandler=${actionHandler({
-          hasHold: this.config.forecast_action?.hold_action !== undefined,
-          hasDoubleClick:
-            this.config.forecast_action?.double_tap_action !== undefined,
-          stopPropagation: true,
-        })}
-        @action=${this._onForecastAction}
-        @pointerdown=${this._onPointerDown}
+        class="${classMap({
+          "wfc-forecast-container": true,
+          "is-scrollable": this.isScrollable,
+        })}"
       >
-        ${forecastTemplates}
+        <div
+          class="wfc-forecast wfc-scroll-container"
+          .actionHandler=${actionHandler({
+            hasHold: this.config.forecast_action?.hold_action !== undefined,
+            hasDoubleClick:
+              this.config.forecast_action?.double_tap_action !== undefined,
+            stopPropagation: true,
+          })}
+          @action=${this._onForecastAction}
+          @pointerdown=${this._onPointerDown}
+        >
+          ${forecastTemplates}
+        </div>
       </div>
     `;
   }
