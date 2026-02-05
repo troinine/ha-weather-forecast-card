@@ -202,7 +202,7 @@ When using chart mode (`mode: chart`), an interactive attribute selector allows 
 - `temperature_and_precipitation` - Default dataset visualizing temperature curves (high/low) and precipitation bars
 - `apparent_temperature` - Visualizes apparent temperature as line graph
 - `humidity` - Visualizes relative humidity as a line graph
-- `pressure` - Visualizes athmospheric pressure as lien graph
+- `pressure` - Visualizes atmospheric pressure as line graph
 - `uv_index` - Visualizes UV index as a bar graph. Decimal values are rounded to integers as per WHO international standards for public health reporting, ensuring clear risk-category communication.
 
 > [!NOTE]
