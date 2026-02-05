@@ -254,26 +254,28 @@ export class WeatherForecastCard extends LitElement {
             : nothing}
           ${this.config.show_forecast === false
             ? nothing
-            : isChartMode
-              ? html`<wfc-forecast-chart
-                  @action=${this.onForecastAction}
-                  .hass=${this.hass}
-                  .config=${this.config}
-                  .weatherEntity=${stateObject}
-                  .forecast=${currentForecast}
-                  .forecastType=${this._currentForecastType}
-                  .itemWidth=${this._currentItemWidth}
-                  .isScrollable=${this._isScrollable}
-                ></wfc-forecast-chart>`
-              : html`<wfc-forecast-simple
-                  @action=${this.onForecastAction}
-                  .hass=${this.hass}
-                  .config=${this.config}
-                  .weatherEntity=${stateObject}
-                  .forecast=${currentForecast}
-                  .forecastType=${this._currentForecastType}
-                  .isScrollable=${this._isScrollable}
-                ></wfc-forecast-simple>`}
+            : html`<div class="wfc-forecast-container">
+                ${isChartMode
+                  ? html`<wfc-forecast-chart
+                      @action=${this.onForecastAction}
+                      .hass=${this.hass}
+                      .config=${this.config}
+                      .weatherEntity=${stateObject}
+                      .forecast=${currentForecast}
+                      .forecastType=${this._currentForecastType}
+                      .itemWidth=${this._currentItemWidth}
+                      .isScrollable=${this._isScrollable}
+                    ></wfc-forecast-chart>`
+                  : html`<wfc-forecast-simple
+                      @action=${this.onForecastAction}
+                      .hass=${this.hass}
+                      .config=${this.config}
+                      .weatherEntity=${stateObject}
+                      .forecast=${currentForecast}
+                      .forecastType=${this._currentForecastType}
+                      .isScrollable=${this._isScrollable}
+                    ></wfc-forecast-simple>`}
+              </div>`}
         </div>
       </ha-card>
     `;

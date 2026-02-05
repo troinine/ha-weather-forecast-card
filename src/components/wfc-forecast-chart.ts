@@ -207,7 +207,7 @@ export class WfcForecastChart extends LitElement {
       </div>
       <div
         class="${classMap({
-          "wfc-forecast-container": true,
+          "wfc-mask-container": true,
           "is-scrollable": this.isScrollable,
         })}"
       >

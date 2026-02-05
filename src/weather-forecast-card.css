@@ -250,7 +250,7 @@ ha-card {
   pointer-events: auto;
 }
 
-.wfc-forecast-container.is-scrollable {
+.wfc-mask-container.is-scrollable {
   --mask: linear-gradient(
     to right,
     rgba(0, 0, 0, 0) 0,
@@ -260,6 +260,10 @@ ha-card {
   );
   -webkit-mask: var(--mask);
   mask: var(--mask);
+}
+
+.wfc-mask-container {
+  width: 100%;
 }
 
 .wfc-scroll-container {
