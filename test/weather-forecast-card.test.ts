@@ -152,7 +152,7 @@ describe("weather-forecast-card", () => {
 
   it("should add is-scrollable class when content overflows", async () => {
     const container = card.shadowRoot!.querySelector(
-      ".wfc-forecast-container"
+      ".wfc-mask-container"
     ) as HTMLElement;
 
     // Set container width such that it overflows
