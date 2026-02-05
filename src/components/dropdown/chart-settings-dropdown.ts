@@ -151,12 +151,15 @@ export class ChartSettingsDropdown extends LitElement {
   }
 
   private _onClickOutside(ev: Event): void {
-    ev.stopPropagation();
-    ev.preventDefault();
-
     const path = ev.composedPath();
-    if (!path.includes(this)) {
-      this.dispatchEvent(new CustomEvent("closed"));
+
+    // Make sure we are not blocking clicks that action something outside of the dropdown
+    if (path.includes(this)) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      return;
     }
+
+    this.dispatchEvent(new CustomEvent("closed"));
   }
 }
