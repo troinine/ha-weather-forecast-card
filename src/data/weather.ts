@@ -484,6 +484,12 @@ export const aggregateHourlyForecastData = (
     const validPrecipChance = group
       .map((e) => e.precipitation_probability)
       .filter((e): e is number => e !== undefined);
+    const validUvIndex = group
+      .map((e) => e.uv_index)
+      .filter((e): e is number => e !== undefined);
+    const validApparentTemp = group
+      .map((e) => e.apparent_temperature)
+      .filter((e): e is number => e !== undefined);
 
     const lastEntryDate = new Date(group[group.length - 1]!.datetime);
     lastEntryDate.setMinutes(59);
@@ -529,6 +535,16 @@ export const aggregateHourlyForecastData = (
 
     if (validBearing.length > 0) {
       aggregatedEntry.wind_bearing = computeAverageBearing(validBearing);
+    }
+
+    if (validUvIndex.length > 0) {
+      aggregatedEntry.uv_index = Math.max(...validUvIndex);
+    }
+
+    if (validApparentTemp.length > 0) {
+      aggregatedEntry.apparent_temperature = parseFloat(
+        average(validApparentTemp).toFixed(1)
+      );
     }
 
     groupedForecast.push(aggregatedEntry);
