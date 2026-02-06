@@ -90,7 +90,11 @@ export class WfcChartAttributeSelector extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    document.removeEventListener("pointerdown", this._boundOnClickOutside, true);
+    document.removeEventListener(
+      "pointerdown",
+      this._boundOnClickOutside,
+      true
+    );
   }
 
   protected updated(changedProps: PropertyValues): void {
@@ -164,6 +168,17 @@ export class WfcChartAttributeSelector extends LitElement {
 
     // Clicks inside the dropdown should not close it
     if (path.includes(this)) {
+      return;
+    }
+
+    // Clicks on the toggle button should not trigger close here;
+    // the toggle button has its own click handler that manages state
+    const isToggleButton = path.some(
+      (el) =>
+        el instanceof Element &&
+        el.classList.contains("wfc-settings-toggle-button")
+    );
+    if (isToggleButton) {
       return;
     }
 
