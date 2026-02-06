@@ -887,9 +887,13 @@ describe("weather-forecast-card chart", () => {
       expect(dropdown!.open).toBe(false);
     });
 
-    it("should use correct dataset type for different attributes", async () => {
+    it("should use bar dataset type for uv_index", async () => {
       const { card } = await createCardFixture({
-        forecast: { mode: ForecastMode.Chart, show_attribute_selector: true },
+        forecast: {
+          mode: ForecastMode.Chart,
+          show_attribute_selector: true,
+          default_chart_attribute: "uv_index",
+        },
       });
 
       const chartElement = card.shadowRoot!.querySelector(
@@ -899,40 +903,52 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
-
-      // UV index should use bar dataset type
-      dropdown!.dispatchEvent(
-        new CustomEvent("selected", { detail: { value: "uv_index" } })
-      );
-      await chartElement.updateComplete;
-
       // @ts-expect-error: _chart is private
-      let chartInstance = chartElement._chart;
+      const chartInstance = chartElement._chart;
       // UV index uses bar type in the dataset
       expect(chartInstance!.data.datasets[0].type).toBe("bar");
+    });
 
-      // Humidity should use line (default, no explicit type on dataset)
-      dropdown!.dispatchEvent(
-        new CustomEvent("selected", { detail: { value: "humidity" } })
-      );
+    it("should use line dataset type for humidity", async () => {
+      const { card } = await createCardFixture({
+        forecast: {
+          mode: ForecastMode.Chart,
+          show_attribute_selector: true,
+          default_chart_attribute: "humidity",
+        },
+      });
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
       // @ts-expect-error: _chart is private
-      chartInstance = chartElement._chart;
+      const chartInstance = chartElement._chart;
       // Line charts don't set explicit type on datasets (uses chart's default)
       expect(chartInstance!.data.datasets[0].type).toBeUndefined();
+    });
 
-      // Temperature and precipitation has mixed types
-      dropdown!.dispatchEvent(
-        new CustomEvent("selected", {
-          detail: { value: "temperature_and_precipitation" },
-        })
-      );
+    it("should use mixed dataset types for temperature_and_precipitation", async () => {
+      const { card } = await createCardFixture({
+        forecast: {
+          mode: ForecastMode.Chart,
+          show_attribute_selector: true,
+          default_chart_attribute: "temperature_and_precipitation",
+        },
+      });
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
       // @ts-expect-error: _chart is private
-      chartInstance = chartElement._chart;
+      const chartInstance = chartElement._chart;
       // Default view has 3 datasets: high temp (line), low temp (line), precipitation (bar)
       expect(chartInstance!.data.datasets.length).toBe(3);
       expect(chartInstance!.data.datasets[2].type).toBe("bar"); // Precipitation is bar
@@ -1012,6 +1028,80 @@ describe("weather-forecast-card chart", () => {
       const chartInstance = chartElement._chart;
       // UV index uses bar chart
       expect(chartInstance!.data.datasets[0].type).toBe("bar");
+    });
+
+    it("should update chart root type when switching from uv_index to temperature_and_precipitation", async () => {
+      const { card } = await createCardFixture({
+        forecast: {
+          mode: ForecastMode.Chart,
+          show_attribute_selector: true,
+          default_chart_attribute: "uv_index",
+        },
+      });
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      chartElement.forecast = forecastWithAllAttributes;
+      await chartElement.updateComplete;
+
+      // @ts-expect-error: _chart is private
+      let chartInstance = chartElement._chart;
+      // Initially UV index uses bar chart type
+      expect(chartInstance!.config.type).toBe("bar");
+
+      // Switch to temperature_and_precipitation
+      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
+      dropdown!.dispatchEvent(
+        new CustomEvent("selected", {
+          detail: { value: "temperature_and_precipitation" },
+        })
+      );
+      await chartElement.updateComplete;
+
+      // @ts-expect-error: _chart is private
+      chartInstance = chartElement._chart;
+      // After switching, chart should be line type, not bar
+      expect(chartInstance!.config.type).toBe("line");
+      expect(chartInstance!.data.datasets.length).toBe(3);
+    });
+
+    it("should update chart root type when switching from temperature_and_precipitation to uv_index", async () => {
+      const { card } = await createCardFixture({
+        forecast: {
+          mode: ForecastMode.Chart,
+          show_attribute_selector: true,
+          default_chart_attribute: "temperature_and_precipitation",
+        },
+      });
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      chartElement.forecast = forecastWithAllAttributes;
+      await chartElement.updateComplete;
+
+      // @ts-expect-error: _chart is private
+      let chartInstance = chartElement._chart;
+      // Initially temperature_and_precipitation uses line chart type
+      expect(chartInstance!.config.type).toBe("line");
+
+      // Switch to uv_index
+      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
+      dropdown!.dispatchEvent(
+        new CustomEvent("selected", {
+          detail: { value: "uv_index" },
+        })
+      );
+      await chartElement.updateComplete;
+
+      // @ts-expect-error: _chart is private
+      chartInstance = chartElement._chart;
+      // After switching, chart should be bar type
+      expect(chartInstance!.config.type).toBe("bar");
+      expect(chartInstance!.data.datasets.length).toBe(1);
     });
   });
 });

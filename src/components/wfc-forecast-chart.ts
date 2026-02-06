@@ -277,12 +277,27 @@ export class WfcForecastChart extends LitElement {
    * It also handles resizing the chart if there has been a structural change, such as switching
    * between daily and hourly forecasts or changing the item width.
    *
+   * When the chart type changes (e.g., from bar to line when switching attributes), the chart
+   * must be destroyed and recreated since Chart.js doesn't support changing the root type after
+   * initialization.
+   *
    * @param structuralChange Whether the chart's layout or structure has changed, requiring a forced resize.
    */
   private updateChartData(structuralChange: boolean = false): void {
     if (!this._chart || !this.forecast?.length) return;
 
     const newConfig = this.getChartConfig();
+    const currentType = (this._chart.config as ChartConfiguration).type;
+    const newType = newConfig.type;
+
+    // Chart.js doesn't support changing the root type after initialization.
+    // When the chart type changes, we need to destroy and recreate the chart.
+    if (currentType !== newType) {
+      this._chart.destroy();
+      this._chart = null;
+      this.initChart();
+      return;
+    }
 
     this._chart.data = newConfig.data;
 
