@@ -176,7 +176,12 @@ export class WfcForecastChart extends LitElement {
     };
 
     return html`
-      <div class="wfc-forecast-chart-settings">
+      <div
+        class="${classMap({
+          "wfc-forecast-chart-settings": true,
+          "has-selector": !!this.config.forecast?.show_attribute_selector,
+        })}"
+      >
         ${this.config.forecast?.show_attribute_selector
           ? html`<span>${this._localizeSelectedAttribute()}</span>
               <div class="wfc-forecast-chart-attribute-selector">
@@ -524,7 +529,9 @@ export class WfcForecastChart extends LitElement {
         datasets: [
           {
             type: "bar",
-            data: data.map((f) => (f.uv_index != null ? Math.round(f.uv_index) : 0)),
+            data: data.map((f) =>
+              f.uv_index != null ? Math.round(f.uv_index) : 0
+            ),
             backgroundColor: data.map((f) => getUvColor(f.uv_index ?? null)),
             borderWidth: 0,
             borderRadius: {

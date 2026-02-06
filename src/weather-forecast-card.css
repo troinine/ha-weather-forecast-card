@@ -533,6 +533,10 @@ ha-card {
   z-index: 5;
 }
 
+.wfc-forecast-chart-settings.has-selector {
+  margin-bottom: var(--wfc-component-gap);
+}
+
 .wfc-forecast-chart-settings span {
   font-size: var(--ha-font-size-xl, 16px);
   line-height: var(--ha-line-height-condensed, 1.2);
@@ -545,7 +549,6 @@ ha-card {
   position: relative;
   display: flex;
   align-items: center;
-  padding-bottom: var(--wfc-component-gap);
 }
 
 wfc-wind-indicator,
