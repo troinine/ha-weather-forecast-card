@@ -58,7 +58,12 @@ jobs:
               process.exit(1);
             }
 
+            // Detect if this is a release candidate (pre-release)
+            const isPreRelease = newVersion.includes("-rc");
+
             fs.appendFileSync(process.env.GITHUB_OUTPUT, `VERSION=v${newVersion}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `IS_PRERELEASE=${isPreRelease}\n`);
+            console.log(`IS_PRERELEASE=${isPreRelease}`);
           '
 
       - name: Build
@@ -79,6 +84,7 @@ jobs:
           tag_name: ${{ steps.version_check.outputs.VERSION }}
           files: dist/weather-forecast-card.js
           generate_release_notes: true
+          prerelease: ${{ steps.version_check.outputs.IS_PRERELEASE == 'true' }}
 
       - name: Bump to next development version
         run: |
@@ -86,13 +92,27 @@ jobs:
             const fs = require("fs");
             const pkg = require("./package.json");
 
-            const parts = pkg.version.split(".").map(Number);
-            parts[1] += 1;
-            parts[2] = 0;
+            let nextVersion;
 
-            const nextVersion = parts.join(".") + "-devel";
+            // Check if current version is a release candidate
+            const rcMatch = pkg.version.match(/^(\d+)\.(\d+)\.(\d+)-rc\.(\d+)$/);
+            
+            if (rcMatch) {
+              // For RC versions, increment the RC number
+              const [, major, minor, patch, rc] = rcMatch;
+              const nextRc = parseInt(rc, 10) + 1;
+              nextVersion = `${major}.${minor}.${patch}-rc.${nextRc}-devel`;
+              console.log("Incrementing RC version");
+            } else {
+              // For regular releases, bump minor version
+              const parts = pkg.version.split(".").map(Number);
+              parts[1] += 1;
+              parts[2] = 0;
+              nextVersion = parts.join(".") + "-devel";
+              console.log("Bumping minor version");
+            }
+
             pkg.version = nextVersion;
-
             fs.writeFileSync("./package.json", JSON.stringify(pkg, null, 2) + "\n");
             console.log("Next version will be:", nextVersion);
           '

@@ -1,7 +1,17 @@
 {
   "name": "weather-forecast-card",
-  "version": "0.10.0-devel",
+  "version": "1.0.0-rc.1-devel",
   "description": "A TypeScript weather forecast card built with Parcel",
+  "author": "troinine",
+  "license": "MIT",
+  "keywords": [
+    "home-assistant",
+    "weather-forecast",
+    "weather-card",
+    "weater-forecast-card",
+    "home-assistant-frontend",
+    "custom-card"
+  ],
   "type": "module",
   "module": "dist/weather-forecast-card.js",
   "targets": {
@@ -25,9 +35,6 @@
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "chart.js": "^4.5.1",
     "chartjs-plugin-datalabels": "^2.2.0",
