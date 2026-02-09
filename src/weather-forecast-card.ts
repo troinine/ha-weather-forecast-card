@@ -28,6 +28,7 @@ import {
   ForecastEvent,
   getForecast,
   subscribeForecast,
+  supportsForecastType,
   supportsRequiredForecastFeatures,
   WeatherEntity,
   ForecastType,
@@ -388,6 +389,42 @@ export class WeatherForecastCard extends LitElement {
       );
     }
 
+    // Auto-switch to available forecast type if current type has no data
+    // BUT only if we've received both forecast events (to avoid switching
+    // prematurely when one forecast is just loading slower than the other)
+    const currentForecastData = this.getCurrentForecast();
+    if (!currentForecastData || currentForecastData.length === 0) {
+      const hasBothEvents =
+        this._dailyForecastEvent != null && this._hourlyForecastEvent != null;
+
+      const weatherEntity = this.hass?.states[this.config!.entity];
+      const shouldAutoSwitch =
+        hasBothEvents ||
+        (this._currentForecastType === "hourly" &&
+          !supportsForecastType(weatherEntity, "hourly")) ||
+        (this._currentForecastType === "daily" &&
+          !supportsForecastType(weatherEntity, "daily"));
+
+      if (shouldAutoSwitch) {
+        if (this._currentForecastType === "hourly" && this._dailyForecastData) {
+          logger.debug(
+            "No hourly forecast data available, switching to daily forecast"
+          );
+
+          this._currentForecastType = "daily";
+        } else if (
+          this._currentForecastType === "daily" &&
+          this._hourlyForecastData
+        ) {
+          logger.debug(
+            "No daily forecast data available, switching to hourly forecast"
+          );
+
+          this._currentForecastType = "hourly";
+        }
+      }
+    }
+
     // Recalculate layout if the number of items changed
     const newLength = this.getCurrentForecast().length;
 
@@ -403,6 +440,17 @@ export class WeatherForecastCard extends LitElement {
 
   private _toggleForecastView(selectedForecast?: ForecastAttribute) {
     const willSwitchToHourly = this._currentForecastType === "daily";
+    const targetForecastData = willSwitchToHourly
+      ? this._hourlyForecastData
+      : this._dailyForecastData;
+
+    // Don't toggle if the target forecast type has no data
+    if (!targetForecastData || targetForecastData.length === 0) {
+      logger.debug(
+        `Cannot toggle to ${willSwitchToHourly ? "hourly" : "daily"} forecast - no data available`
+      );
+      return;
+    }
 
     this._currentForecastType =
       this._currentForecastType === "daily" ? "hourly" : "daily";
@@ -489,50 +537,67 @@ export class WeatherForecastCard extends LitElement {
       return;
     }
 
+    if (this.config.show_forecast === false) {
+      return;
+    }
+
     if (
       !supportsRequiredForecastFeatures(this.hass.states[this.config.entity])
     ) {
-      logger.warn("Weather entity does not support all forecast features.");
+      logger.warn(
+        "Weather entity does not support forecast. Cannot display forecast data."
+      );
       return;
     }
 
     logger.debug("Subscribing to forecast events");
 
-    try {
-      this._dailySubscription = Promise.resolve(
-        subscribeForecast(this.hass!, this.config!.entity, "daily", (event) => {
-          this._dailyForecastEvent = event;
-          this.processForecastData();
-        })
-      );
-    } catch (error: unknown) {
-      if (isInvalidEntityIdError(error)) {
-        setTimeout(() => {
-          this._dailyForecastEvent = undefined;
-        }, 2000);
+    const weatherEntity = this.hass.states[this.config.entity];
+
+    if (supportsForecastType(weatherEntity, "daily")) {
+      try {
+        this._dailySubscription = Promise.resolve(
+          subscribeForecast(
+            this.hass!,
+            this.config!.entity,
+            "daily",
+            (event) => {
+              this._dailyForecastEvent = event;
+              this.processForecastData();
+            }
+          )
+        );
+      } catch (error: unknown) {
+        if (isInvalidEntityIdError(error)) {
+          setTimeout(() => {
+            this._dailyForecastEvent = undefined;
+          }, 2000);
+        }
+        throw error;
       }
-      throw error;
     }
 
-    try {
-      this._hourlySubscription = Promise.resolve(
-        subscribeForecast(
-          this.hass!,
-          this.config!.entity,
-          "hourly",
-          (event) => {
-            this._hourlyForecastEvent = event;
-            this.processForecastData();
-          }
-        )
-      );
-    } catch (error: unknown) {
-      if (isInvalidEntityIdError(error)) {
-        setTimeout(() => {
-          this._hourlyForecastEvent = undefined;
-        }, 2000);
+    if (supportsForecastType(weatherEntity, "hourly")) {
+      try {
+        this._hourlySubscription = Promise.resolve(
+          subscribeForecast(
+            this.hass!,
+            this.config!.entity,
+            "hourly",
+            (event) => {
+              this._hourlyForecastEvent = event;
+              this.processForecastData();
+            }
+          )
+        );
+      } catch (error: unknown) {
+        if (isInvalidEntityIdError(error)) {
+          setTimeout(() => {
+            this._hourlyForecastEvent = undefined;
+          }, 2000);
+        }
+        throw error;
       }
-      throw error;
     }
   }
 

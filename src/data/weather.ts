@@ -363,7 +363,28 @@ export const supportsRequiredForecastFeatures = (
   const hasDaily = (features & WeatherEntityFeature.FORECAST_DAILY) !== 0;
   const hasHourly = (features & WeatherEntityFeature.FORECAST_HOURLY) !== 0;
 
-  return hasDaily && hasHourly;
+  return hasDaily || hasHourly;
+};
+
+export const supportsForecastType = (
+  weatherEntity: HassEntityBase | undefined,
+  forecastType: "hourly" | "daily"
+): boolean => {
+  if (!weatherEntity || !weatherEntity.attributes) {
+    return false;
+  }
+
+  const features = weatherEntity.attributes.supported_features;
+  if (typeof features !== "number") {
+    return false;
+  }
+
+  const featureFlag =
+    forecastType === "hourly"
+      ? WeatherEntityFeature.FORECAST_HOURLY
+      : WeatherEntityFeature.FORECAST_DAILY;
+
+  return (features & featureFlag) !== 0;
 };
 
 export const formatPrecipitation = (value: number, unit: string): string => {
