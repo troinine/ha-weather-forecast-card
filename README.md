@@ -365,6 +365,14 @@ Add these variables to your Home Assistant theme to customize the card's appeara
 | `weather-forecast-card-temp-hot-color`                  | `#f44336`                              | Temperature color for hot conditions. Used when `use_color_thresholds` is `true`      |
 | `weather-forecast-card-chart-temp-low-line-color`       | `#2196f3`                              | Default chart line color for low temperature. Corresponds to `cold` threshold color.  |
 | `weather-forecast-card-chart-temp-high-line-color`      | `#ff9800`                              | Default chart line color for high temperature. Corresponds to `warm` threshold color. |
+| `weather-forecast-card-chart-humidity-line-color`       | `var(--cyan-color, #00bcd4)`           | Chart line color for humidity attribute in chart mode                                 |
+| `weather-forecast-card-chart-pressure-line-color`       | `var(--purple-color, #9c27b0)`         | Chart line color for pressure attribute in chart mode                                 |
+| `weather-forecast-card-chart-uv-bar-color`              | `var(--amber-color, #ffc107)`          | Default chart bar color for UV index attribute in chart mode                          |
+| `weather-forecast-card-uv-low-color`                    | `#289500`                              | UV index bar color for low risk level (0-2)                                           |
+| `weather-forecast-card-uv-moderate-color`               | `#f7e400`                              | UV index bar color for moderate risk level (3-5)                                      |
+| `weather-forecast-card-uv-high-color`                   | `#f85900`                              | UV index bar color for high risk level (6-7)                                          |
+| `weather-forecast-card-uv-very-high-color`              | `#d8001d`                              | UV index bar color for very high risk level (8-10)                                    |
+| `weather-forecast-card-uv-extreme-color`                | `#6b49c8`                              | UV index bar color for extreme risk level (11+)                                       |
 | `weather-forecast-card-chart-label-color`               | `var(--primary-text-color, #000)`      | Default color for chart labels                                                        |
 | `weather-forecast-card-chart-temp-high-label-color`     | `var(--chart-label-color)`             | Chart label color for high temperature                                                |
 | `weather-forecast-card-chart-temp-low-label-color`      | `var(--secondary-text-color, #9b9b9b)` | Chart label color for low temperature                                                 |
@@ -377,6 +385,9 @@ Add these variables to your Home Assistant theme to customize the card's appeara
 | `weather-forecast-card-day-indicator-text-color`        | `#ffffff`                              | Text color for day indicator badge                                                    |
 | `weather-forecast-card-current-conditions-icon-size`    | `64px`                                 | Size of the current weather condition icon                                            |
 | `weather-forecast-card-forecast-conditions-icon-size`   | `28px`                                 | Size of forecast weather condition icons                                              |
+
+> [!NOTE]
+> **Chart attribute colors:** When visualizing UV index with `chart` mode, the bars use World Health Organization (WHO) and the Global Solar UV Index (UVI) standards for universally established and recognized color scales. However, these can be adjusted via theme variables documented in the table above.
 
 ### Weather Effects Variables
 
@@ -413,6 +424,11 @@ Add any of the variables to your themes to customize the card:
 my-custom-theme:
   # Weather Forecast Card customization
   weather-forecast-card-chart-temp-high-line-color: "#ff5722"
+
+  # Chart visualization colors
+  weather-forecast-card-chart-humidity-line-color: "#00acc1"
+  weather-forecast-card-chart-pressure-line-color: "#7b1fa2"
+  weather-forecast-card-uv-low-color: "#00ff00"
 
   # Weather Forecast Card effects customization
   weather-forecast-card-effects-sun-color: "#fbbf24"
