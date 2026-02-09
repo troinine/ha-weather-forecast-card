@@ -367,7 +367,7 @@ Add these variables to your Home Assistant theme to customize the card's appeara
 | `weather-forecast-card-chart-temp-high-line-color`      | `#ff9800`                              | Default chart line color for high temperature. Corresponds to `warm` threshold color. |
 | `weather-forecast-card-chart-humidity-line-color`       | `var(--cyan-color, #00bcd4)`           | Chart line color for humidity attribute in chart mode                                 |
 | `weather-forecast-card-chart-pressure-line-color`       | `var(--purple-color, #9c27b0)`         | Chart line color for pressure attribute in chart mode                                 |
-| `weather-forecast-card-chart-uv-bar-color`              | `var(--amber-color, #ffc107)`          | Default chart bar color for UV index attribute in chart mode                          |
+| `weather-forecast-card-chart-uv-bar-color`              | `var(--amber-color, #ffc107)`          | Fallback chart bar color for UV index when value is missing/unknown; normal UV bars use `weather-forecast-card-uv-*-color` |
 | `weather-forecast-card-uv-low-color`                    | `#289500`                              | UV index bar color for low risk level (0-2)                                           |
 | `weather-forecast-card-uv-moderate-color`               | `#f7e400`                              | UV index bar color for moderate risk level (3-5)                                      |
 | `weather-forecast-card-uv-high-color`                   | `#f85900`                              | UV index bar color for high risk level (6-7)                                          |
