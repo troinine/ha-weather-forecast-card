@@ -387,7 +387,7 @@ Add these variables to your Home Assistant theme to customize the card's appeara
 | `weather-forecast-card-forecast-conditions-icon-size`   | `28px`                                 | Size of forecast weather condition icons                                              |
 
 > [!NOTE]
-> **Chart attribute colors:** When visualizing UV index with `chart` mode, the bars use World Health Organization (WHO) and the Global Solar UV Index (UVI) standards for universally established and recognized color scales. However, these can be adjusted via theme variables documented in the table above.
+> **Chart attribute colors:** When visualizing UV index with `chart` mode, the bar groupings follow the Global Solar UV Index (UVI) risk categories (0–2, 3–5, 6–7, 8–10, 11+). The default bar colors are theme-configurable values (see the table above) and are not an official WHO color standard.
 
 ### Weather Effects Variables
 
