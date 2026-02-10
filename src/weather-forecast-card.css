@@ -54,11 +54,11 @@
   );
   --wfc-chart-humidity-line-color: var(
     --weather-forecast-card-chart-humidity-line-color,
-    var(--cyan-color, #00bcd4)
+    var(--blue-color, #2196f3)
   );
   --wfc-chart-pressure-line-color: var(
     --weather-forecast-card-chart-pressure-line-color,
-    var(--purple-color, #9c27b0)
+    var(--cyan-color, #00bcd4)
   );
   --wfc-chart-uv-bar-color: var(
     --weather-forecast-card-chart-uv-bar-color,

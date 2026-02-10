@@ -365,8 +365,8 @@ Add these variables to your Home Assistant theme to customize the card's appeara
 | `weather-forecast-card-temp-hot-color`                  | `#f44336`                              | Temperature color for hot conditions. Used when `use_color_thresholds` is `true`                                           |
 | `weather-forecast-card-chart-temp-low-line-color`       | `#2196f3`                              | Default chart line color for low temperature. Corresponds to `cold` threshold color.                                       |
 | `weather-forecast-card-chart-temp-high-line-color`      | `#ff9800`                              | Default chart line color for high temperature. Corresponds to `warm` threshold color.                                      |
-| `weather-forecast-card-chart-humidity-line-color`       | `var(--cyan-color, #00bcd4)`           | Chart line color for humidity attribute in chart mode                                                                      |
-| `weather-forecast-card-chart-pressure-line-color`       | `var(--purple-color, #9c27b0)`         | Chart line color for pressure attribute in chart mode                                                                      |
+| `weather-forecast-card-chart-humidity-line-color`       | `var(--blue-color, #2196f3)`           | Chart line color for humidity attribute in chart mode                                                                      |
+| `weather-forecast-card-chart-pressure-line-color`       | `var(--cyan-color, #00bcd4)`           | Chart line color for pressure attribute in chart mode                                                                      |
 | `weather-forecast-card-chart-uv-bar-color`              | `var(--amber-color, #ffc107)`          | Fallback chart bar color for UV index when value is missing/unknown; normal UV bars use `weather-forecast-card-uv-*-color` |
 | `weather-forecast-card-uv-low-color`                    | `#289500`                              | UV index bar color for low risk level (0-2)                                                                                |
 | `weather-forecast-card-uv-moderate-color`               | `#f7e400`                              | UV index bar color for moderate risk level (3-5)                                                                           |
@@ -426,8 +426,8 @@ my-custom-theme:
   weather-forecast-card-chart-temp-high-line-color: "#ff5722"
 
   # Chart visualization colors
-  weather-forecast-card-chart-humidity-line-color: "#00acc1"
-  weather-forecast-card-chart-pressure-line-color: "#7b1fa2"
+  weather-forecast-card-chart-humidity-line-color: "#1976d2"
+  weather-forecast-card-chart-pressure-line-color: "#0097a7"
   weather-forecast-card-uv-low-color: "#00ff00"
 
   # Weather Forecast Card effects customization
