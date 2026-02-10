@@ -95,6 +95,7 @@ export class WfcForecastChart extends LitElement {
   @property({ attribute: false }) forecast: ForecastAttribute[] = [];
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
   @property({ attribute: false }) forecastType!: ForecastType;
+  @property({ attribute: false }) isTwiceDailyEntity = false;
   @property({ attribute: false }) itemWidth: number = 0;
   @property({ attribute: false }) isScrollable = false;
   @query("canvas") private _canvas?: HTMLCanvasElement;
@@ -812,7 +813,7 @@ export class WfcForecastChart extends LitElement {
     const parts: TemplateResult[] = [];
     let currentDay: string | undefined;
 
-    forecast.forEach((item) => {
+    forecast.forEach((item, index) => {
       if (!item.datetime) {
         return;
       }
@@ -835,6 +836,8 @@ export class WfcForecastChart extends LitElement {
             .hass=${this.hass}
             .forecast=${item}
             .forecastType=${this.forecastType}
+            .isTwiceDailyEntity=${this.isTwiceDailyEntity}
+            .forecastIndex=${index}
             .config=${this.config}
           ></wfc-forecast-header-items>
         </div>

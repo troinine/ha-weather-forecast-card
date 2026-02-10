@@ -396,6 +396,10 @@ ha-card {
   color: inherit;
 }
 
+.wfc-forecast-slot-time-primary ha-icon {
+  --mdc-icon-size: 18px;
+}
+
 .wfc-forecast-slot-temperature {
   display: flex;
   align-items: center;

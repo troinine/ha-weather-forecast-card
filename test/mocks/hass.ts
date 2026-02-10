@@ -11,6 +11,8 @@ export type ForecastSubscriptionCallback = (
   forecastevent: ForecastEvent
 ) => void;
 
+export type ForecastSubscriptionType = "hourly" | "daily" | "twice_daily";
+
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MockHomeAssistant extends Omit<HomeAssistant, "auth" | "themes"> {
   themes: {
@@ -178,21 +180,119 @@ const generateRandomDailyForecast = (
   return forecast;
 };
 
+/**
+ * Generates a twice_daily forecast (morning/evening for each day).
+ * This simulates weather providers like NWS that don't provide daily forecasts.
+ */
+const generateRandomTwiceDailyForecast = (
+  startDate: Date,
+  unit: "°C" | "°F" = "°C"
+): ForecastAttribute[] => {
+  const forecast = [];
+  const currentDay = new Date(startDate);
+  currentDay.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < FORECAST_DAYS; i++) {
+    // Night period (00:00)
+    const nightTime = new Date(currentDay.getTime() + i * 24 * 60 * 60 * 1000);
+    // Day period (12:00)
+    const dayTime = new Date(
+      currentDay.getTime() + i * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000
+    );
+
+    const baseTempCelsius = 2.5 + Math.sin((i / 7) * Math.PI) * 7.5;
+    const tempVariation = (Math.random() - 0.5) * 4;
+
+    // Night is colder
+    const nightTempCelsius =
+      Math.round((baseTempCelsius - 5 + tempVariation) * 10) / 10;
+    const dayTempCelsius =
+      Math.round((baseTempCelsius + 3 + tempVariation) * 10) / 10;
+
+    const nightTemp =
+      unit === "°F"
+        ? Math.round(celsiusToFahrenheit(nightTempCelsius) * 10) / 10
+        : nightTempCelsius;
+    const dayTemp =
+      unit === "°F"
+        ? Math.round(celsiusToFahrenheit(dayTempCelsius) * 10) / 10
+        : dayTempCelsius;
+
+    const randNight = Math.random();
+    const randDay = Math.random();
+
+    const nightCondition =
+      nightTempCelsius < 0
+        ? randNight < 0.4
+          ? "snowy"
+          : "clear-night"
+        : randNight < 0.3
+          ? "cloudy"
+          : "clear-night";
+    const dayCondition =
+      dayTempCelsius < 0
+        ? randDay < 0.4
+          ? "snowy"
+          : "cloudy"
+        : randDay < 0.25
+          ? "rainy"
+          : randDay < 0.5
+            ? "cloudy"
+            : "sunny";
+
+    // Night entry
+    forecast.push({
+      datetime: nightTime.toISOString(),
+      temperature: nightTemp,
+      templow: nightTemp,
+      condition: nightCondition,
+      precipitation: Math.random() < 0.3 ? Math.round(Math.random() * 5) : 0,
+      precipitation_probability: Math.round(Math.random() * 50),
+      wind_speed: Math.round((1 + Math.random() * 6) * 10) / 10,
+      wind_bearing: Math.round(Math.random() * 360),
+      humidity: Math.round(50 + Math.random() * 40),
+      is_daytime: false,
+    });
+
+    // Day entry
+    forecast.push({
+      datetime: dayTime.toISOString(),
+      temperature: dayTemp,
+      templow: nightTemp,
+      condition: dayCondition,
+      precipitation: Math.random() < 0.3 ? Math.round(Math.random() * 8) : 0,
+      precipitation_probability: Math.round(Math.random() * 60),
+      wind_speed: Math.round((2 + Math.random() * 8) * 10) / 10,
+      wind_bearing: Math.round(Math.random() * 360),
+      humidity: Math.round(35 + Math.random() * 45),
+      uv_index: Math.round(Math.random() * 8),
+      is_daytime: true,
+    });
+  }
+
+  return forecast;
+};
+
 export interface MockHassOptions {
   unitOfMeasurement?: "°C" | "°F";
   darkMode?: boolean;
   currentCondition?: string | null;
   use12HourClock?: boolean;
   language?: string;
+  supportedFeatures?: number;
 }
 
 export class MockHass {
   private subscriptions = new Map<
     string,
-    { callback: ForecastSubscriptionCallback; forecastType: "hourly" | "daily" }
+    {
+      callback: ForecastSubscriptionCallback;
+      forecastType: ForecastSubscriptionType;
+    }
   >();
   public hourlyForecast: ForecastAttribute[] = [];
   public dailyForecast: ForecastAttribute[] = [];
+  public twiceDailyForecast: ForecastAttribute[] = [];
 
   private options: MockHassOptions;
 
@@ -201,6 +301,7 @@ export class MockHass {
       {
         unitOfMeasurement: "°C",
         darkMode: true,
+        supportedFeatures: 3, // FORECAST_DAILY | FORECAST_HOURLY
       },
       options
     );
@@ -210,6 +311,10 @@ export class MockHass {
       this.options.unitOfMeasurement
     );
     this.dailyForecast = generateRandomDailyForecast(
+      new Date(),
+      this.options.unitOfMeasurement
+    );
+    this.twiceDailyForecast = generateRandomTwiceDailyForecast(
       new Date(),
       this.options.unitOfMeasurement
     );
@@ -344,7 +449,7 @@ export class MockHass {
             precipitation: currentForecast.precipitation,
             precipitation_unit: "mm",
             apparent_temperature: this.calculateApparentTemperature(),
-            supported_features: 3, // FORECAST_DAILY | FORECAST_HOURLY
+            supported_features: this.options.supportedFeatures,
           },
           last_changed: "2025-11-20T10:30:00.000Z",
           last_updated: "2025-11-20T10:30:00.000Z",
@@ -432,6 +537,8 @@ export class MockHass {
           "ui.card.weather.cardinal_direction.wnw": "WNW",
           "ui.card.weather.cardinal_direction.nw": "NW",
           "ui.card.weather.cardinal_direction.nnw": "NNW",
+          "ui.card.weather.day": "Day",
+          "ui.card.weather.night": "Night",
         };
 
         return translations[key] || key;
@@ -544,7 +651,7 @@ export class MockHass {
         // @ts-expect-error Mock subscription message
         subscribeMessage: (
           callback: ForecastSubscriptionCallback,
-          message: { forecast_type: "hourly" | "daily" }
+          message: { forecast_type: ForecastSubscriptionType }
         ) => {
           console.log("Mock forecast subscription:", message);
 
@@ -555,11 +662,20 @@ export class MockHass {
             forecastType: message.forecast_type,
           });
 
-          // Use stored forecast data
-          const mockForecast =
-            message.forecast_type === "hourly"
-              ? this.hourlyForecast
-              : this.dailyForecast;
+          // Use stored forecast data based on type
+          let mockForecast: ForecastAttribute[];
+          switch (message.forecast_type) {
+            case "hourly":
+              mockForecast = this.hourlyForecast;
+              break;
+            case "twice_daily":
+              mockForecast = this.twiceDailyForecast;
+              break;
+            case "daily":
+            default:
+              mockForecast = this.dailyForecast;
+              break;
+          }
 
           const forecastEvent: ForecastEvent = {
             type: message.forecast_type,
@@ -609,15 +725,26 @@ export class MockHass {
   }
 
   // Update forecast data for matching subscriptions only
-  updateForecasts(type: "hourly" | "daily") {
+  updateForecasts(type: ForecastSubscriptionType) {
     this.subscriptions.forEach(({ callback, forecastType }) => {
       // Only send to subscriptions that match the forecast type
       if (forecastType !== type) {
         return;
       }
 
-      const mockForecast =
-        type === "hourly" ? this.hourlyForecast : this.dailyForecast;
+      let mockForecast: ForecastAttribute[];
+      switch (type) {
+        case "hourly":
+          mockForecast = this.hourlyForecast;
+          break;
+        case "twice_daily":
+          mockForecast = this.twiceDailyForecast;
+          break;
+        case "daily":
+        default:
+          mockForecast = this.dailyForecast;
+          break;
+      }
 
       const forecastEvent: ForecastEvent = {
         type,

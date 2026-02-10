@@ -28,6 +28,8 @@ export class WfcForecastHeaderItems extends LitElement {
   @property({ attribute: false }) hass!: ExtendedHomeAssistant;
   @property({ attribute: false }) forecast!: ForecastAttribute;
   @property({ attribute: false }) forecastType!: ForecastType;
+  @property({ attribute: false }) isTwiceDailyEntity = false;
+  @property({ attribute: false }) forecastIndex = 0;
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
   private suntimesInfo?: SuntimesInfo | null;
@@ -71,7 +73,11 @@ export class WfcForecastHeaderItems extends LitElement {
           ? "wfc-two-rows"
           : ""}"
       >
-        <span class="wfc-forecast-slot-time-primary">${dateInfo.label}</span>
+        <span class="wfc-forecast-slot-time-primary"
+          >${dateInfo.icon
+            ? html`<ha-icon .icon=${dateInfo.icon}></ha-icon>`
+            : dateInfo.label}</span
+        >
         ${hasTwoRows
           ? html`<span class="wfc-forecast-slot-time-secondary"
               >${dateInfo.secondaryLabel}</span
@@ -91,11 +97,29 @@ export class WfcForecastHeaderItems extends LitElement {
     label: string;
     secondaryLabel?: string;
     className?: string;
+    icon?: string;
   } {
-    // Use two-row layout only for 12-hour (AM/PM) clock format
+    // Use two-row layout only for 12-hour (AM/PM) clock format or twice_daily forecasts
     const isAmPm = useAmPm(this.hass);
+    const isTwiceDaily =
+      this.forecastType === "twice_daily" &&
+      this.forecast.is_daytime !== undefined;
 
-    if (this.forecastType !== "hourly") {
+    // For twice_daily forecasts, show weekday + Day/Night indicator
+    if (isTwiceDaily) {
+      const dayNightLabel =
+        this.forecast.is_daytime !== false
+          ? this.hass.localize("ui.card.weather.day") || "Day"
+          : this.hass.localize("ui.card.weather.night") || "Night";
+
+      return {
+        label: formatDay(this.hass, this.forecast.datetime),
+        secondaryLabel: dayNightLabel,
+      };
+    }
+
+    // For daily forecasts
+    if (this.forecastType === "daily") {
       if (isAmPm) {
         return {
           label: formatDay(this.hass, this.forecast.datetime),
@@ -145,6 +169,24 @@ export class WfcForecastHeaderItems extends LitElement {
     // Sunrise/sunset times (with minutes)
     if (className) {
       const timeParts = formatTimeParts(this.hass, displayDate);
+      // For twice_daily entity, time goes in second row for layout consistency
+      // and use sun icons instead of empty label
+      if (this.isTwiceDailyEntity && !isAmPm) {
+        const timeWithSuffix = timeParts.suffix
+          ? `${timeParts.time} ${timeParts.suffix}`
+          : timeParts.time;
+
+        return {
+          label: "",
+          secondaryLabel: timeWithSuffix,
+          className,
+          icon:
+            className === "wfc-sunrise"
+              ? "mdi:weather-sunset-up"
+              : "mdi:weather-sunset-down",
+        };
+      }
+
       return {
         label: timeParts.time,
         secondaryLabel: isAmPm ? timeParts.suffix : undefined,
@@ -154,6 +196,19 @@ export class WfcForecastHeaderItems extends LitElement {
 
     // Regular hourly forecast
     const hourParts = formatHourParts(this.hass, displayDate);
+
+    // For twice_daily entity, use two-row layout for consistency with daily view
+    // First row: weekday (first item only), empty for others
+    // Second row: hour
+    if (this.isTwiceDailyEntity && !isAmPm) {
+      const isFirstItem = this.forecastIndex === 0;
+      return {
+        label: isFirstItem ? formatDay(this.hass, this.forecast.datetime) : "",
+        secondaryLabel: hourParts.hour,
+      };
+    }
+
+    // Standard hourly: two-row for AM/PM, single-row for 24-hour
     return {
       label: hourParts.hour,
       secondaryLabel: isAmPm ? hourParts.suffix : undefined,

@@ -362,13 +362,15 @@ export const supportsRequiredForecastFeatures = (
 
   const hasDaily = (features & WeatherEntityFeature.FORECAST_DAILY) !== 0;
   const hasHourly = (features & WeatherEntityFeature.FORECAST_HOURLY) !== 0;
+  const hasTwiceDaily =
+    (features & WeatherEntityFeature.FORECAST_TWICE_DAILY) !== 0;
 
-  return hasDaily || hasHourly;
+  return hasDaily || hasHourly || hasTwiceDaily;
 };
 
 export const supportsForecastType = (
   weatherEntity: HassEntityBase | undefined,
-  forecastType: "hourly" | "daily"
+  forecastType: "hourly" | "daily" | "twice_daily"
 ): boolean => {
   if (!weatherEntity || !weatherEntity.attributes) {
     return false;
@@ -379,12 +381,33 @@ export const supportsForecastType = (
     return false;
   }
 
-  const featureFlag =
-    forecastType === "hourly"
-      ? WeatherEntityFeature.FORECAST_HOURLY
-      : WeatherEntityFeature.FORECAST_DAILY;
+  const featureFlagMap: Record<
+    "hourly" | "daily" | "twice_daily",
+    WeatherEntityFeature
+  > = {
+    hourly: WeatherEntityFeature.FORECAST_HOURLY,
+    daily: WeatherEntityFeature.FORECAST_DAILY,
+    twice_daily: WeatherEntityFeature.FORECAST_TWICE_DAILY,
+  };
+
+  const featureFlag = featureFlagMap[forecastType];
 
   return (features & featureFlag) !== 0;
+};
+
+/**
+ * @returns the forecast type supported by the entity, preferring "daily" over "twice_daily" if both are supported
+ */
+export const getDailyForecastType = (
+  weatherEntity: HassEntityBase | undefined
+): "daily" | "twice_daily" | undefined => {
+  if (supportsForecastType(weatherEntity, "daily")) {
+    return "daily";
+  }
+  if (supportsForecastType(weatherEntity, "twice_daily")) {
+    return "twice_daily";
+  }
+  return undefined;
 };
 
 export const formatPrecipitation = (value: number, unit: string): string => {

@@ -27,6 +27,7 @@ import {
 import {
   ForecastEvent,
   getForecast,
+  getDailyForecastType,
   subscribeForecast,
   supportsForecastType,
   supportsRequiredForecastFeatures,
@@ -76,6 +77,7 @@ export class WeatherForecastCard extends LitElement {
 
   private _hourlyForecastData?: ForecastAttribute[];
   private _dailyForecastData?: ForecastAttribute[];
+  private _effectiveDailyType?: "daily" | "twice_daily";
 
   private _minForecastItemWidth?: number;
   private _forecastContainer?: HTMLElement | null = null;
@@ -219,6 +221,7 @@ export class WeatherForecastCard extends LitElement {
       </hui-warning>`;
     }
 
+    const isTwiceDailyEntity = this._effectiveDailyType === "twice_daily";
     const isChartMode = this.config.forecast?.mode === ForecastMode.Chart;
     const currentForecast = this.getCurrentForecast();
 
@@ -264,6 +267,7 @@ export class WeatherForecastCard extends LitElement {
                       .weatherEntity=${stateObject}
                       .forecast=${currentForecast}
                       .forecastType=${this._currentForecastType}
+                      .isTwiceDailyEntity=${isTwiceDailyEntity}
                       .itemWidth=${this._currentItemWidth}
                       .isScrollable=${this._isScrollable}
                     ></wfc-forecast-chart>`
@@ -274,6 +278,7 @@ export class WeatherForecastCard extends LitElement {
                       .weatherEntity=${stateObject}
                       .forecast=${currentForecast}
                       .forecastType=${this._currentForecastType}
+                      .isTwiceDailyEntity=${isTwiceDailyEntity}
                       .isScrollable=${this._isScrollable}
                     ></wfc-forecast-simple>`}
               </div>`}
@@ -349,10 +354,11 @@ export class WeatherForecastCard extends LitElement {
       this._hourlyForecastEvent,
       "hourly"
     );
+    // Use the effective daily type (daily or twice_daily) for processing
     const dailyForecastData = getForecast(
       attributes,
       this._dailyForecastEvent,
-      "daily"
+      this._effectiveDailyType
     );
 
     if (!hourlyForecastData && !dailyForecastData) {
@@ -398,12 +404,17 @@ export class WeatherForecastCard extends LitElement {
         this._dailyForecastEvent != null && this._hourlyForecastEvent != null;
 
       const weatherEntity = this.hass?.states[this.config!.entity];
+      // Check if entity supports any daily-like forecast (daily or twice_daily)
+      const effectiveDailyType = getDailyForecastType(weatherEntity);
+      const hasDailyLike = effectiveDailyType !== undefined;
+      const isInDailyLikeView =
+        this._currentForecastType === "daily" ||
+        this._currentForecastType === "twice_daily";
       const shouldAutoSwitch =
         hasBothEvents ||
         (this._currentForecastType === "hourly" &&
           !supportsForecastType(weatherEntity, "hourly")) ||
-        (this._currentForecastType === "daily" &&
-          !supportsForecastType(weatherEntity, "daily"));
+        (isInDailyLikeView && !hasDailyLike);
 
       if (shouldAutoSwitch) {
         if (this._currentForecastType === "hourly" && this._dailyForecastData) {
@@ -411,11 +422,8 @@ export class WeatherForecastCard extends LitElement {
             "No hourly forecast data available, switching to daily forecast"
           );
 
-          this._currentForecastType = "daily";
-        } else if (
-          this._currentForecastType === "daily" &&
-          this._hourlyForecastData
-        ) {
+          this._currentForecastType = effectiveDailyType || "daily";
+        } else if (isInDailyLikeView && this._hourlyForecastData) {
           logger.debug(
             "No daily forecast data available, switching to hourly forecast"
           );
@@ -439,7 +447,10 @@ export class WeatherForecastCard extends LitElement {
   }
 
   private _toggleForecastView(selectedForecast?: ForecastAttribute) {
-    const willSwitchToHourly = this._currentForecastType === "daily";
+    const isInDailyLikeView =
+      this._currentForecastType === "daily" ||
+      this._currentForecastType === "twice_daily";
+    const willSwitchToHourly = isInDailyLikeView;
     const targetForecastData = willSwitchToHourly
       ? this._hourlyForecastData
       : this._dailyForecastData;
@@ -452,8 +463,10 @@ export class WeatherForecastCard extends LitElement {
       return;
     }
 
-    this._currentForecastType =
-      this._currentForecastType === "daily" ? "hourly" : "daily";
+    // Toggle between hourly and the effective daily type (daily or twice_daily)
+    this._currentForecastType = isInDailyLikeView
+      ? "hourly"
+      : this._effectiveDailyType || "daily";
 
     if (!selectedForecast || !this.config?.forecast?.scroll_to_selected) {
       return;
@@ -554,13 +567,26 @@ export class WeatherForecastCard extends LitElement {
 
     const weatherEntity = this.hass.states[this.config.entity];
 
-    if (supportsForecastType(weatherEntity, "daily")) {
+    // Subscribe to the effective daily type (daily preferred, twice_daily as fallback)
+    const effectiveDailyType = getDailyForecastType(weatherEntity);
+    this._effectiveDailyType = effectiveDailyType;
+
+    // Update current forecast type if we're in daily view but entity only supports twice_daily
+    if (
+      effectiveDailyType === "twice_daily" &&
+      this._currentForecastType === "daily"
+    ) {
+      this._currentForecastType = "twice_daily";
+    }
+
+    if (effectiveDailyType) {
+      logger.debug(`Subscribing to ${effectiveDailyType} forecast`);
       try {
         this._dailySubscription = Promise.resolve(
           subscribeForecast(
             this.hass!,
             this.config!.entity,
-            "daily",
+            effectiveDailyType,
             (event) => {
               this._dailyForecastEvent = event;
               this.processForecastData();

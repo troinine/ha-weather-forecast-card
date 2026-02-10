@@ -119,6 +119,18 @@
           id="test-card-12-hour-clock-chart-mode"
         ></weather-forecast-card>
       </div>
+      <h3>Twice daily, simple</h3>
+      <div class="test-card">
+        <weather-forecast-card
+          id="test-card-twice-daily-simple"
+        ></weather-forecast-card>
+      </div>
+      <h3>Twice daily, chart</h3>
+      <div class="test-card">
+        <weather-forecast-card
+          id="test-card-twice-daily-chart"
+        ></weather-forecast-card>
+      </div>
       <h2>Bug fixes</h2>
       <h3>#14</h3>
       <div class="test-card">
@@ -322,6 +334,29 @@
             },
           },
           hass12HourClock.getHass()
+        );
+
+        initializeCard(
+          "test-card-twice-daily-simple",
+          {
+            entity: "weather.demo",
+            forecast: {
+              mode: "simple",
+            },
+          },
+          new MockHass({ supportedFeatures: 6 }).getHass()
+        );
+
+        initializeCard(
+          "test-card-twice-daily-chart",
+          {
+            entity: "weather.demo",
+            forecast: {
+              mode: "chart",
+              extra_attribute: "wind_direction",
+            },
+          },
+          new MockHass({ supportedFeatures: 6 }).getHass()
         );
 
         const hassIssue14 = new MockHass();

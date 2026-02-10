@@ -139,7 +139,12 @@ describe("weather-forecast-card simple", () => {
     forecastItems.forEach((item, index) => {
       const timeLabel = item.querySelector(".wfc-forecast-slot-time");
       expect(timeLabel).not.toBeNull();
-      expect(timeLabel?.textContent?.trim()).toBe(
+
+      // Hourly uses two-row layout, check primary label
+      const primaryLabel = timeLabel?.querySelector(
+        ".wfc-forecast-slot-time-primary"
+      );
+      expect(primaryLabel?.textContent?.trim()).toBe(
         formatHourParts(hass, TEST_FORECAST_HOURLY[index].datetime).hour
       );
 

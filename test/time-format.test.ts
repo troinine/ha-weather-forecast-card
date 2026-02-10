@@ -281,7 +281,7 @@ describe("time format rendering", () => {
     mockHassInstance.hourlyForecast = TEST_FORECAST_HOURLY;
     const hass = mockHassInstance.getHass() as ExtendedHomeAssistant;
 
-    it("should use single-row layout for German 24-hour format", async () => {
+    it("should use single-row layout for German 24-hour hourly format", async () => {
       const card = await fixture<WeatherForecastCard>(
         html`<weather-forecast-card
           .hass=${hass}
@@ -310,7 +310,7 @@ describe("time format rendering", () => {
         card.shadowRoot!.querySelectorAll(".wfc-forecast-slot");
       expect(forecastItems.length).toBeGreaterThan(0);
 
-      // German uses 24-hour format, so should NOT have two-row layout
+      // German 24-hour format should use single-row layout
       const firstTimeLabel = forecastItems[0].querySelector(
         ".wfc-forecast-slot-time"
       );
@@ -318,7 +318,7 @@ describe("time format rendering", () => {
       expect(firstTimeLabel?.classList.contains("wfc-two-rows")).toBe(false);
     });
 
-    it("should use consistent single-row layout for hourly and sunrise/sunset in German", async () => {
+    it("should use single-row layout for hourly in German", async () => {
       const sunTimesConfig: WeatherForecastCardConfig = {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
@@ -356,7 +356,7 @@ describe("time format rendering", () => {
         card.shadowRoot!.querySelectorAll(".wfc-forecast-slot");
       expect(forecastItems.length).toBeGreaterThan(0);
 
-      // All slots should use single-row layout for German 24-hour format
+      // German 24-hour format should use single-row layout
       forecastItems.forEach((item) => {
         const timeLabel = item.querySelector(".wfc-forecast-slot-time");
         if (timeLabel) {
