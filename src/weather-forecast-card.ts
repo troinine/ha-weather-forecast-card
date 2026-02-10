@@ -77,7 +77,6 @@ export class WeatherForecastCard extends LitElement {
 
   private _hourlyForecastData?: ForecastAttribute[];
   private _dailyForecastData?: ForecastAttribute[];
-  private _effectiveDailyType?: "daily" | "twice_daily";
 
   private _minForecastItemWidth?: number;
   private _forecastContainer?: HTMLElement | null = null;
@@ -221,7 +220,8 @@ export class WeatherForecastCard extends LitElement {
       </hui-warning>`;
     }
 
-    const isTwiceDailyEntity = this._effectiveDailyType === "twice_daily";
+    const isTwiceDailyEntity =
+      getDailyForecastType(stateObject) === "twice_daily";
     const isChartMode = this.config.forecast?.mode === ForecastMode.Chart;
     const currentForecast = this.getCurrentForecast();
 
@@ -338,9 +338,8 @@ export class WeatherForecastCard extends LitElement {
       return;
     }
 
-    const { attributes } = this.hass!.states[
-      this.config!.entity
-    ] as WeatherEntity;
+    const weatherEntity = this.hass!.states[this.config!.entity] as WeatherEntity;
+    const { attributes } = weatherEntity;
 
     if (!attributes) {
       return;
@@ -358,7 +357,7 @@ export class WeatherForecastCard extends LitElement {
     const dailyForecastData = getForecast(
       attributes,
       this._dailyForecastEvent,
-      this._effectiveDailyType
+      getDailyForecastType(weatherEntity)
     );
 
     if (!hourlyForecastData && !dailyForecastData) {
@@ -403,7 +402,6 @@ export class WeatherForecastCard extends LitElement {
       const hasBothEvents =
         this._dailyForecastEvent != null && this._hourlyForecastEvent != null;
 
-      const weatherEntity = this.hass?.states[this.config!.entity];
       // Check if entity supports any daily-like forecast (daily or twice_daily)
       const effectiveDailyType = getDailyForecastType(weatherEntity);
       const hasDailyLike = effectiveDailyType !== undefined;
@@ -464,9 +462,10 @@ export class WeatherForecastCard extends LitElement {
     }
 
     // Toggle between hourly and the effective daily type (daily or twice_daily)
+    const weatherEntity = this.hass?.states[this.config!.entity];
     this._currentForecastType = isInDailyLikeView
       ? "hourly"
-      : this._effectiveDailyType || "daily";
+      : getDailyForecastType(weatherEntity) || "daily";
 
     if (!selectedForecast || !this.config?.forecast?.scroll_to_selected) {
       return;
@@ -569,7 +568,6 @@ export class WeatherForecastCard extends LitElement {
 
     // Subscribe to the effective daily type (daily preferred, twice_daily as fallback)
     const effectiveDailyType = getDailyForecastType(weatherEntity);
-    this._effectiveDailyType = effectiveDailyType;
 
     // Update current forecast type if we're in daily view but entity only supports twice_daily
     if (

@@ -79,11 +79,6 @@ describe("twice_daily forecast", () => {
       expect(forecastItems?.length).toBeGreaterThan(0);
     });
 
-    it("should use twice_daily as effective daily type", async () => {
-      // @ts-expect-error: accessing private property
-      expect(card._effectiveDailyType).toBe("twice_daily");
-    });
-
     it("should populate daily forecast data from twice_daily subscription", async () => {
       // @ts-expect-error: accessing private property
       expect(card._dailyForecastData).toBeDefined();
@@ -164,11 +159,6 @@ describe("twice_daily forecast", () => {
       const chartContainer =
         card.shadowRoot?.querySelector("wfc-forecast-chart");
       expect(chartContainer).not.toBeNull();
-    });
-
-    it("should use twice_daily as effective daily type", async () => {
-      // @ts-expect-error: accessing private property
-      expect(card._effectiveDailyType).toBe("twice_daily");
     });
 
     it("should render chart canvas with twice_daily data", async () => {
@@ -288,6 +278,6 @@ describe("forecast type preference", () => {
 
     // Should use daily, not twice_daily
     // @ts-expect-error: accessing private property
-    expect(card._effectiveDailyType).toBe("daily");
+    expect(card._currentForecastType).toBe("daily");
   });
 });
