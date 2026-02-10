@@ -401,6 +401,8 @@ describe("weather-forecast-card", () => {
       expect(card.config.current?.temperature_entity).toBe(
         "sensor.outdoor_temp"
       );
+      // @ts-expect-error: accessing private property
+      expect(card.config.temperature_entity).toBeUndefined();
     });
 
     it("should prefer current.temperature_entity over root-level temperature_entity", () => {

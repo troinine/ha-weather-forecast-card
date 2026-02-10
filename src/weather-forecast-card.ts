@@ -147,14 +147,14 @@ export class WeatherForecastCard extends LitElement {
     // Migrate legacy root-level temperature_entity to current.temperature_entity
     // Prefer current.temperature_entity if both are defined
     const migratedConfig = { ...config };
-    if (
-      config.temperature_entity &&
-      !config.current?.temperature_entity
-    ) {
-      migratedConfig.current = {
-        ...config.current,
-        temperature_entity: config.temperature_entity,
-      };
+    if (config.temperature_entity) {
+      if (!config.current?.temperature_entity) {
+        migratedConfig.current = {
+          ...config.current,
+          temperature_entity: config.temperature_entity,
+        };
+      }
+      delete migratedConfig.temperature_entity;
     }
 
     this.config = merge({}, DEFAULT_CONFIG, migratedConfig);
