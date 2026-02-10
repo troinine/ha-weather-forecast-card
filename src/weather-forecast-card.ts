@@ -144,7 +144,20 @@ export class WeatherForecastCard extends LitElement {
       );
     }
 
-    this.config = merge({}, DEFAULT_CONFIG, config);
+    // Migrate legacy root-level temperature_entity to current.temperature_entity
+    // Prefer current.temperature_entity if both are defined
+    const migratedConfig = { ...config };
+    if (
+      config.temperature_entity &&
+      !config.current?.temperature_entity
+    ) {
+      migratedConfig.current = {
+        ...config.current,
+        temperature_entity: config.temperature_entity,
+      };
+    }
+
+    this.config = merge({}, DEFAULT_CONFIG, migratedConfig);
     this._currentForecastType = this.config.default_forecast || "daily";
   }
 

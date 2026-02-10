@@ -192,10 +192,11 @@ export class WfcCurrentWeather extends LitElement {
   }
 
   private onAction = (event: ActionHandlerEvent): void => {
-    const config = this.config.temperature_entity
+    const temperatureEntity = this.config.current?.temperature_entity;
+    const config = temperatureEntity
       ? {
           ...this.config,
-          entity: this.config.temperature_entity,
+          entity: temperatureEntity,
         }
       : this.config;
 
@@ -203,8 +204,9 @@ export class WfcCurrentWeather extends LitElement {
   };
 
   private getTemperature(): string | null {
-    if (this.config?.temperature_entity) {
-      const tempEntity = this.hass.states[this.config.temperature_entity];
+    const temperatureEntity = this.config.current?.temperature_entity;
+    if (temperatureEntity) {
+      const tempEntity = this.hass.states[temperatureEntity];
       if (tempEntity) {
         return formatTemperature(
           this.hass,

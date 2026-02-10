@@ -100,6 +100,7 @@ export interface WeatherForecastCardCurrentConfig {
     | (CurrentWeatherAttributes | CurrentWeatherAttributeConfig)[];
   temperature_precision?: number;
   secondary_info_attribute?: CurrentWeatherAttributes;
+  temperature_entity?: string;
 }
 
 export interface WeatherForecastCardForecastActionConfig {
@@ -112,6 +113,7 @@ export interface WeatherForecastCardConfig {
   type: "custom:weather-forecast-card";
   entity: string;
   name?: string;
+  /** @deprecated Use `current.temperature_entity` instead */
   temperature_entity?: string;
   show_current?: boolean;
   show_forecast?: boolean;

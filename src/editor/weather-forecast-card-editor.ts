@@ -126,13 +126,6 @@ export class WeatherForecastCardEditor
         optional: true,
       },
       {
-        name: "temperature_entity",
-        selector: {
-          entity: { domain: "sensor", device_class: "temperature" },
-        },
-        optional: true,
-      },
-      {
         name: "forecast_mode",
         default: "show_both",
         selector: {
@@ -201,6 +194,13 @@ export class WeatherForecastCardEditor
 
   private _currentWeatherSchema = (localize: LocalizeFunc): HaFormSchema[] =>
     [
+      {
+        name: "current.temperature_entity",
+        selector: {
+          entity: { domain: "sensor", device_class: "temperature" },
+        },
+        optional: true,
+      },
       {
         name: "current.show_attributes",
         default: false,
@@ -564,7 +564,7 @@ export class WeatherForecastCardEditor
         ).toLocaleLowerCase()})`;
       case "name":
         return this.hass.localize("ui.panel.lovelace.editor.card.generic.name");
-      case "temperature_entity":
+      case "current.temperature_entity":
         return `${this.hass!.localize("ui.card.weather.attributes.temperature")} ${(
           this.hass!.localize("ui.panel.lovelace.editor.card.generic.entity") ||
           "entity"
@@ -648,7 +648,7 @@ export class WeatherForecastCardEditor
 
   private _computeHelper = (schema: HaFormSchema): string | undefined => {
     switch (schema.name) {
-      case "temperature_entity":
+      case "current.temperature_entity":
         return "Optional temperature sensor entity to override the weather entity's temperature.";
       case "default_forecast":
         return "Select the default forecast type to show when forecasts are enabled. Users can still toggle between hourly and daily forecasts if both are available.";

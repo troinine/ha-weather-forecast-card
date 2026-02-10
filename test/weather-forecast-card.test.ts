@@ -387,6 +387,59 @@ describe("weather-forecast-card", () => {
         "temperature_precision must be 0 or greater and at most 2"
       );
     });
+
+    it("should migrate root-level temperature_entity to current.temperature_entity", () => {
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        temperature_entity: "sensor.outdoor_temp",
+      };
+
+      card.setConfig(config);
+
+      // @ts-expect-error: accessing private property
+      expect(card.config.current?.temperature_entity).toBe(
+        "sensor.outdoor_temp"
+      );
+    });
+
+    it("should prefer current.temperature_entity over root-level temperature_entity", () => {
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        temperature_entity: "sensor.legacy_temp",
+        current: {
+          temperature_entity: "sensor.current_temp",
+        },
+      };
+
+      card.setConfig(config);
+
+      // @ts-expect-error: accessing private property
+      expect(card.config.current?.temperature_entity).toBe(
+        "sensor.current_temp"
+      );
+    });
+
+    it("should not override existing current config when migrating temperature_entity", () => {
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        temperature_entity: "sensor.outdoor_temp",
+        current: {
+          temperature_precision: 1,
+        },
+      };
+
+      card.setConfig(config);
+
+      // @ts-expect-error: accessing private property
+      expect(card.config.current?.temperature_entity).toBe(
+        "sensor.outdoor_temp"
+      );
+      // @ts-expect-error: accessing private property
+      expect(card.config.current?.temperature_precision).toBe(1);
+    });
   });
 
   describe("reconnection and popup scenarios", () => {

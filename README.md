@@ -74,7 +74,6 @@ resources:
 | `type`                   | `string`          | **Required** | `custom:weather-forecast-card`                                                                                                                                                    |
 | `entity`                 | `string`          | **Required** | The weather entity id (e.g., `weather.home`).                                                                                                                                     |
 | `name`                   | `string`          | optional     | Custom name to display. Defaults to the entity's friendly name.                                                                                                                   |
-| `temperature_entity`     | `string`          | optional     | Bring your own temperature entity to override the temperature from the main weather `entity`.                                                                                     |
 | `show_current`           | `boolean`         | `true`       | Show current weather conditions.                                                                                                                                                  |
 | `show_forecast`          | `boolean`         | `true`       | Show forecast section.                                                                                                                                                            |
 | `default_forecast`       | `string`          | `daily`      | Default forecast to view (`daily` or `hourly`).                                                                                                                                   |
@@ -93,6 +92,7 @@ The `current` object controls the display of current weather information and att
 
 | Name                       | Type                       | Default  | Description                                                                                                                                                                                                                                                                                                                                                |
 | :------------------------- | :------------------------- | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `temperature_entity`       | `string`                   | optional | Bring your own temperature entity to override the temperature from the main weather `entity`.                                                                                                                                                                                                                                                              |
 | `show_attributes`          | `boolean`/`string`/`array` | optional | Display weather attributes below current conditions. Set to `true` to show all available attributes, `false` to hide all, a single attribute name (e.g., `"humidity"`), or an array of attribute names or objects. See [Custom Attribute Entities](#custom-attribute-entities) for advanced configuration.                                                 |
 | `secondary_info_attribute` | `string`                   | optional | Controls which secondary info is displayed below current temperature. Supports all available weather attributes. If not set, or if the given attribute is not available in the weather entity, it will default to temperature extrema (high/low) if available, if not available then `precipitation` and if precipitation isn't available then `humidity`. |
 | `temperature_precision`    | `number`                   | optional | Number of decimal places to display for temperature values (0-2). Applies to current temperature, high/low temperatures, and temperature-related attributes like dew point and apparent temperature.                                                                                                                                                       |
@@ -115,7 +115,7 @@ The `current` object controls the display of current weather information and att
 
 #### Custom Attribute Entities
 
-Similar to the `temperature_entity` option for current temperature, you can override individual attribute values with custom sensor entities. This is useful when your weather integration doesn't provide certain attributes or when you have more accurate local sensors.
+Similar to the `temperature_entity` option, you can override individual attribute values with custom sensor entities. This is useful when your weather integration doesn't provide certain attributes or when you have more accurate local sensors.
 
 **Object format for attributes:**
 
@@ -352,39 +352,39 @@ The card can be customized using Home Assistant theme variables. Most colors, si
 
 Add these variables to your Home Assistant theme to customize the card's appearance:
 
-| Variable Name                                           | Default                                | Description                                                                           |
-| :------------------------------------------------------ | :------------------------------------- | :------------------------------------------------------------------------------------ |
-| `weather-forecast-card-wind-low-color`                  | `var(--success-color, #43a047)`        | Wind indicator color for low wind speeds                                              |
-| `weather-forecast-card-wind-medium-color`               | `var(--warning-color, #ffa600)`        | Wind indicator color for medium wind speeds                                           |
-| `weather-forecast-card-wind-high-color`                 | `var(--error-color, #db4437)`          | Wind indicator color for high wind speeds                                             |
-| `weather-forecast-card-temp-cold-color`                 | `#2196f3`                              | Temperature color for cold conditions. Used when `use_color_thresholds` is `true`     |
-| `weather-forecast-card-temp-freezing-color`             | `#4fb3ff`                              | Temperature color for freezing conditions. Used when `use_color_thresholds` is `true` |
-| `weather-forecast-card-temp-chilly-color`               | `#ffeb3b`                              | Temperature color for chilly conditions. Used when `use_color_thresholds` is `true`   |
-| `weather-forecast-card-temp-mild-color`                 | `#4caf50`                              | Temperature color for mild conditions. Used when `use_color_thresholds` is `true`     |
-| `weather-forecast-card-temp-warm-color`                 | `#ff9800`                              | Temperature color for warm conditions. Used when `use_color_thresholds` is `true`     |
-| `weather-forecast-card-temp-hot-color`                  | `#f44336`                              | Temperature color for hot conditions. Used when `use_color_thresholds` is `true`      |
-| `weather-forecast-card-chart-temp-low-line-color`       | `#2196f3`                              | Default chart line color for low temperature. Corresponds to `cold` threshold color.  |
-| `weather-forecast-card-chart-temp-high-line-color`      | `#ff9800`                              | Default chart line color for high temperature. Corresponds to `warm` threshold color. |
-| `weather-forecast-card-chart-humidity-line-color`       | `var(--cyan-color, #00bcd4)`           | Chart line color for humidity attribute in chart mode                                 |
-| `weather-forecast-card-chart-pressure-line-color`       | `var(--purple-color, #9c27b0)`         | Chart line color for pressure attribute in chart mode                                 |
+| Variable Name                                           | Default                                | Description                                                                                                                |
+| :------------------------------------------------------ | :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| `weather-forecast-card-wind-low-color`                  | `var(--success-color, #43a047)`        | Wind indicator color for low wind speeds                                                                                   |
+| `weather-forecast-card-wind-medium-color`               | `var(--warning-color, #ffa600)`        | Wind indicator color for medium wind speeds                                                                                |
+| `weather-forecast-card-wind-high-color`                 | `var(--error-color, #db4437)`          | Wind indicator color for high wind speeds                                                                                  |
+| `weather-forecast-card-temp-cold-color`                 | `#2196f3`                              | Temperature color for cold conditions. Used when `use_color_thresholds` is `true`                                          |
+| `weather-forecast-card-temp-freezing-color`             | `#4fb3ff`                              | Temperature color for freezing conditions. Used when `use_color_thresholds` is `true`                                      |
+| `weather-forecast-card-temp-chilly-color`               | `#ffeb3b`                              | Temperature color for chilly conditions. Used when `use_color_thresholds` is `true`                                        |
+| `weather-forecast-card-temp-mild-color`                 | `#4caf50`                              | Temperature color for mild conditions. Used when `use_color_thresholds` is `true`                                          |
+| `weather-forecast-card-temp-warm-color`                 | `#ff9800`                              | Temperature color for warm conditions. Used when `use_color_thresholds` is `true`                                          |
+| `weather-forecast-card-temp-hot-color`                  | `#f44336`                              | Temperature color for hot conditions. Used when `use_color_thresholds` is `true`                                           |
+| `weather-forecast-card-chart-temp-low-line-color`       | `#2196f3`                              | Default chart line color for low temperature. Corresponds to `cold` threshold color.                                       |
+| `weather-forecast-card-chart-temp-high-line-color`      | `#ff9800`                              | Default chart line color for high temperature. Corresponds to `warm` threshold color.                                      |
+| `weather-forecast-card-chart-humidity-line-color`       | `var(--cyan-color, #00bcd4)`           | Chart line color for humidity attribute in chart mode                                                                      |
+| `weather-forecast-card-chart-pressure-line-color`       | `var(--purple-color, #9c27b0)`         | Chart line color for pressure attribute in chart mode                                                                      |
 | `weather-forecast-card-chart-uv-bar-color`              | `var(--amber-color, #ffc107)`          | Fallback chart bar color for UV index when value is missing/unknown; normal UV bars use `weather-forecast-card-uv-*-color` |
-| `weather-forecast-card-uv-low-color`                    | `#289500`                              | UV index bar color for low risk level (0-2)                                           |
-| `weather-forecast-card-uv-moderate-color`               | `#f7e400`                              | UV index bar color for moderate risk level (3-5)                                      |
-| `weather-forecast-card-uv-high-color`                   | `#f85900`                              | UV index bar color for high risk level (6-7)                                          |
-| `weather-forecast-card-uv-very-high-color`              | `#d8001d`                              | UV index bar color for very high risk level (8-10)                                    |
-| `weather-forecast-card-uv-extreme-color`                | `#6b49c8`                              | UV index bar color for extreme risk level (11+)                                       |
-| `weather-forecast-card-chart-label-color`               | `var(--primary-text-color, #000)`      | Default color for chart labels                                                        |
-| `weather-forecast-card-chart-temp-high-label-color`     | `var(--chart-label-color)`             | Chart label color for high temperature                                                |
-| `weather-forecast-card-chart-temp-low-label-color`      | `var(--secondary-text-color, #9b9b9b)` | Chart label color for low temperature                                                 |
-| `weather-forecast-card-chart-precipitation-label-color` | `var(--chart-label-color)`             | Chart label color for precipitation                                                   |
-| `weather-forecast-card-chart-grid-color`                | Color mix 15% opaque text              | Chart grid line color                                                                 |
-| `weather-forecast-card-precipitation-bar-color`         | Color mix 40% blue                     | Precipitation bar color                                                               |
-| `weather-forecast-card-sunrise-color`                   | `var(--orange-color, #ff9800)`         | Sunrise time indicator color                                                          |
-| `weather-forecast-card-sunset-color`                    | `var(--purple-color, #926bc7)`         | Sunset time indicator color                                                           |
-| `weather-forecast-card-day-indicator-color`             | `#056bb8`                              | Background color for day indicator badge                                              |
-| `weather-forecast-card-day-indicator-text-color`        | `#ffffff`                              | Text color for day indicator badge                                                    |
-| `weather-forecast-card-current-conditions-icon-size`    | `64px`                                 | Size of the current weather condition icon                                            |
-| `weather-forecast-card-forecast-conditions-icon-size`   | `28px`                                 | Size of forecast weather condition icons                                              |
+| `weather-forecast-card-uv-low-color`                    | `#289500`                              | UV index bar color for low risk level (0-2)                                                                                |
+| `weather-forecast-card-uv-moderate-color`               | `#f7e400`                              | UV index bar color for moderate risk level (3-5)                                                                           |
+| `weather-forecast-card-uv-high-color`                   | `#f85900`                              | UV index bar color for high risk level (6-7)                                                                               |
+| `weather-forecast-card-uv-very-high-color`              | `#d8001d`                              | UV index bar color for very high risk level (8-10)                                                                         |
+| `weather-forecast-card-uv-extreme-color`                | `#6b49c8`                              | UV index bar color for extreme risk level (11+)                                                                            |
+| `weather-forecast-card-chart-label-color`               | `var(--primary-text-color, #000)`      | Default color for chart labels                                                                                             |
+| `weather-forecast-card-chart-temp-high-label-color`     | `var(--chart-label-color)`             | Chart label color for high temperature                                                                                     |
+| `weather-forecast-card-chart-temp-low-label-color`      | `var(--secondary-text-color, #9b9b9b)` | Chart label color for low temperature                                                                                      |
+| `weather-forecast-card-chart-precipitation-label-color` | `var(--chart-label-color)`             | Chart label color for precipitation                                                                                        |
+| `weather-forecast-card-chart-grid-color`                | Color mix 15% opaque text              | Chart grid line color                                                                                                      |
+| `weather-forecast-card-precipitation-bar-color`         | Color mix 40% blue                     | Precipitation bar color                                                                                                    |
+| `weather-forecast-card-sunrise-color`                   | `var(--orange-color, #ff9800)`         | Sunrise time indicator color                                                                                               |
+| `weather-forecast-card-sunset-color`                    | `var(--purple-color, #926bc7)`         | Sunset time indicator color                                                                                                |
+| `weather-forecast-card-day-indicator-color`             | `#056bb8`                              | Background color for day indicator badge                                                                                   |
+| `weather-forecast-card-day-indicator-text-color`        | `#ffffff`                              | Text color for day indicator badge                                                                                         |
+| `weather-forecast-card-current-conditions-icon-size`    | `64px`                                 | Size of the current weather condition icon                                                                                 |
+| `weather-forecast-card-forecast-conditions-icon-size`   | `28px`                                 | Size of forecast weather condition icons                                                                                   |
 
 > [!NOTE]
 > **Chart attribute colors:** When visualizing UV index with `chart` mode, the bar groupings follow the Global Solar UV Index (UVI) risk categories (0–2, 3–5, 6–7, 8–10, 11+). The default bar colors are theme-configurable values (see the table above) and are not an official WHO color standard.

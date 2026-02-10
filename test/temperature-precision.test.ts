@@ -178,8 +178,8 @@ describe("temperature_precision", () => {
       const config: WeatherForecastCardConfig = {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
-        temperature_entity: "sensor.outdoor_temp",
         current: {
+          temperature_entity: "sensor.outdoor_temp",
           temperature_precision: 1,
         },
       };
@@ -213,8 +213,8 @@ describe("temperature_precision", () => {
       const config: WeatherForecastCardConfig = {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
-        temperature_entity: "sensor.outdoor_temp",
         current: {
+          temperature_entity: "sensor.outdoor_temp",
           temperature_precision: 0,
         },
       };
