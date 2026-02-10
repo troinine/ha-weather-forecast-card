@@ -453,19 +453,19 @@ export class WeatherForecastCard extends LitElement {
       ? this._hourlyForecastData
       : this._dailyForecastData;
 
+    // Toggle between hourly and the effective daily type (daily or twice_daily)
+    const weatherEntity = this.hass?.states[this.config!.entity];
+    const effectiveDailyType = getDailyForecastType(weatherEntity) || "daily";
+
     // Don't toggle if the target forecast type has no data
     if (!targetForecastData || targetForecastData.length === 0) {
       logger.debug(
-        `Cannot toggle to ${willSwitchToHourly ? "hourly" : "daily"} forecast - no data available`
+        `Cannot toggle to ${willSwitchToHourly ? "hourly" : effectiveDailyType} forecast - no data available`
       );
       return;
     }
 
-    // Toggle between hourly and the effective daily type (daily or twice_daily)
-    const weatherEntity = this.hass?.states[this.config!.entity];
-    this._currentForecastType = isInDailyLikeView
-      ? "hourly"
-      : getDailyForecastType(weatherEntity) || "daily";
+    this._currentForecastType = isInDailyLikeView ? "hourly" : effectiveDailyType;
 
     if (!selectedForecast || !this.config?.forecast?.scroll_to_selected) {
       return;
