@@ -1,6 +1,11 @@
 import { LitElement, html, TemplateResult, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { mdiClose, mdiTune } from "@mdi/js";
+import {
+  mdiClose,
+  mdiTune,
+  mdiWeatherSunsetDown,
+  mdiWeatherSunsetUp,
+} from "@mdi/js";
 
 /**
  * Mock component for ha-icon
@@ -14,6 +19,8 @@ export class HaIcon extends LitElement {
   private iconMap: { [key: string]: string } = {
     "mdi:tune": mdiTune,
     "mdi:close": mdiClose,
+    "mdi:weather-sunset-up": mdiWeatherSunsetUp,
+    "mdi:weather-sunset-down": mdiWeatherSunsetDown,
   };
 
   protected createRenderRoot() {
