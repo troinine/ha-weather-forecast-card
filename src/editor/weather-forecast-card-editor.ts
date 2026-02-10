@@ -715,6 +715,9 @@ export class WeatherForecastCardEditor
 
     const newConfig = moveDottedKeysToNested(config);
 
+    // Remove legacy root-level temperature_entity (now under current.temperature_entity)
+    delete newConfig.temperature_entity;
+
     if (newConfig?.forecast?.extra_attribute === "none") {
       delete newConfig.forecast.extra_attribute;
     }
@@ -834,6 +837,13 @@ const denormalizeConfig = (obj: Record<string, any>) => {
       : result.show_current
         ? "show_current"
         : "show_forecast";
+
+  // Migrate legacy root-level temperature_entity to current.temperature_entity
+  // Prefer current.temperature_entity if both are defined
+  if (result.temperature_entity && !result["current.temperature_entity"]) {
+    result["current.temperature_entity"] = result.temperature_entity;
+  }
+  delete result.temperature_entity;
 
   if (result.show_condition_effects === true) {
     result.show_condition_effects = [...WEATHER_EFFECTS];
