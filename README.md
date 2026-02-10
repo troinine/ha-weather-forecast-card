@@ -115,7 +115,7 @@ The `current` object controls the display of current weather information and att
 
 #### Custom Attribute Entities
 
-Similar to the `temperature_entity` option, you can override individual attribute values with custom sensor entities. This is useful when your weather integration doesn't provide certain attributes or when you have more accurate local sensors.
+Similar to the `current.temperature_entity` option, you can override individual attribute values with custom sensor entities. This is useful when your weather integration doesn't provide certain attributes or when you have more accurate local sensors.
 
 **Object format for attributes:**
 
