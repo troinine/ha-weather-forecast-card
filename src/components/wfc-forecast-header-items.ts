@@ -29,7 +29,6 @@ export class WfcForecastHeaderItems extends LitElement {
   @property({ attribute: false }) forecast!: ForecastAttribute;
   @property({ attribute: false }) forecastType!: ForecastType;
   @property({ attribute: false }) isTwiceDailyEntity = false;
-  @property({ attribute: false }) forecastIndex = 0;
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
   private suntimesInfo?: SuntimesInfo | null;
@@ -198,12 +197,10 @@ export class WfcForecastHeaderItems extends LitElement {
     const hourParts = formatHourParts(this.hass, displayDate);
 
     // For twice_daily entity, use two-row layout for consistency with daily view
-    // First row: weekday (first item only), empty for others
-    // Second row: hour
+    // Day indicators are rendered separately by the parent component
     if (this.isTwiceDailyEntity && !isAmPm) {
-      const isFirstItem = this.forecastIndex === 0;
       return {
-        label: isFirstItem ? formatDay(this.hass, this.forecast.datetime) : "",
+        label: "",
         secondaryLabel: hourParts.hour,
       };
     }

@@ -249,8 +249,8 @@ export class WfcForecastChart extends LitElement {
 
           <div class="wfc-forecast-chart-footer">
             ${forecast.map(
-              (item) => html`
-                <div class="wfc-forecast-slot">
+              (item, index) => html`
+                <div class="wfc-forecast-slot" data-index=${index}>
                   <wfc-forecast-info
                     .hass=${this.hass}
                     .weatherEntity=${this.weatherEntity}
@@ -831,13 +831,12 @@ export class WfcForecastChart extends LitElement {
       }
 
       parts.push(html`
-        <div class="wfc-forecast-slot">
+        <div class="wfc-forecast-slot" data-index=${index}>
           <wfc-forecast-header-items
             .hass=${this.hass}
             .forecast=${item}
             .forecastType=${this.forecastType}
             .isTwiceDailyEntity=${this.isTwiceDailyEntity}
-            .forecastIndex=${index}
             .config=${this.config}
           ></wfc-forecast-header-items>
         </div>

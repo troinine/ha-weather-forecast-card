@@ -79,7 +79,6 @@ export class WfcForecastSimple extends LitElement {
             .forecast=${forecast}
             .forecastType=${this.forecastType}
             .isTwiceDailyEntity=${this.isTwiceDailyEntity}
-            .forecastIndex=${index}
             .config=${this.config}
           ></wfc-forecast-header-items>
           <wfc-forecast-details
