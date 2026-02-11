@@ -449,7 +449,7 @@ The card uses Home Assistant's font size variables. You can customize these via 
 | `--ha-font-size-3xl` | `28px`  | Current weather conditions and temperature                                                      |
 | `--ha-font-size-xl`  | `20px`  | Current weather conditions and temperature (smaller screens), secondary info icon, chart header |
 | `--ha-font-size-l`   | `16px`  | Wind speed text in wind indicators                                                              |
-| `--ha-font-size-m`   | `14px`  | Condition text, forecast labels, current weather attributes, forecast primary time labels       |
+| `--ha-font-size-m`   | `14px`  | Forecast labels, current weather attributes, forecast primary time labels                       |
 | `--ha-font-size-s`   | `12px`  | Forecast secondary time labels, simple forecast precipitation amount                            |
 
 **Theme example:**
