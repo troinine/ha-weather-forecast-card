@@ -490,7 +490,7 @@ card_mod:
   style: |
     ha-card {
       /* Make simple forecast items wider to avoid text overflow */
-      --forecast-item-width: 70;
+      --forecast-item-width: 70px;
     }
     /* Affects only font sizes in the current weather section */
     .wfc-current-weather {
