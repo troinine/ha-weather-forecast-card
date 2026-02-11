@@ -438,6 +438,76 @@ my-custom-theme:
 > [!NOTE]
 > These variables are applied through Home Assistant's theme system. Make sure to reload your theme after making changes.
 
+### Adjusting Font Sizes
+
+The card uses Home Assistant's font size variables. You can customize these via your theme or using [card-mod](https://github.com/thomasloven/lovelace-card-mod).
+
+**Available font size variables:**
+
+| Variable             | Default | Used For                                                                                        |
+| :------------------- | :------ | :---------------------------------------------------------------------------------------------- |
+| `--ha-font-size-3xl` | `28px`  | Current weather conditions and temperature                                                      |
+| `--ha-font-size-xl`  | `20px`  | Current weather conditions and temperature (smaller screens), secondary info icon, chart header |
+| `--ha-font-size-l`   | `16px`  | Wind speed text in wind indicators                                                              |
+| `--ha-font-size-m`   | `14px`  | Condition text, forecast labels, current weather attributes, forecast primary time labels       |
+| `--ha-font-size-s`   | `12px`  | Forecast secondary time labels, simple forecast precipitation amount                            |
+
+**Theme example:**
+
+```yaml
+my-custom-theme:
+  # Adjust font sizes globally for all cards
+  ha-font-size-3xl: 32px
+  ha-font-size-l: 18px
+```
+
+**Card-mod example:**
+
+Configure font size for all elements:
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+card_mod:
+  style: |
+    ha-card {
+      /* Larger current conditions and temperature */
+      --ha-font-size-3xl: 38px;
+      --ha-font-size-xl: 30px;
+      /* Larger forecast temperatures (simple mode) */
+      --ha-font-size-m: 16px;
+      /* Make simple forecast items wider to avoid text overflow */
+      --forecast-item-width: 75px;
+    }
+```
+
+Or if you want more granular control:
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+card_mod:
+  style: |
+    ha-card {
+      /* Make simple forecast items wider to avoid text overflow */
+      --forecast-item-width: 70;
+    }
+    /* Affects only font sizes in the current weather section */
+    .wfc-current-weather {
+      /* Larger current conditions and temperature */
+      --ha-font-size-3xl: 38px;
+      --ha-font-size-xl: 30px;
+    }
+    /* Affects only forecast section */
+    .wfc-forecast {
+      /* Forecast header and temperatures font (simple mode) */
+      --ha-font-size-m: 20px;
+    }
+```
+
+> [!NOTE]
+> Chart labels use a dedicated variable `weather-forecast-card-chart-font-size` (default `12px`) which can be set via themes. See the [Theme Variables](#theme-variables) table above.
+
 ## License
 
 This repo is [MIT Licensed](LICENSE)
