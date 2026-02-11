@@ -94,7 +94,7 @@
   --fade-width: 15px;
   --forecast-conditions-icon-size: var(
     --weather-forecast-card-forecast-conditions-icon-size,
-    28px
+    40px
   );
   --current-conditions-icon-size: var(
     --weather-forecast-card-current-conditions-icon-size,
