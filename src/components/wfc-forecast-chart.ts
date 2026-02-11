@@ -79,6 +79,15 @@ const MAX_CANVAS_WIDTH = 16384;
 // If the label value is longer than this, only render every second label to avoid clutter.
 const MIN_RENDER_EVERY_SECOND_LABEL = 6;
 
+// Default chart font size in pixels. Used as a baseline for scaling other dimensions and offsets in the chart.
+const DEFAULT_CHART_FONT_SIZE = 12;
+
+// Default padding for top and bottom of the chart, used as a baseline for scaling based on font size.
+const DEFAULT_CHART_PADDING = 10;
+
+// Default chart height in pixels at the baseline font size, used as a reference for scaling the chart height dynamically.
+const DEFAULT_CHART_HEIGHT = 130;
+
 /**
  * A chart component to display weather forecast data.
  *
@@ -158,6 +167,11 @@ export class WfcForecastChart extends LitElement {
 
     const count = forecast.length;
     const gaps = Math.max(count - 1, 0);
+    const fontSize = this._getChartFontSize();
+
+    // Adjust chart height based on font size (base: 130px at default font size)
+    const chartHeight =
+      DEFAULT_CHART_HEIGHT + Math.max(0, fontSize - DEFAULT_CHART_FONT_SIZE);
 
     const totalWidthCalc = `calc(${count} * var(--forecast-item-width) + ${gaps} * var(--forecast-item-gap))`;
 
@@ -174,6 +188,7 @@ export class WfcForecastChart extends LitElement {
       width: "calc(var(--wfc-forecast-chart-width) + var(--forecast-item-gap))",
       marginLeft: "calc(var(--forecast-item-gap) / -2)",
       display: "block",
+      height: `${chartHeight}px`,
     };
 
     return html`
@@ -319,19 +334,48 @@ export class WfcForecastChart extends LitElement {
     this._chart.update("none");
   }
 
+  private _getChartFontSize(): number {
+    const style = getComputedStyle(this);
+    const fontSizeStyle = style.getPropertyValue("--wfc-chart-font-size");
+    if (fontSizeStyle) {
+      const parsedFontSize = parseFloat(fontSizeStyle);
+      if (!isNaN(parsedFontSize)) {
+        return parsedFontSize;
+      }
+    }
+    return DEFAULT_CHART_FONT_SIZE;
+  }
+
+  private _getBarLabelOffset(): number {
+    const fontSize = this._getChartFontSize();
+    return -22 - (fontSize - DEFAULT_CHART_FONT_SIZE);
+  }
+
   private getChartConfig(): ChartConfiguration {
     const data = this.safeForecast;
     const style = getComputedStyle(this);
     const gridColor = style.getPropertyValue("--wfc-chart-grid-color");
+    const fontSize = this._getChartFontSize();
+
+    // Adjust bottom padding based on font size (base: 10 at default font size)
+    const bottomPadding =
+      DEFAULT_CHART_PADDING + (fontSize - DEFAULT_CHART_FONT_SIZE);
 
     const baseOptions: ChartOptions = {
       responsive: true,
       maintainAspectRatio: false,
+      plugins: {
+        datalabels: {
+          font: {
+            size: fontSize,
+          },
+        },
+      },
       layout: {
         autoPadding: false,
         padding: {
-          top: 10,
-          bottom: 10,
+          top: DEFAULT_CHART_PADDING,
+          bottom: bottomPadding,
           left: 0,
           right: 0,
         },
@@ -450,7 +494,7 @@ export class WfcForecastChart extends LitElement {
             datalabels: {
               anchor: "start",
               align: "end",
-              offset: -22,
+              offset: this._getBarLabelOffset(),
               color: precipLabelColor,
               formatter: (value: number) =>
                 formatPrecipitation(
@@ -545,7 +589,7 @@ export class WfcForecastChart extends LitElement {
             datalabels: {
               anchor: "start",
               align: "end",
-              offset: -22,
+              offset: this._getBarLabelOffset(),
               color: labelColor,
             },
           },

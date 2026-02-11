@@ -69,6 +69,7 @@
   --wfc-uv-high: var(--weather-forecast-card-uv-high-color, #f85900);
   --wfc-uv-very-high: var(--weather-forecast-card-uv-very-high-color, #d8001d);
   --wfc-uv-extreme: var(--weather-forecast-card-uv-extreme-color, #6b49c8);
+  --wfc-chart-font-size: var(--weather-forecast-card-chart-font-size, 12);
   --wfc-sunrise-color: var(
     --weather-forecast-card-sunrise-color,
     var(--orange-color, #ff9800)

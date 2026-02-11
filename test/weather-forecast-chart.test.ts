@@ -649,7 +649,9 @@ describe("weather-forecast-card chart", () => {
       expect(settingsButton).not.toBeNull();
 
       // Initially dropdown should not be visible
-      let dropdown = chartElement!.querySelector("wfc-chart-attribute-selector");
+      let dropdown = chartElement!.querySelector(
+        "wfc-chart-attribute-selector"
+      );
       expect(dropdown).not.toBeNull();
       // @ts-expect-error: open is a property
       expect(dropdown!.open).toBe(false);
@@ -677,7 +679,9 @@ describe("weather-forecast-card chart", () => {
       await chartElement.updateComplete;
 
       // Simulate attribute selection
-      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
+      const dropdown = chartElement.querySelector(
+        "wfc-chart-attribute-selector"
+      );
       expect(dropdown).not.toBeNull();
 
       dropdown!.dispatchEvent(
@@ -712,7 +716,9 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
+      const dropdown = chartElement.querySelector(
+        "wfc-chart-attribute-selector"
+      );
       dropdown!.dispatchEvent(
         new CustomEvent("selected", { detail: { value: "pressure" } })
       );
@@ -741,7 +747,9 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
+      const dropdown = chartElement.querySelector(
+        "wfc-chart-attribute-selector"
+      );
       dropdown!.dispatchEvent(
         new CustomEvent("selected", { detail: { value: "uv_index" } })
       );
@@ -773,7 +781,9 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
+      const dropdown = chartElement.querySelector(
+        "wfc-chart-attribute-selector"
+      );
       dropdown!.dispatchEvent(
         new CustomEvent("selected", {
           detail: { value: "apparent_temperature" },
@@ -804,7 +814,9 @@ describe("weather-forecast-card chart", () => {
       chartElement.forecast = forecastWithAllAttributes;
       await chartElement.updateComplete;
 
-      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
+      const dropdown = chartElement.querySelector(
+        "wfc-chart-attribute-selector"
+      );
 
       // First switch to humidity
       dropdown!.dispatchEvent(
@@ -854,9 +866,7 @@ describe("weather-forecast-card chart", () => {
 
       // Should include temperature_and_precipitation, humidity, pressure
       // but not uv_index since it's not in the forecast data
-      const optionValues = options.map(
-        (o: { value: string }) => o.value
-      );
+      const optionValues = options.map((o: { value: string }) => o.value);
       expect(optionValues).toContain("temperature_and_precipitation");
       expect(optionValues).toContain("humidity");
       expect(optionValues).toContain("pressure");
@@ -880,7 +890,9 @@ describe("weather-forecast-card chart", () => {
       settingsButton.click();
       await chartElement.updateComplete;
 
-      const dropdown = chartElement!.querySelector("wfc-chart-attribute-selector");
+      const dropdown = chartElement!.querySelector(
+        "wfc-chart-attribute-selector"
+      );
       // @ts-expect-error: open is a property
       expect(dropdown!.open).toBe(true);
 
@@ -1057,7 +1069,9 @@ describe("weather-forecast-card chart", () => {
       expect(chartInstance!.config.type).toBe("bar");
 
       // Switch to temperature_and_precipitation
-      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
+      const dropdown = chartElement.querySelector(
+        "wfc-chart-attribute-selector"
+      );
       dropdown!.dispatchEvent(
         new CustomEvent("selected", {
           detail: { value: "temperature_and_precipitation" },
@@ -1094,7 +1108,9 @@ describe("weather-forecast-card chart", () => {
       expect(chartInstance!.config.type).toBe("line");
 
       // Switch to uv_index
-      const dropdown = chartElement.querySelector("wfc-chart-attribute-selector");
+      const dropdown = chartElement.querySelector(
+        "wfc-chart-attribute-selector"
+      );
       dropdown!.dispatchEvent(
         new CustomEvent("selected", {
           detail: { value: "uv_index" },
@@ -1107,6 +1123,172 @@ describe("weather-forecast-card chart", () => {
       // After switching, chart should be bar type
       expect(chartInstance!.config.type).toBe("bar");
       expect(chartInstance!.data.datasets.length).toBe(1);
+    });
+  });
+
+  describe("chart font size", () => {
+    it("should use default font size of 12 when CSS variable is not set", async () => {
+      const { card } = await createCardFixture();
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      // @ts-expect-error: _getChartFontSize is private
+      const fontSize = chartElement._getChartFontSize();
+      expect(fontSize).toBe(12);
+    });
+
+    it("should use custom font size from CSS variable", async () => {
+      const { card } = await createCardFixture(
+        {},
+        { "--wfc-chart-font-size": "16" }
+      );
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      // @ts-expect-error: _getChartFontSize is private
+      const fontSize = chartElement._getChartFontSize();
+      expect(fontSize).toBe(16);
+    });
+
+    it("should parse font size with px suffix", async () => {
+      const { card } = await createCardFixture(
+        {},
+        { "--wfc-chart-font-size": "14px" }
+      );
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      // @ts-expect-error: _getChartFontSize is private
+      const fontSize = chartElement._getChartFontSize();
+      expect(fontSize).toBe(14);
+    });
+
+    it("should apply font size to chart datalabels", async () => {
+      const { chart } = await createCardFixture(
+        {},
+        { "--wfc-chart-font-size": "16" }
+      );
+
+      const pluginOptions = chart.options.plugins?.datalabels;
+      expect(pluginOptions?.font?.size).toBe(16);
+    });
+
+    it("should scale bottom padding with font size", async () => {
+      // Default font size 12 should have bottom padding 10
+      const { chart: defaultChart } = await createCardFixture();
+      // @ts-expect-error: layout type
+      expect(defaultChart.options.layout?.padding?.bottom).toBe(10);
+
+      // Font size 16 should have bottom padding 14 (10 + (16 - 12))
+      const { chart: largerChart } = await createCardFixture(
+        {},
+        { "--wfc-chart-font-size": "16" }
+      );
+      // @ts-expect-error: layout type
+      expect(largerChart.options.layout?.padding?.bottom).toBe(14);
+    });
+
+    it("should keep top padding fixed at 10 regardless of font size", async () => {
+      const { chart: defaultChart } = await createCardFixture();
+      // @ts-expect-error: layout type
+      expect(defaultChart.options.layout?.padding?.top).toBe(10);
+
+      const { chart: largerChart } = await createCardFixture(
+        {},
+        { "--wfc-chart-font-size": "16" }
+      );
+      // @ts-expect-error: layout type
+      expect(largerChart.options.layout?.padding?.top).toBe(10);
+    });
+
+    it("should scale bar label offset with font size", async () => {
+      const { card } = await createCardFixture(
+        {},
+        { "--wfc-chart-font-size": "16" }
+      );
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      // @ts-expect-error: _getBarLabelOffset is private
+      const offset = chartElement._getBarLabelOffset();
+      // Base offset -22 at font size 12, so at font size 16: -22 - (16 - 12) = -26
+      expect(offset).toBe(-26);
+    });
+
+    it("should use default bar label offset of -22 at default font size", async () => {
+      const { card } = await createCardFixture();
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      // @ts-expect-error: _getBarLabelOffset is private
+      const offset = chartElement._getBarLabelOffset();
+      expect(offset).toBe(-22);
+    });
+
+    it("should apply bar label offset to precipitation dataset", async () => {
+      const { chart } = await createCardFixture(
+        {},
+        { "--wfc-chart-font-size": "16" }
+      );
+
+      // Dataset 2 is precipitation (bar chart)
+      const precipDataset = chart.data.datasets[2];
+      // @ts-expect-error: datalabels type
+      expect(precipDataset.datalabels?.offset).toBe(-26);
+    });
+
+    it("should scale chart container height with font size", async () => {
+      // Test with default font size (12)
+      const { card: defaultCard } = await createCardFixture();
+      const defaultChartElement = defaultCard.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+      const defaultContainer = defaultChartElement.querySelector(
+        ".wfc-forecast-chart"
+      ) as HTMLElement;
+      const defaultHeight = parseInt(defaultContainer.style.height);
+
+      // Test with larger font size
+      const { card: largerCard } = await createCardFixture(
+        {},
+        { "--wfc-chart-font-size": "16" }
+      );
+      const largerChartElement = largerCard.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      const largerContainer = largerChartElement.querySelector(
+        ".wfc-forecast-chart"
+      ) as HTMLElement;
+      const largerHeight = parseInt(largerContainer.style.height);
+
+      // Height should increase when font size increases
+      // (exact value depends on when HappyDOM applies computed styles)
+      expect(largerHeight).toBeGreaterThan(defaultHeight);
+    });
+
+    it("should use default chart height of 130px at default font size", async () => {
+      const { card } = await createCardFixture();
+
+      const chartElement = card.shadowRoot!.querySelector(
+        "wfc-forecast-chart"
+      ) as WfcForecastChart;
+
+      const chartContainer = chartElement.querySelector(
+        ".wfc-forecast-chart"
+      ) as HTMLElement;
+
+      expect(chartContainer.style.height).toBe("130px");
     });
   });
 });
