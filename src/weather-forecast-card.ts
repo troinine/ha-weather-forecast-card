@@ -56,6 +56,8 @@ const DEFAULT_CONFIG: Partial<WeatherForecastCardConfig> = {
   forecast: {
     mode: ForecastMode.Simple,
     show_sun_times: true,
+    use_color_thresholds: true,
+    scroll_to_selected: true,
   },
   forecast_action: {
     tap_action: { action: "toggle-forecast" },

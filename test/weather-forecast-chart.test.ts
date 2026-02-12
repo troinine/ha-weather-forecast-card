@@ -261,7 +261,10 @@ describe("weather-forecast-card chart", () => {
       "--wfc-precipitation-bar-color": testColors.precipBar,
     };
 
-    const { chart } = await createCardFixture({}, styles);
+    const { chart } = await createCardFixture(
+      { forecast: { mode: ForecastMode.Chart, use_color_thresholds: false } },
+      styles
+    );
 
     const datasets = chart.data.datasets;
 
@@ -354,8 +357,11 @@ describe("weather-forecast-card chart", () => {
     expect(scrollContainer.scrollLeft).toBeGreaterThan(0);
   });
 
-  it("should use non-dashed line for low temperature by default", async () => {
-    const datasets = chart.data.datasets;
+  it("should use non-dashed line for low temperature when use_color_thresholds is false", async () => {
+    const { chart: chartWithoutThresholds } = await createCardFixture({
+      forecast: { mode: ForecastMode.Chart, use_color_thresholds: false },
+    });
+    const datasets = chartWithoutThresholds.data.datasets;
     // @ts-expect-error: borderDash is defined
     expect(datasets[0].borderDash).toBeUndefined();
     // @ts-expect-error: borderDash is defined
