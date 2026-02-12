@@ -312,7 +312,7 @@ export class WeatherForecastCardEditor
       {
         name: "forecast.scroll_to_selected",
         selector: { boolean: {} },
-        default: false,
+        default: true,
         optional: true,
       },
       {
@@ -324,7 +324,7 @@ export class WeatherForecastCardEditor
       {
         name: "forecast.use_color_thresholds",
         selector: { boolean: {} },
-        default: false,
+        default: true,
         optional: true,
       },
       {
