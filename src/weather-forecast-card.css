@@ -44,13 +44,14 @@
     --weather-forecast-card-chart-precipitation-label-color,
     var(--wfc-chart-label-color)
   );
+  /* Fallbacks for iOS 15 / Safari 15 (no color-mix support) */
   --wfc-chart-grid-color: var(
     --weather-forecast-card-chart-grid-color,
-    color-mix(in srgb, var(--primary-text-color, #000) 15%, transparent)
+    rgba(0, 0, 0, 0.15)
   );
   --wfc-precipitation-bar-color: var(
     --weather-forecast-card-precipitation-bar-color,
-    color-mix(in srgb, var(--blue-color, #2196f3) 40%, transparent)
+    rgba(33, 150, 243, 0.4)
   );
   --wfc-chart-humidity-line-color: var(
     --weather-forecast-card-chart-humidity-line-color,
@@ -102,6 +103,20 @@
     64px
   );
   --indicator-width: 20px;
+}
+
+/* Modern browsers with color-mix support */
+@supports (color: color-mix(in srgb, red, blue)) {
+  :host {
+    --wfc-chart-grid-color: var(
+      --weather-forecast-card-chart-grid-color,
+      color-mix(in srgb, var(--primary-text-color, #000) 15%, transparent)
+    );
+    --wfc-precipitation-bar-color: var(
+      --weather-forecast-card-precipitation-bar-color,
+      color-mix(in srgb, var(--blue-color, #2196f3) 40%, transparent)
+    );
+  }
 }
 
 ha-card {
@@ -564,6 +579,15 @@ wfc-weather-condition-icon-provider {
   display: contents;
 }
 
+/* Fallback for browsers without container query support */
+@media (max-width: 375px) {
+  .wfc-current-state,
+  .wfc-current-temperature {
+    font-size: var(--ha-font-size-xl);
+  }
+}
+
+/* Modern browsers with container query support */
 @container wfc-container (max-width: 375px) {
   .wfc-current-state,
   .wfc-current-temperature {

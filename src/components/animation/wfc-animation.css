@@ -9,8 +9,9 @@
     --weather-forecast-card-effects-sky-visibility,
     visible
   );
-  --drop-color-start: color-mix(in srgb, var(--rain-color), transparent 100%);
-  --drop-color-end: color-mix(in srgb, var(--rain-color), transparent 40%);
+  /* Fallbacks for iOS 15 / Safari 15 (no color-mix support) */
+  --drop-color-start: transparent;
+  --drop-color-end: var(--rain-color);
   --drop-height: var(--weather-forecast-card-effects-drop-height, 20px);
   --drop-start-pos-diff-y: 50px;
   --snow-glow-color: var(--snow-color);
@@ -109,6 +110,14 @@
     --weather-forecast-card-effects-clear-night-horizon,
     rgba(40, 25, 100, 0.4)
   );
+}
+
+/* Modern browsers with color-mix support */
+@supports (color: color-mix(in srgb, red, blue)) {
+  :host {
+    --drop-color-start: color-mix(in srgb, var(--rain-color), transparent 100%);
+    --drop-color-end: color-mix(in srgb, var(--rain-color), transparent 40%);
+  }
 }
 
 .snowflake-path {
