@@ -47,7 +47,7 @@
   /* Fallbacks for iOS 15 / Safari 15 (no color-mix support) */
   --wfc-chart-grid-color: var(
     --weather-forecast-card-chart-grid-color,
-    rgba(0, 0, 0, 0.15)
+    rgba(var(--rgb-primary-text-color, 0, 0, 0), 0.15)
   );
   --wfc-precipitation-bar-color: var(
     --weather-forecast-card-precipitation-bar-color,
