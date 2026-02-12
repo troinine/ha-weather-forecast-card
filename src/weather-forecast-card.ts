@@ -1,5 +1,5 @@
 import { merge } from "lodash-es";
-import { property, state } from "lit/decorators.js";
+import { property, query, state } from "lit/decorators.js";
 import { styles } from "./weather-forecast-card.styles";
 import { createWarningText, normalizeDate } from "./helpers";
 import { logger } from "./logger";
@@ -74,12 +74,13 @@ export class WeatherForecastCard extends LitElement {
   @state() private _currentItemWidth!: number;
   @state() private _currentForecastType: ForecastType = "daily";
   @state() private _isScrollable = false;
+  @query("ha-card") private _haCard?: HTMLElement;
+  @query(".wfc-forecast-container") private _forecastContainer?: HTMLElement;
 
   private _hourlyForecastData?: ForecastAttribute[];
   private _dailyForecastData?: ForecastAttribute[];
 
   private _minForecastItemWidth?: number;
-  private _forecastContainer?: HTMLElement | null = null;
   private _resizeObserver?: ResizeObserver | null = null;
 
   static styles = styles as CSSResultGroup;
@@ -164,7 +165,7 @@ export class WeatherForecastCard extends LitElement {
   public connectedCallback(): void {
     super.connectedCallback();
 
-    this._minForecastItemWidth = this.getInitialMinForecastItemWidth();
+    this._minForecastItemWidth = this.computeInitialMinForecastItemWidth();
     this.waitForLayout();
 
     if (this.hasUpdated && this.config && this.hass) {
@@ -303,12 +304,6 @@ export class WeatherForecastCard extends LitElement {
   private waitForLayout(): void {
     if (!this.isConnected) return;
 
-    if (!this._forecastContainer) {
-      this._forecastContainer = this.renderRoot?.querySelector(
-        ".wfc-forecast-container"
-      );
-    }
-
     const width = this._forecastContainer?.clientWidth || 0;
 
     // We may need to wait for the container to have width (e.g. popup open animation)
@@ -337,13 +332,16 @@ export class WeatherForecastCard extends LitElement {
     this.layoutForecastItems(this._forecastContainer.clientWidth);
   }
 
-  private getInitialMinForecastItemWidth(): number {
-    const computedStyle = getComputedStyle(this);
-    const itemWidth = computedStyle
-      .getPropertyValue("--forecast-item-width")
-      .trim();
+  private computeInitialMinForecastItemWidth(): number {
+    const style = getComputedStyle(this);
+    const minItemWidthSimple =
+      parseInt(style.getPropertyValue("--wfc-min-item-width-simple")) || 65;
+    const minItemWidthChart =
+      parseInt(style.getPropertyValue("--wfc-min-item-width-chart")) || 55;
 
-    return parseInt(itemWidth || "60", 10);
+    return this.config?.forecast?.mode === ForecastMode.Simple
+      ? minItemWidthSimple
+      : minItemWidthChart;
   }
 
   private processForecastData() {
@@ -351,7 +349,9 @@ export class WeatherForecastCard extends LitElement {
       return;
     }
 
-    const weatherEntity = this.hass!.states[this.config!.entity] as WeatherEntity;
+    const weatherEntity = this.hass!.states[
+      this.config!.entity
+    ] as WeatherEntity;
     const { attributes } = weatherEntity;
 
     if (!attributes) {
@@ -478,7 +478,9 @@ export class WeatherForecastCard extends LitElement {
       return;
     }
 
-    this._currentForecastType = isInDailyLikeView ? "hourly" : effectiveDailyType;
+    this._currentForecastType = isInDailyLikeView
+      ? "hourly"
+      : effectiveDailyType;
 
     if (!selectedForecast || !this.config?.forecast?.scroll_to_selected) {
       return;
@@ -647,7 +649,9 @@ export class WeatherForecastCard extends LitElement {
   }
 
   private layoutForecastItems(containerWidth: number) {
-    if (containerWidth <= 0 || !this._minForecastItemWidth) return;
+    if (containerWidth <= 0 || !this._minForecastItemWidth || !this._haCard) {
+      return;
+    }
 
     const items = this.getCurrentForecast();
 
@@ -668,8 +672,11 @@ export class WeatherForecastCard extends LitElement {
     this._currentItemWidth = calculatedItemWidth + gap;
     this._isScrollable = items.length > itemsPerView;
 
-    this.style.setProperty("--forecast-item-gap", `${gap}px`);
-    this.style.setProperty("--forecast-item-width", `${calculatedItemWidth}px`);
+    this._haCard.style.setProperty("--forecast-item-gap", `${gap}px`);
+    this._haCard.style.setProperty(
+      "--forecast-item-width",
+      `${calculatedItemWidth}px`
+    );
   }
 
   private haveWeatherUnitsChanged(changedProps: PropertyValues): boolean {

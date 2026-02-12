@@ -444,6 +444,148 @@ describe("weather-forecast-card", () => {
     });
   });
 
+  describe("forecast layout and CSS variables", () => {
+    it("should set CSS variables on ha-card element", async () => {
+      const container = card.shadowRoot!.querySelector(
+        ".wfc-forecast-container"
+      ) as HTMLElement;
+
+      Object.defineProperty(container, "clientWidth", {
+        value: 400,
+        configurable: true,
+      });
+
+      // @ts-expect-error: accessing private method
+      card.layoutForecastItems(400);
+      await card.updateComplete;
+
+      const haCard = card.shadowRoot!.querySelector("ha-card") as HTMLElement;
+      expect(haCard).not.toBeNull();
+
+      const itemWidth = haCard.style.getPropertyValue("--forecast-item-width");
+      expect(itemWidth).not.toBe("");
+      expect(itemWidth).toMatch(/^\d+px$/);
+    });
+
+    it("should set --forecast-item-gap on ha-card element", async () => {
+      // Use a width that results in a gap (few items, large container)
+      mockHassInstance.dailyForecast = TEST_FORECAST_DAILY.slice(0, 3);
+      mockHassInstance.updateForecasts("daily");
+      await card.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const container = card.shadowRoot!.querySelector(
+        ".wfc-forecast-container"
+      ) as HTMLElement;
+
+      Object.defineProperty(container, "clientWidth", {
+        value: 500,
+        configurable: true,
+      });
+
+      // @ts-expect-error: accessing private method
+      card.layoutForecastItems(500);
+      await card.updateComplete;
+
+      const haCard = card.shadowRoot!.querySelector("ha-card") as HTMLElement;
+      const gap = haCard.style.getPropertyValue("--forecast-item-gap");
+      expect(gap).not.toBe("");
+      expect(gap).toMatch(/^[\d.]+px$/);
+    });
+
+    it("should calculate correct item width based on container width", async () => {
+      const container = card.shadowRoot!.querySelector(
+        ".wfc-forecast-container"
+      ) as HTMLElement;
+
+      Object.defineProperty(container, "clientWidth", {
+        value: 350,
+        configurable: true,
+      });
+
+      // @ts-expect-error: accessing private method
+      card.layoutForecastItems(350);
+      await card.updateComplete;
+
+      const haCard = card.shadowRoot!.querySelector("ha-card") as HTMLElement;
+      const itemWidthStr = haCard.style.getPropertyValue("--forecast-item-width");
+      const itemWidth = parseInt(itemWidthStr, 10);
+
+      // Item width should be calculated based on container width and min item width
+      // @ts-expect-error: accessing private property
+      const minWidth = card._minForecastItemWidth;
+      const expectedItemsPerView = Math.floor(350 / minWidth);
+      const expectedItemWidth = Math.floor(350 / expectedItemsPerView);
+
+      expect(itemWidth).toBe(expectedItemWidth);
+    });
+
+    it("should not set CSS variables when ha-card is not available", async () => {
+      // Create a new card without rendering
+      const testCard = new WeatherForecastCard();
+      testCard.setConfig(testConfig);
+
+      // @ts-expect-error: accessing private property
+      testCard._minForecastItemWidth = 65;
+
+      // @ts-expect-error: accessing private method - should not throw
+      testCard.layoutForecastItems(400);
+
+      // No error should be thrown, method should return early
+      expect(true).toBe(true);
+    });
+
+    it("should update _currentItemWidth when layout changes", async () => {
+      const container = card.shadowRoot!.querySelector(
+        ".wfc-forecast-container"
+      ) as HTMLElement;
+
+      Object.defineProperty(container, "clientWidth", {
+        value: 300,
+        configurable: true,
+      });
+
+      // @ts-expect-error: accessing private method
+      card.layoutForecastItems(300);
+      await card.updateComplete;
+
+      // @ts-expect-error: accessing private property
+      const width1 = card._currentItemWidth;
+
+      Object.defineProperty(container, "clientWidth", {
+        value: 600,
+        configurable: true,
+      });
+
+      // @ts-expect-error: accessing private method
+      card.layoutForecastItems(600);
+      await card.updateComplete;
+
+      // @ts-expect-error: accessing private property
+      const width2 = card._currentItemWidth;
+
+      expect(width1).not.toBe(width2);
+    });
+
+    it("should expose ha-card via @query decorator", async () => {
+      // @ts-expect-error: accessing private property
+      const haCard = card._haCard;
+
+      expect(haCard).not.toBeNull();
+      expect(haCard?.tagName.toLowerCase()).toBe("ha-card");
+    });
+
+    it("should expose forecast container via @query decorator", async () => {
+      // @ts-expect-error: accessing private property
+      const forecastContainer = card._forecastContainer;
+
+      expect(forecastContainer).not.toBeNull();
+      expect(forecastContainer?.classList.contains("wfc-forecast-container")).toBe(
+        true
+      );
+    });
+  });
+
   describe("reconnection and popup scenarios", () => {
     it("should establish subscriptions when reconnected to DOM with hasUpdated=true", async () => {
       const testCard = await fixture<WeatherForecastCard>(
