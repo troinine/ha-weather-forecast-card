@@ -508,12 +508,15 @@ describe("weather-forecast-card", () => {
       await card.updateComplete;
 
       const haCard = card.shadowRoot!.querySelector("ha-card") as HTMLElement;
-      const itemWidthStr = haCard.style.getPropertyValue("--forecast-item-width");
+      const itemWidthStr = haCard.style.getPropertyValue(
+        "--forecast-item-width"
+      );
       const itemWidth = parseInt(itemWidthStr, 10);
 
       // Item width should be calculated based on container width and min item width
       // @ts-expect-error: accessing private property
       const minWidth = card._minForecastItemWidth;
+      // @ts-expect-error minWidth is not null.
       const expectedItemsPerView = Math.floor(350 / minWidth);
       const expectedItemWidth = Math.floor(350 / expectedItemsPerView);
 
@@ -580,9 +583,9 @@ describe("weather-forecast-card", () => {
       const forecastContainer = card._forecastContainer;
 
       expect(forecastContainer).not.toBeNull();
-      expect(forecastContainer?.classList.contains("wfc-forecast-container")).toBe(
-        true
-      );
+      expect(
+        forecastContainer?.classList.contains("wfc-forecast-container")
+      ).toBe(true);
     });
   });
 
