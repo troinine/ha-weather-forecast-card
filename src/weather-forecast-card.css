@@ -580,10 +580,12 @@ wfc-weather-condition-icon-provider {
 }
 
 /* Fallback for browsers without container query support */
-@media (max-width: 375px) {
-  .wfc-current-state,
-  .wfc-current-temperature {
-    font-size: var(--ha-font-size-xl, 20px);
+@supports not (container-type: inline-size) {
+  @media (max-width: 375px) {
+    .wfc-current-state,
+    .wfc-current-temperature {
+      font-size: var(--ha-font-size-xl, 20px);
+    }
   }
 }
 
