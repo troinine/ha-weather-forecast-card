@@ -2,6 +2,7 @@
   "name": "weather-forecast-card",
   "version": "1.1.0-devel",
   "description": "A TypeScript weather forecast card built with Parcel",
+  "browserslist": "ios >= 12, android >= 5, last 2 versions, > 0.5%, not dead",
   "author": "troinine",
   "license": "MIT",
   "keywords": [
