@@ -28,6 +28,7 @@ import {
   WEATHER_ATTRIBUTE_ICON_MAP,
   WeatherEntity,
 } from "../data/weather";
+import { getUvIndexColor } from "../data/uv-index";
 import {
   LineController,
   LineElement,
@@ -556,27 +557,7 @@ export class WfcForecastChart extends LitElement {
     style: CSSStyleDeclaration,
     options: ChartOptions
   ): ChartConfiguration {
-    const defaultColor = style
-      .getPropertyValue("--wfc-chart-uv-bar-color")
-      .trim();
     const labelColor = style.getPropertyValue("--wfc-chart-label-color");
-
-    const uvColors = {
-      low: style.getPropertyValue("--wfc-uv-low").trim(),
-      moderate: style.getPropertyValue("--wfc-uv-moderate").trim(),
-      high: style.getPropertyValue("--wfc-uv-high").trim(),
-      veryHigh: style.getPropertyValue("--wfc-uv-very-high").trim(),
-      extreme: style.getPropertyValue("--wfc-uv-extreme").trim(),
-    };
-
-    const getUvColor = (value: number | null) => {
-      if (value === null) return defaultColor;
-      if (value >= 11) return uvColors.extreme;
-      if (value >= 8) return uvColors.veryHigh;
-      if (value >= 6) return uvColors.high;
-      if (value >= 3) return uvColors.moderate;
-      return uvColors.low;
-    };
 
     return {
       type: "bar",
@@ -588,7 +569,9 @@ export class WfcForecastChart extends LitElement {
             data: data.map((f) =>
               f.uv_index != null ? Math.round(f.uv_index) : 0
             ),
-            backgroundColor: data.map((f) => getUvColor(f.uv_index ?? null)),
+            backgroundColor: data.map((f) =>
+              style.getPropertyValue(getUvIndexColor(f.uv_index ?? null)).trim()
+            ),
             borderWidth: 0,
             borderRadius: {
               topLeft: 5,

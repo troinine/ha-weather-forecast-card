@@ -1,5 +1,7 @@
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { styleMap } from "lit/directives/style-map.js";
+import { getUvIndexColor } from "../data/uv-index";
 import { ForecastAttribute, WeatherEntity } from "../data/weather";
 import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../types";
 import { logger } from "../logger";
@@ -46,6 +48,20 @@ export class WfcForecastInfo extends LitElement {
             </span>
           `
         : null;
+    } else if (attribute === "uv_index") {
+      const raw = this.forecast.uv_index;
+      if (raw == null) {
+        return null;
+      }
+      const rounded = Math.round(raw);
+      const colorProp = getUvIndexColor(raw);
+      return html`
+        <span
+          class="wfc-forecast-extra-uv-index wfc-secondary"
+          style=${styleMap({ color: `var(${colorProp})` })}
+          >${String(rounded)}</span
+        >
+      `;
     } else if (attribute === "wind_bearing" || attribute === "wind_direction") {
       return html`<wfc-wind-indicator
         .hass=${this.hass}

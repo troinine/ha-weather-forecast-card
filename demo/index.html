@@ -401,6 +401,7 @@
       let hass = mockHass.getHass();
 
       const demoMode = "toggle_and_scroll"; // 'condition_effects' | 'toggle_and_scroll' | 'none'
+      const extraAttributeDemo = "wind_direction"; // 'uv_index' | 'wind_direction' | 'wind_bearing' | 'precipitation_probability'
 
       const updateTheme = () => {
         const card = document.querySelector(".demo-card");
@@ -436,7 +437,7 @@
           },
           forecast: {
             mode: "chart",
-            extra_attribute: "wind_direction",
+            extra_attribute: extraAttributeDemo,
             hourly_group_size: 2,
             show_sun_times: demoMode !== "condition_effects",
             use_color_thresholds: true,

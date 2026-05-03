@@ -305,6 +305,11 @@ export class WeatherForecastCardEditor
                     "ui.card.weather.attributes.precipitation_probability"
                   ) || "Precipitation probability",
               },
+              {
+                value: "uv_index",
+                label:
+                  localize("ui.card.weather.attributes.uv_index") || "UV index",
+              },
             ],
           },
         },
