@@ -231,7 +231,13 @@ describe("weather-forecast-card", () => {
 
       card.setConfig(config);
       await card.updateComplete;
-      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      await waitUntil(
+        // @ts-expect-error: accessing private property
+        () => card._dailyForecastData?.length === 3,
+        "daily forecast data should be limited to daily_slots",
+        { timeout: 2000, interval: 20 }
+      );
 
       // @ts-expect-error: accessing private property
       expect(card._dailyForecastData?.length).toBe(3);
@@ -249,7 +255,13 @@ describe("weather-forecast-card", () => {
 
       card.setConfig(config);
       await card.updateComplete;
-      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      await waitUntil(
+        // @ts-expect-error: accessing private property
+        () => card._hourlyForecastData?.length === 10,
+        "hourly forecast data should be limited to hourly_slots",
+        { timeout: 2000, interval: 20 }
+      );
 
       // @ts-expect-error: accessing private property
       expect(card._hourlyForecastData?.length).toBe(10);
@@ -268,10 +280,16 @@ describe("weather-forecast-card", () => {
 
       card.setConfig(config);
       await card.updateComplete;
-      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Total hourly items = 72. Grouped by 3 = 24 items.
       // Limited by 5 slots = 5 items.
+      await waitUntil(
+        // @ts-expect-error: accessing private property
+        () => card._hourlyForecastData?.length === 5,
+        "grouped hourly forecast data should be limited to hourly_slots",
+        { timeout: 2000, interval: 20 }
+      );
+
       // @ts-expect-error: accessing private property
       expect(card._hourlyForecastData?.length).toBe(5);
     });
