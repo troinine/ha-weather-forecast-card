@@ -8,7 +8,12 @@ import {
 import { HassEntity } from "home-assistant-js-websocket";
 import { ForecastAttribute } from "./data/weather";
 
-export type ForecastSubscription = Promise<() => void> | undefined;
+export type ForecastUnsubscribe = () => void | Promise<void>;
+export type ForecastSubscription =
+  | Promise<ForecastUnsubscribe | undefined>
+  | undefined;
+
+export type ForecastTypesOption = "both" | "daily" | "hourly";
 
 export type ForecastActionDetails = ActionHandlerDetail & {
   selectedForecast: ForecastAttribute;
@@ -118,6 +123,7 @@ export interface WeatherForecastCardConfig {
   show_current?: boolean;
   show_forecast?: boolean;
   default_forecast?: "hourly" | "daily";
+  forecast_types?: ForecastTypesOption;
   icons_path?: string;
   show_condition_effects?: boolean | WeatherEffect[];
   current?: WeatherForecastCardCurrentConfig;

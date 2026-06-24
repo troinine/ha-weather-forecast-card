@@ -326,11 +326,15 @@ export const subscribeForecast = (
   forecast_type: ModernForecastType,
   callback: (forecastevent: ForecastEvent) => void
 ) =>
-  hass.connection.subscribeMessage<ForecastEvent>(callback, {
-    type: "weather/subscribe_forecast",
-    forecast_type,
-    entity_id,
-  });
+  hass.connection.subscribeMessage<ForecastEvent>(
+    callback,
+    {
+      type: "weather/subscribe_forecast",
+      forecast_type,
+      entity_id,
+    },
+    { resubscribe: false }
+  );
 
 export const getMaxPrecipitation = (forecasts: ForecastAttribute[]): number => {
   const maxPrecipitation = Math.max(

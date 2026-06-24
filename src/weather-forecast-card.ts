@@ -3,7 +3,11 @@ import { property, query, state } from "lit/decorators.js";
 import { styles } from "./weather-forecast-card.styles";
 import { createWarningText, normalizeDate } from "./helpers";
 import { logger } from "./logger";
-import { actionHandler, isInvalidEntityIdError } from "./hass";
+import {
+  actionHandler,
+  isInvalidEntityIdError,
+  isSubscriptionNotFoundError,
+} from "./hass";
 import {
   ForecastActionEvent,
   ForecastMode,
@@ -40,6 +44,7 @@ import {
 import {
   ExtendedHomeAssistant,
   ForecastSubscription,
+  ForecastTypesOption,
   WeatherForecastCardConfig,
 } from "./types";
 
@@ -53,6 +58,7 @@ const DEFAULT_CONFIG: Partial<WeatherForecastCardConfig> = {
   show_current: true,
   show_forecast: true,
   default_forecast: "daily",
+  forecast_types: "both",
   forecast: {
     mode: ForecastMode.Simple,
     show_sun_times: true,
@@ -66,11 +72,11 @@ const DEFAULT_CONFIG: Partial<WeatherForecastCardConfig> = {
   tap_action: { action: "more-info" },
 };
 
+const DISCONNECT_UNSUBSCRIBE_DELAY_MS = 1000;
+
 export class WeatherForecastCard extends LitElement {
   @property({ attribute: false }) public hass?: ExtendedHomeAssistant;
   @state() private config?: WeatherForecastCardConfig;
-  @state() private _dailySubscription?: ForecastSubscription;
-  @state() private _hourlySubscription?: ForecastSubscription;
   @state() private _dailyForecastEvent?: ForecastEvent | undefined;
   @state() private _hourlyForecastEvent?: ForecastEvent | undefined;
   @state() private _currentItemWidth!: number;
@@ -78,6 +84,13 @@ export class WeatherForecastCard extends LitElement {
   @state() private _isScrollable = false;
   @query("ha-card") private _haCard?: HTMLElement;
   @query(".wfc-forecast-container") private _forecastContainer?: HTMLElement;
+
+  private _dailySubscription?: ForecastSubscription;
+  private _hourlySubscription?: ForecastSubscription;
+  private _subscriptionRequestId = 0;
+  private _subscriptionGeneration = 0;
+  private _subscribed = false;
+  private _disconnectUnsubscribeTimer?: number;
 
   private _hourlyForecastData?: ForecastAttribute[];
   private _dailyForecastData?: ForecastAttribute[];
@@ -167,10 +180,20 @@ export class WeatherForecastCard extends LitElement {
   public connectedCallback(): void {
     super.connectedCallback();
 
+    this.clearDisconnectUnsubscribeTimer();
+
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+
     this._minForecastItemWidth = this.computeInitialMinForecastItemWidth();
     this.waitForLayout();
 
-    if (this.hasUpdated && this.config && this.hass) {
+    if (
+      this.hasUpdated &&
+      this.config &&
+      this.hass &&
+      !this._subscribed &&
+      !document.hidden
+    ) {
       this.subscribeForecastEvents();
     }
   }
@@ -178,7 +201,12 @@ export class WeatherForecastCard extends LitElement {
   public disconnectedCallback(): void {
     super.disconnectedCallback();
 
-    this.unsubscribeForecastEvents();
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange
+    );
+
+    this.scheduleDisconnectUnsubscribe();
     this._resizeObserver?.disconnect();
     this._resizeObserver = null;
 
@@ -205,11 +233,17 @@ export class WeatherForecastCard extends LitElement {
       return;
     }
 
-    if (
-      changedProps.has("config") ||
-      this.haveWeatherUnitsChanged(changedProps) ||
-      (!this._hourlySubscription && !this._dailySubscription)
-    ) {
+    if (!this.isConnected) {
+      return;
+    }
+
+    if (this.haveForecastSubscriptionInputsChanged(changedProps)) {
+      this._subscribed = false;
+    }
+
+    // Skip while the page is hidden: a hass update arriving in a backgrounded
+    // tab must not re-open subscriptions we deliberately suspended.
+    if (!this._subscribed && !document.hidden) {
       this.subscribeForecastEvents();
     }
 
@@ -530,31 +564,129 @@ export class WeatherForecastCard extends LitElement {
     });
   }
 
-  private unsubscribeForecastEvents() {
-    logger.debug("Unsubscribing from forecast events");
+  private async unsubscribeForecastEvents() {
+    this.clearDisconnectUnsubscribeTimer();
+    this._subscriptionGeneration += 1;
 
-    this._dailySubscription?.then((unsub) => {
-      try {
-        unsub();
-      } catch (error) {
-        logger.warn("Error unsubscribing from daily forecast:", error);
-      }
-    });
-    this._hourlySubscription?.then((unsub) => {
-      try {
-        unsub();
-      } catch (error) {
-        logger.warn("Error unsubscribing from hourly forecast:", error);
-      }
-    });
+    const dailySubscription = this._dailySubscription;
+    const hourlySubscription = this._hourlySubscription;
 
-    // Clear subscription references to prevent re-unsubscribing
+    this._subscribed = false;
+
+    // Clear subscription references before awaiting so a newer generation cannot
+    // accidentally unsubscribe handles already being retired by this generation.
     this._dailySubscription = undefined;
     this._hourlySubscription = undefined;
+
+    await Promise.all([
+      this.unsubscribeForecastSubscription(dailySubscription, "daily"),
+      this.unsubscribeForecastSubscription(hourlySubscription, "hourly"),
+    ]);
+  }
+
+  private scheduleDisconnectUnsubscribe(): void {
+    this.clearDisconnectUnsubscribeTimer();
+
+    this._disconnectUnsubscribeTimer = window.setTimeout(() => {
+      this._disconnectUnsubscribeTimer = undefined;
+      this._subscriptionRequestId += 1;
+      void this.unsubscribeForecastEvents();
+    }, DISCONNECT_UNSUBSCRIBE_DELAY_MS);
+  }
+
+  private clearDisconnectUnsubscribeTimer(): void {
+    if (this._disconnectUnsubscribeTimer === undefined) {
+      return;
+    }
+
+    window.clearTimeout(this._disconnectUnsubscribeTimer);
+    this._disconnectUnsubscribeTimer = undefined;
+  }
+
+  private handleVisibilityChange = (): void => {
+    if (document.hidden) {
+      this.suspendForecastSubscriptions();
+    } else {
+      this.resumeForecastSubscriptions();
+    }
+  };
+
+  private suspendForecastSubscriptions(): void {
+    if (!this._subscribed && this._disconnectUnsubscribeTimer === undefined) {
+      return;
+    }
+
+    // The page is hidden (e.g. tablet screen off or kiosk webview backgrounded).
+    // Background timers are throttled, so unsubscribe synchronously instead of
+    // via the disconnect timer to make sure the unsubscribe reaches Home
+    // Assistant before the page freezes. Otherwise HA keeps queueing the full
+    // forecast broadcasts we cannot drain, eventually overflowing its message
+    // queue and dropping the client (issue #129).
+    this._subscriptionRequestId += 1;
+    void this.unsubscribeForecastEvents();
+  }
+
+  private resumeForecastSubscriptions(): void {
+    if (this.isConnected && this.config && this.hass && !this._subscribed) {
+      this.subscribeForecastEvents();
+    }
+  }
+
+  private async unsubscribeForecastSubscription(
+    subscription: ForecastSubscription,
+    type: ForecastType
+  ): Promise<void> {
+    if (!subscription) {
+      return;
+    }
+
+    try {
+      const unsub = await subscription;
+      if (!unsub) {
+        return;
+      }
+      await unsub();
+    } catch (error) {
+      if (isSubscriptionNotFoundError(error)) {
+        return;
+      }
+
+      logger.warn(`Error unsubscribing from ${type} forecast:`, error);
+    }
+  }
+
+  private createForecastSubscription(
+    forecastType: ForecastEvent["type"],
+    callback: (event: ForecastEvent) => void,
+    onInvalidEntityId: () => void
+  ): ForecastSubscription {
+    return Promise.resolve(
+      subscribeForecast(this.hass!, this.config!.entity, forecastType, callback)
+    ).catch((error: unknown) => {
+      if (isInvalidEntityIdError(error)) {
+        setTimeout(onInvalidEntityId, 2000);
+        return undefined;
+      }
+
+      if (isSubscriptionNotFoundError(error)) {
+        return undefined;
+      }
+
+      logger.warn(`Error subscribing to ${forecastType} forecast:`, error);
+      return undefined;
+    });
   }
 
   private async subscribeForecastEvents() {
-    this.unsubscribeForecastEvents();
+    const subscriptionRequestId = ++this._subscriptionRequestId;
+
+    await this.unsubscribeForecastEvents();
+
+    if (subscriptionRequestId !== this._subscriptionRequestId) {
+      return;
+    }
+
+    const subscriptionGeneration = this._subscriptionGeneration;
 
     if (
       !this.isConnected ||
@@ -579,9 +711,17 @@ export class WeatherForecastCard extends LitElement {
       return;
     }
 
-    logger.debug("Subscribing to forecast events");
+    this._subscribed = true;
 
     const weatherEntity = this.hass.states[this.config.entity];
+
+    // Limit which forecast types we subscribe to. Each subscription makes HA
+    // re-broadcast its full forecast array on every weather state change, so
+    // skipping an unused type avoids needless websocket load (issue #129).
+    const forecastTypes: ForecastTypesOption =
+      this.config.forecast_types ?? "both";
+    const subscribeDaily = forecastTypes !== "hourly";
+    const subscribeHourly = forecastTypes !== "daily";
 
     // Subscribe to the effective daily type (daily preferred, twice_daily as fallback)
     const effectiveDailyType = getDailyForecastType(weatherEntity);
@@ -594,51 +734,46 @@ export class WeatherForecastCard extends LitElement {
       this._currentForecastType = "twice_daily";
     }
 
-    if (effectiveDailyType) {
-      logger.debug(`Subscribing to ${effectiveDailyType} forecast`);
-      try {
-        this._dailySubscription = Promise.resolve(
-          subscribeForecast(
-            this.hass!,
-            this.config!.entity,
-            effectiveDailyType,
-            (event) => {
-              this._dailyForecastEvent = event;
-              this.processForecastData();
-            }
-          )
-        );
-      } catch (error: unknown) {
-        if (isInvalidEntityIdError(error)) {
-          setTimeout(() => {
-            this._dailyForecastEvent = undefined;
-          }, 2000);
-        }
-        throw error;
-      }
+    // Keep the visible forecast type aligned with the subscribed types so the
+    // card never starts on a view that will never receive data.
+    if (!subscribeDaily && this._currentForecastType !== "hourly") {
+      this._currentForecastType = "hourly";
+    } else if (!subscribeHourly && this._currentForecastType === "hourly") {
+      this._currentForecastType = effectiveDailyType || "daily";
     }
 
-    if (supportsForecastType(weatherEntity, "hourly")) {
-      try {
-        this._hourlySubscription = Promise.resolve(
-          subscribeForecast(
-            this.hass!,
-            this.config!.entity,
-            "hourly",
-            (event) => {
-              this._hourlyForecastEvent = event;
-              this.processForecastData();
-            }
-          )
-        );
-      } catch (error: unknown) {
-        if (isInvalidEntityIdError(error)) {
-          setTimeout(() => {
-            this._hourlyForecastEvent = undefined;
-          }, 2000);
+    if (effectiveDailyType && subscribeDaily) {
+      this._dailySubscription = this.createForecastSubscription(
+        effectiveDailyType,
+        (event) => {
+          if (!this.shouldHandleForecastEvent(subscriptionGeneration)) {
+            return;
+          }
+
+          this._dailyForecastEvent = event;
+          this.processForecastData();
+        },
+        () => {
+          this._dailyForecastEvent = undefined;
         }
-        throw error;
-      }
+      );
+    }
+
+    if (subscribeHourly && supportsForecastType(weatherEntity, "hourly")) {
+      this._hourlySubscription = this.createForecastSubscription(
+        "hourly",
+        (event) => {
+          if (!this.shouldHandleForecastEvent(subscriptionGeneration)) {
+            return;
+          }
+
+          this._hourlyForecastEvent = event;
+          this.processForecastData();
+        },
+        () => {
+          this._hourlyForecastEvent = undefined;
+        }
+      );
     }
   }
 
@@ -703,6 +838,76 @@ export class WeatherForecastCard extends LitElement {
     return Object.values(WeatherUnits).some((unitKey) => {
       return oldState.attributes[unitKey] !== newState.attributes[unitKey];
     });
+  }
+
+  private haveForecastSubscriptionInputsChanged(
+    changedProps: PropertyValues
+  ): boolean {
+    return (
+      changedProps.has("config") ||
+      this.haveWeatherUnitsChanged(changedProps) ||
+      this.haveForecastFeaturesChanged(changedProps) ||
+      this.hasWeatherEntityAvailabilityChanged(changedProps)
+    );
+  }
+
+  private shouldHandleForecastEvent(subscriptionGeneration: number): boolean {
+    // Capture data from the current, live subscription regardless of whether the
+    // element is momentarily detached from the DOM. Lovelace/Bubble Card popups
+    // reparent the card while opening, and a forecast event delivered during that
+    // gap must not be lost — otherwise the forecast never renders and only the
+    // current-weather section (which reads entity state directly) shows. Events
+    // from retired subscriptions are still dropped via the generation guard, and
+    // a torn-down card via the _subscribed flag.
+    return (
+      this._subscribed &&
+      subscriptionGeneration === this._subscriptionGeneration
+    );
+  }
+
+  private haveForecastFeaturesChanged(changedProps: PropertyValues): boolean {
+    if (!changedProps.has("hass") || !this.config?.entity) {
+      return false;
+    }
+
+    const oldHass = changedProps.get("hass") as ExtendedHomeAssistant;
+    const newHass = this.hass;
+
+    if (!oldHass || !newHass) {
+      return false;
+    }
+
+    const oldState = oldHass.states[this.config.entity];
+    const newState = newHass.states[this.config.entity];
+
+    if (!oldState || !newState) {
+      return false;
+    }
+
+    return (
+      oldState.attributes.supported_features !==
+      newState.attributes.supported_features
+    );
+  }
+
+  private hasWeatherEntityAvailabilityChanged(
+    changedProps: PropertyValues
+  ): boolean {
+    if (!changedProps.has("hass") || !this.config?.entity) {
+      return false;
+    }
+
+    const oldHass = changedProps.get("hass") as ExtendedHomeAssistant;
+    const newHass = this.hass;
+
+    if (!newHass) {
+      return false;
+    }
+
+    const oldEntityState = oldHass?.states[this.config.entity];
+    const newEntityState = newHass.states[this.config.entity];
+
+    return !!oldEntityState !== !!newEntityState;
   }
 
   private onForecastAction = (event: ForecastActionEvent): void => {

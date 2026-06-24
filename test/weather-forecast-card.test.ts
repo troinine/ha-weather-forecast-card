@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { fixture, waitUntil } from "@open-wc/testing";
 import { html } from "lit";
 import { MockHass } from "./mocks/hass";
@@ -608,25 +608,109 @@ describe("weather-forecast-card", () => {
       // @ts-expect-error: accessing private property
       expect(testCard._hourlySubscription).toBeDefined();
 
+      // @ts-expect-error: accessing private property
+      const initialDailySubId = testCard._dailySubscription;
+      // @ts-expect-error: accessing private property
+      const initialHourlySubId = testCard._hourlySubscription;
+
       // Simulate disconnection (popup closes)
       testCard.remove();
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Verify subscriptions were cleared on disconnect
+      // Short disconnections can happen during Lovelace reparenting; subscriptions
+      // should remain active until the delayed disconnect cleanup runs.
       // @ts-expect-error: accessing private property
-      expect(testCard._dailySubscription).toBeUndefined();
+      expect(testCard._dailySubscription).toBeDefined();
       // @ts-expect-error: accessing private property
-      expect(testCard._hourlySubscription).toBeUndefined();
+      expect(testCard._hourlySubscription).toBeDefined();
 
       // Simulate reconnection (popup opens)
       document.body.appendChild(testCard);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Verify subscriptions are re-established
+      // Verify the existing subscriptions are retained instead of recreated
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBe(initialDailySubId);
+      // @ts-expect-error: accessing private property
+      expect(testCard._hourlySubscription).toBe(initialHourlySubId);
+    });
+
+    it("should unsubscribe after a sustained disconnection", async () => {
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${hass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // @ts-expect-error: accessing private property
       expect(testCard._dailySubscription).toBeDefined();
       // @ts-expect-error: accessing private property
       expect(testCard._hourlySubscription).toBeDefined();
+
+      testCard.remove();
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBeUndefined();
+      // @ts-expect-error: accessing private property
+      expect(testCard._hourlySubscription).toBeUndefined();
+      // Once torn down, forecast events are ignored via the _subscribed guard.
+      // @ts-expect-error: accessing private property
+      expect(testCard._subscribed).toBe(false);
+    });
+
+    it("should handle rejected subscription setup promises", async () => {
+      const forecastHass = new MockHass({
+        rejectForecastSubscribe: true,
+      });
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // @ts-expect-error: accessing private property
+      await expect(testCard._dailySubscription).resolves.toBeUndefined();
+      // @ts-expect-error: accessing private property
+      await expect(testCard._hourlySubscription).resolves.toBeUndefined();
+    });
+
+    it("should ignore missing subscription errors during unsubscribe", async () => {
+      const forecastHass = new MockHass({
+        rejectForecastUnsubscribe: true,
+      });
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      testCard.remove();
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBeUndefined();
+      // @ts-expect-error: accessing private property
+      expect(testCard._hourlySubscription).toBeUndefined();
     });
 
     it("should not create duplicate subscriptions on reconnect", async () => {
@@ -656,20 +740,82 @@ describe("weather-forecast-card", () => {
       document.body.appendChild(testCard);
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Verify new subscription objects were created (different references)
+      // Verify the subscription objects were retained across a quick reconnect
       // @ts-expect-error: accessing private property
       const newDailySubId = testCard._dailySubscription;
       // @ts-expect-error: accessing private property
       const newHourlySubId = testCard._hourlySubscription;
 
-      // Both should be defined
-      expect(newDailySubId).toBeDefined();
-      expect(newHourlySubId).toBeDefined();
+      expect(newDailySubId).toBe(initialDailySubId);
+      expect(newHourlySubId).toBe(initialHourlySubId);
+    });
 
-      // They may be different references if createCallback created new promises
-      // The important thing is that we have valid subscriptions, not duplicates
-      expect(newDailySubId).not.toBeNull();
-      expect(newHourlySubId).not.toBeNull();
+    it("should not resubscribe when forecast events update card state", async () => {
+      const forecastHass = new MockHass();
+      forecastHass.dailyForecast = TEST_FORECAST_DAILY;
+      forecastHass.hourlyForecast = TEST_FORECAST_HOURLY;
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      const dailySubscribeCount = forecastHass.getSubscribeCallCount("daily");
+      const hourlySubscribeCount = forecastHass.getSubscribeCallCount("hourly");
+
+      expect(dailySubscribeCount).toBeGreaterThan(0);
+      expect(hourlySubscribeCount).toBeGreaterThan(0);
+
+      forecastHass.updateForecasts("daily");
+      forecastHass.updateForecasts("hourly");
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      expect(forecastHass.getSubscribeCallCount("daily")).toBe(
+        dailySubscribeCount
+      );
+      expect(forecastHass.getSubscribeCallCount("hourly")).toBe(
+        hourlySubscribeCount
+      );
+    });
+
+    it("should retain forecast data delivered during a transient disconnection", async () => {
+      const forecastHass = new MockHass();
+      forecastHass.dailyForecast = TEST_FORECAST_DAILY;
+      forecastHass.hourlyForecast = TEST_FORECAST_HOURLY;
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+
+      // Simulate a Bubble Card popup reparenting the element while opening:
+      // disconnect before the forecast event is delivered, then reconnect within
+      // the disconnect grace period. The forecast event arrives while detached.
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      testCard.remove();
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      document.body.appendChild(testCard);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // The forecast data delivered during the gap must survive so the chart
+      // renders after the popup opens (not just the current-weather section).
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailyForecastData).toBeDefined();
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailyForecastData?.length).toBeGreaterThan(0);
     });
 
     it("should render forecast data after reconnection", async () => {
@@ -702,6 +848,192 @@ describe("weather-forecast-card", () => {
       const reconnectedForecastCount = testCard._dailyForecastData?.length ?? 0;
       expect(reconnectedForecastCount).toBeGreaterThan(0);
       expect(reconnectedForecastCount).toBe(initialForecastCount);
+    });
+  });
+
+  describe("forecast_types subscription limiting", () => {
+    it("should only subscribe to daily when forecast_types is daily", async () => {
+      const forecastHass = new MockHass();
+      forecastHass.dailyForecast = TEST_FORECAST_DAILY;
+      forecastHass.hourlyForecast = TEST_FORECAST_HOURLY;
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const dailyConfig: WeatherForecastCardConfig = {
+        ...testConfig,
+        forecast_types: "daily",
+      };
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${dailyConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(dailyConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      expect(forecastHass.getSubscribeCallCount("daily")).toBeGreaterThan(0);
+      expect(forecastHass.getSubscribeCallCount("hourly")).toBe(0);
+      // @ts-expect-error: accessing private property
+      expect(testCard._hourlySubscription).toBeUndefined();
+    });
+
+    it("should only subscribe to hourly when forecast_types is hourly", async () => {
+      const forecastHass = new MockHass();
+      forecastHass.dailyForecast = TEST_FORECAST_DAILY;
+      forecastHass.hourlyForecast = TEST_FORECAST_HOURLY;
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const hourlyConfig: WeatherForecastCardConfig = {
+        ...testConfig,
+        forecast_types: "hourly",
+      };
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${hourlyConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(hourlyConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      expect(forecastHass.getSubscribeCallCount("hourly")).toBeGreaterThan(0);
+      expect(forecastHass.getSubscribeCallCount("daily")).toBe(0);
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBeUndefined();
+      // Visible view should be aligned with the only subscribed type.
+      // @ts-expect-error: accessing private property
+      expect(testCard._currentForecastType).toBe("hourly");
+    });
+
+    it("should subscribe to both types by default", async () => {
+      const forecastHass = new MockHass();
+      forecastHass.dailyForecast = TEST_FORECAST_DAILY;
+      forecastHass.hourlyForecast = TEST_FORECAST_HOURLY;
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      expect(forecastHass.getSubscribeCallCount("daily")).toBeGreaterThan(0);
+      expect(forecastHass.getSubscribeCallCount("hourly")).toBeGreaterThan(0);
+    });
+  });
+
+  describe("page visibility suspension", () => {
+    const setPageHidden = (hidden: boolean) => {
+      Object.defineProperty(document, "hidden", {
+        configurable: true,
+        get: () => hidden,
+      });
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => (hidden ? "hidden" : "visible"),
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    };
+
+    afterEach(() => {
+      // Restore visibility for subsequent tests without dispatching an event.
+      Object.defineProperty(document, "hidden", {
+        configurable: true,
+        get: () => false,
+      });
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "visible",
+      });
+    });
+
+    it("should unsubscribe when the page becomes hidden and resubscribe when visible", async () => {
+      const forecastHass = new MockHass();
+      forecastHass.dailyForecast = TEST_FORECAST_DAILY;
+      forecastHass.hourlyForecast = TEST_FORECAST_HOURLY;
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      // @ts-expect-error: accessing private property
+      expect(testCard._subscribed).toBe(true);
+      const subscribeCountBeforeHide = forecastHass.getSubscribeCallCount();
+
+      // Page hidden (e.g. tablet screen off) should tear subscriptions down.
+      setPageHidden(true);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // @ts-expect-error: accessing private property
+      expect(testCard._subscribed).toBe(false);
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBeUndefined();
+      // @ts-expect-error: accessing private property
+      expect(testCard._hourlySubscription).toBeUndefined();
+
+      // Page visible again should re-establish subscriptions.
+      setPageHidden(false);
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      // @ts-expect-error: accessing private property
+      expect(testCard._subscribed).toBe(true);
+      expect(forecastHass.getSubscribeCallCount()).toBeGreaterThan(
+        subscribeCountBeforeHide
+      );
+    });
+
+    it("should not resubscribe from a hass update while hidden", async () => {
+      const forecastHass = new MockHass();
+      forecastHass.dailyForecast = TEST_FORECAST_DAILY;
+      forecastHass.hourlyForecast = TEST_FORECAST_HOURLY;
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      setPageHidden(true);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const subscribeCountWhileHidden = forecastHass.getSubscribeCallCount();
+
+      // A hass update arriving in a backgrounded tab must not re-open
+      // subscriptions we deliberately suspended.
+      forecastHass.updateForecasts("daily");
+      testCard.hass = forecastHass.getHass() as ExtendedHomeAssistant;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      // @ts-expect-error: accessing private property
+      expect(testCard._subscribed).toBe(false);
+      expect(forecastHass.getSubscribeCallCount()).toBe(
+        subscribeCountWhileHidden
+      );
     });
   });
 });

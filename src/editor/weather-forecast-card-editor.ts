@@ -177,6 +177,29 @@ export class WeatherForecastCardEditor
         },
       },
       {
+        name: "forecast_types",
+        default: "both",
+        optional: true,
+        selector: {
+          select: {
+            options: [
+              {
+                value: "both",
+                label: "Hourly and daily",
+              },
+              {
+                value: "daily",
+                label: "Daily only",
+              },
+              {
+                value: "hourly",
+                label: "Hourly only",
+              },
+            ],
+          },
+        },
+      },
+      {
         name: "show_condition_effects",
         default: false,
         optional: true,
@@ -577,6 +600,8 @@ export class WeatherForecastCardEditor
         return this.hass!.localize(
           "ui.panel.lovelace.editor.card.weather-forecast.forecast_type"
         );
+      case "forecast_types":
+        return "Forecast types to load";
       case "icons_path":
         return "Path to custom icons";
       case "current.show_attributes":
@@ -652,6 +677,8 @@ export class WeatherForecastCardEditor
         return "Optional temperature sensor entity to override the weather entity's temperature.";
       case "default_forecast":
         return "Select the default forecast type to show when forecasts are enabled. Users can still toggle between hourly and daily forecasts if both are available.";
+      case "forecast_types":
+        return "Limit which forecast types the card subscribes to. Loading only the forecast you display reduces websocket load, which can prevent dashboard slowdowns on resource-constrained devices.";
       case "current.show_attributes":
         return "Select which weather attributes to display in the current weather section.";
       case "current.secondary_info_attribute":
