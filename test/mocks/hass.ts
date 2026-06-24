@@ -282,6 +282,7 @@ export interface MockHassOptions {
   supportedFeatures?: number;
   rejectForecastSubscribe?: boolean;
   rejectForecastUnsubscribe?: boolean;
+  connected?: boolean;
 }
 
 export class MockHass {
@@ -309,6 +310,7 @@ export class MockHass {
         unitOfMeasurement: "°C",
         darkMode: true,
         supportedFeatures: 3, // FORECAST_DAILY | FORECAST_HOURLY
+        connected: true,
       },
       options
     );
@@ -335,6 +337,10 @@ export class MockHass {
     this.options.currentCondition = condition;
   }
 
+  setConnected(connected: boolean) {
+    this.options.connected = connected;
+  }
+
   getSubscribeCallCount(type?: ForecastSubscriptionType): number {
     if (type) {
       return this.subscribeCallCounts[type];
@@ -350,6 +356,7 @@ export class MockHass {
     const currentForecast = this.hourlyForecast[0];
 
     return {
+      connected: this.options.connected ?? true,
       themes: {
         darkMode: this.options.darkMode || true,
       },

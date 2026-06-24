@@ -201,11 +201,11 @@ export class WeatherForecastCard extends LitElement {
   public disconnectedCallback(): void {
     super.disconnectedCallback();
 
-    document.removeEventListener(
-      "visibilitychange",
-      this.handleVisibilityChange
-    );
-
+    // Keep the visibility listener attached through the disconnect grace window:
+    // if the page is hidden (e.g. screen off) while a detached card is awaiting
+    // its delayed unsubscribe, the throttled timer would not fire in time and HA
+    // would keep queueing broadcasts. The listener lets us tear down
+    // synchronously instead, and is removed once the teardown completes.
     this.scheduleDisconnectUnsubscribe();
     this._resizeObserver?.disconnect();
     this._resizeObserver = null;
@@ -578,6 +578,16 @@ export class WeatherForecastCard extends LitElement {
     this._dailySubscription = undefined;
     this._hourlySubscription = undefined;
 
+    // Once we have fully torn down while detached, stop listening for visibility
+    // changes so a discarded card is not retained by the document-level listener.
+    // While still connected the listener stays so suspend/resume keeps working.
+    if (!this.isConnected) {
+      document.removeEventListener(
+        "visibilitychange",
+        this.handleVisibilityChange
+      );
+    }
+
     await Promise.all([
       this.unsubscribeForecastSubscription(dailySubscription, "daily"),
       this.unsubscribeForecastSubscription(hourlySubscription, "hourly"),
@@ -847,8 +857,28 @@ export class WeatherForecastCard extends LitElement {
       changedProps.has("config") ||
       this.haveWeatherUnitsChanged(changedProps) ||
       this.haveForecastFeaturesChanged(changedProps) ||
-      this.hasWeatherEntityAvailabilityChanged(changedProps)
+      this.hasWeatherEntityAvailabilityChanged(changedProps) ||
+      this.hasConnectionBeenReestablished(changedProps)
     );
+  }
+
+  private hasConnectionBeenReestablished(
+    changedProps: PropertyValues
+  ): boolean {
+    if (!changedProps.has("hass")) {
+      return false;
+    }
+
+    const oldHass = changedProps.get("hass") as
+      | ExtendedHomeAssistant
+      | undefined;
+    const newHass = this.hass;
+
+    // With resubscribe:false the websocket reconnect drops our subscriptions, so
+    // detect the connection coming back (connected false -> true) and force a
+    // resubscribe. Otherwise forecasts silently stop updating until the next
+    // config change or visibility toggle.
+    return oldHass?.connected === false && newHass?.connected === true;
   }
 
   private shouldHandleForecastEvent(subscriptionGeneration: number): boolean {

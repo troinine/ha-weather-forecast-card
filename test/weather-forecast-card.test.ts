@@ -1053,5 +1053,86 @@ describe("weather-forecast-card", () => {
         subscribeCountWhileHidden
       );
     });
+
+    it("should unsubscribe if the page hides during the disconnect grace window", async () => {
+      const forecastHass = new MockHass();
+      forecastHass.dailyForecast = TEST_FORECAST_DAILY;
+      forecastHass.hourlyForecast = TEST_FORECAST_HOURLY;
+      const testHass = forecastHass.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${testHass}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      // Detach while visible: subscriptions are retained during the grace window.
+      testCard.remove();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBeDefined();
+
+      // The page hides before the throttled grace timer can fire. Visibility
+      // handling must still tear the subscriptions down synchronously so HA stops
+      // queueing broadcasts the frozen page cannot drain.
+      setPageHidden(true);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // @ts-expect-error: accessing private property
+      expect(testCard._subscribed).toBe(false);
+      // @ts-expect-error: accessing private property
+      expect(testCard._dailySubscription).toBeUndefined();
+      // @ts-expect-error: accessing private property
+      expect(testCard._hourlySubscription).toBeUndefined();
+    });
+  });
+
+  describe("websocket reconnection", () => {
+    it("should resubscribe after the websocket reconnects", async () => {
+      const forecastHass = new MockHass();
+      forecastHass.dailyForecast = TEST_FORECAST_DAILY;
+      forecastHass.hourlyForecast = TEST_FORECAST_HOURLY;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${forecastHass.getHass() as ExtendedHomeAssistant}
+          .config=${testConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(testConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      const subscribeCountBeforeDrop = forecastHass.getSubscribeCallCount();
+      expect(subscribeCountBeforeDrop).toBeGreaterThan(0);
+
+      // Connection drops: resubscribe:false means HA discards our subscriptions,
+      // but we cannot resubscribe until the connection is back.
+      forecastHass.setConnected(false);
+      testCard.hass = forecastHass.getHass() as ExtendedHomeAssistant;
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(forecastHass.getSubscribeCallCount()).toBe(subscribeCountBeforeDrop);
+
+      // Connection restored: the card must resubscribe so forecasts resume.
+      forecastHass.setConnected(true);
+      testCard.hass = forecastHass.getHass() as ExtendedHomeAssistant;
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      // @ts-expect-error: accessing private property
+      expect(testCard._subscribed).toBe(true);
+      expect(forecastHass.getSubscribeCallCount()).toBeGreaterThan(
+        subscribeCountBeforeDrop
+      );
+    });
   });
 });
