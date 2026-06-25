@@ -179,6 +179,40 @@ describe("wfc-current-weather attributes", () => {
 
     expect(values).toContain("8,1 m/s");
   });
+
+  it("ignores null and empty placeholder items in show_attributes", async () => {
+    // The HA editor inserts a null placeholder when a new list item is added,
+    // before a value is chosen. These must not crash the render.
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              "wind_speed",
+              null,
+              {},
+            ] as unknown as CurrentWeatherAttributeConfig[],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const items = attrEl?.querySelectorAll(".wfc-current-attribute");
+    expect(items?.length).toBe(1);
+
+    const value = attrEl!.querySelector(
+      ".wfc-current-attribute-value"
+    )?.textContent;
+    expect(value?.trim()).toBe("5 m/s");
+  });
 });
 
 describe("secondary_info_attribute", () => {
@@ -731,6 +765,50 @@ describe("custom entity attributes", () => {
       ".wfc-current-attribute-value"
     )?.textContent;
     expect(value?.trim()).toBe("75 %");
+  });
+
+  it("renders entity-only items (no name) from the entity state", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { entity: "sensor.custom_humidity" },
+              {
+                entity: "sensor.custom_pressure",
+                label: "Outside",
+                icon: "mdi:abacus",
+              },
+            ] as CurrentWeatherAttributeConfig[],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+
+    const items = attrEl?.querySelectorAll(".wfc-current-attribute");
+    expect(items?.length).toBe(2);
+
+    const labels = Array.from(
+      attrEl!.querySelectorAll(".wfc-current-attribute-name")
+    ).map((node) => node.textContent?.trim());
+    const values = Array.from(
+      attrEl!.querySelectorAll(".wfc-current-attribute-value")
+    ).map((node) => node.textContent?.trim());
+
+    // entity-only with no label falls back to the entity friendly_name
+    expect(labels[0]).toBe("Custom Humidity Sensor");
+    expect(values[0]).toBe("75 %");
+    // explicit label override works on an entity-only item
+    expect(labels[1]).toBe("Outside");
+    expect(values[1]).toBe("1025 hPa");
   });
 
   it("skips attribute when custom entity is unavailable", async () => {

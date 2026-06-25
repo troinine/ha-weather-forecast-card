@@ -2,11 +2,15 @@ import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { capitalize } from "lodash-es";
 import memoizeOne from "memoize-one";
-import { ExtendedHomeAssistant, WeatherForecastCardConfig } from "../types";
+import {
+  CURRENT_WEATHER_ATTRIBUTES,
+  ExtendedHomeAssistant,
+  WeatherForecastCardConfig,
+} from "../types";
 import {
   formatCustomEntityAttributeValue,
   formatWeatherEntityAttributeValue,
-  WEATHER_ATTRIBUTE_ICON_MAP,
+  resolveAttributeIcon,
   WeatherEntity,
 } from "../data/weather";
 import type { NormalizedAttributeConfig } from "./wfc-current-weather";
@@ -48,23 +52,36 @@ export class WfcCurrentWeatherAttributes extends LitElement {
   private _renderAttribute(
     attrConfig: NormalizedAttributeConfig
   ): TemplateResult | typeof nothing {
-    const { name: attribute, entity: customEntityId } = attrConfig;
+    if (!attrConfig || (!attrConfig.name && !attrConfig.entity)) {
+      return nothing;
+    }
 
-    // Use custom entity value if specified, otherwise use weather entity
-    const value = customEntityId
-      ? formatCustomEntityAttributeValue(
-          this.hass,
-          this.weatherEntity,
-          this.config,
-          attribute,
-          customEntityId
-        )
-      : formatWeatherEntityAttributeValue(
-          this.hass,
-          this.weatherEntity,
-          this.config,
-          attribute
-        );
+    const {
+      name: attribute,
+      entity: customEntityId,
+      label: explicitLabel,
+      icon: explicitIcon,
+    } = attrConfig;
+
+    // Resolve the value from the custom entity if one is given, otherwise from
+    // the weather entity using the attribute name.
+    let value: string | undefined;
+    if (customEntityId) {
+      value = formatCustomEntityAttributeValue(
+        this.hass,
+        this.weatherEntity,
+        this.config,
+        attribute,
+        customEntityId
+      );
+    } else if (attribute) {
+      value = formatWeatherEntityAttributeValue(
+        this.hass,
+        this.weatherEntity,
+        this.config,
+        attribute
+      );
+    }
 
     if (!value) {
       return nothing;
@@ -73,10 +90,11 @@ export class WfcCurrentWeatherAttributes extends LitElement {
     const stateObj = customEntityId
       ? this.hass.states[customEntityId] || this.weatherEntity
       : this.weatherEntity;
-    const icon =
-      customEntityId && this.hass.states[customEntityId]?.attributes?.icon
-        ? this.hass.states[customEntityId]?.attributes.icon
-        : WEATHER_ATTRIBUTE_ICON_MAP[attribute];
+
+    const customEntity = customEntityId
+      ? this.hass.states[customEntityId]
+      : undefined;
+    const icon = resolveAttributeIcon(attribute, explicitIcon, customEntity);
 
     return html`
       <div class="wfc-current-attribute">
@@ -88,11 +106,31 @@ export class WfcCurrentWeatherAttributes extends LitElement {
           .icon=${icon}
         ></ha-attribute-icon>
         <span class="wfc-current-attribute-name">
-          ${this.localize(attribute)}
+          ${this.resolveLabel(attribute, explicitLabel, customEntity)}
         </span>
         <span class="wfc-current-attribute-value">${value}</span>
       </div>
     `;
+  }
+
+  private resolveLabel(
+    attribute: string | undefined,
+    explicitLabel: string | undefined,
+    customEntity: { attributes?: { friendly_name?: string } } | undefined
+  ): string {
+    if (explicitLabel) {
+      return explicitLabel;
+    }
+    if (
+      attribute &&
+      (CURRENT_WEATHER_ATTRIBUTES as ReadonlyArray<string>).includes(attribute)
+    ) {
+      return this.localize(attribute);
+    }
+    return (
+      customEntity?.attributes?.friendly_name ??
+      (attribute ? capitalize(attribute).replace(/_/g, " ") : "")
+    );
   }
 
   private localize = (attribute: string): string => {

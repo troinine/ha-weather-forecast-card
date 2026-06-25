@@ -63,8 +63,13 @@ export const DEFAULT_CHART_ATTRIBUTE: ChartAttributes =
   "temperature_and_precipitation";
 
 export interface CurrentWeatherAttributeConfig {
-  name: CurrentWeatherAttributes;
+  // Optional: an item may be a known weather attribute (name) and/or a custom
+  // entity source (entity). At least one must be present to render. An
+  // entity-only item displays that entity's state as an arbitrary attribute.
+  name?: CurrentWeatherAttributes | (string & {});
   entity?: string;
+  label?: string;
+  icon?: string;
 }
 
 export type WeatherEffect = (typeof WEATHER_EFFECTS)[number];
@@ -104,7 +109,7 @@ export interface WeatherForecastCardCurrentConfig {
     | CurrentWeatherAttributeConfig
     | (CurrentWeatherAttributes | CurrentWeatherAttributeConfig)[];
   temperature_precision?: number;
-  secondary_info_attribute?: CurrentWeatherAttributes;
+  secondary_info_attribute?: CurrentWeatherAttributes | CurrentWeatherAttributeConfig;
   temperature_entity?: string;
 }
 

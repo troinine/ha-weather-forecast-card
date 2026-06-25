@@ -17,6 +17,7 @@ import {
 } from "../types";
 import {
   ForecastAttribute,
+  formatCustomEntityAttributeValue,
   formatTemperature,
   formatWeatherEntityAttributeValue,
   WEATHER_ATTRIBUTE_ICON_MAP,
@@ -27,8 +28,10 @@ import "./wfc-weather-condition-icon-provider";
 import "./wfc-current-weather-attributes";
 
 export type NormalizedAttributeConfig = {
-  name: CurrentWeatherAttributes;
+  name?: CurrentWeatherAttributes | string;
   entity?: string;
+  label?: string;
+  icon?: string;
 };
 
 type SecondaryInfo = {
@@ -175,17 +178,24 @@ export class WfcCurrentWeather extends LitElement {
 
     // Handle single object: { name: "humidity", entity: "sensor.my_humidity" }
     if (!Array.isArray(showAttr) && typeof showAttr === "object") {
-      return [showAttr as CurrentWeatherAttributeConfig];
+      return showAttr.name || showAttr.entity
+        ? [showAttr as CurrentWeatherAttributeConfig]
+        : [];
     }
 
-    // Handle array: mixed strings and objects
+    // Handle array: mixed strings and objects. The editor inserts a null
+    // placeholder when a new list item is added, so drop null/empty entries.
+    // Keep any item that identifies a value source: a name (weather attribute)
+    // or an entity (arbitrary custom attribute).
     if (Array.isArray(showAttr)) {
-      return showAttr.map((item) => {
-        if (typeof item === "string") {
-          return { name: item as CurrentWeatherAttributes };
-        }
-        return item as CurrentWeatherAttributeConfig;
-      });
+      return showAttr
+        .filter((item) => item != null)
+        .map((item) =>
+          typeof item === "string"
+            ? { name: item as CurrentWeatherAttributes }
+            : (item as CurrentWeatherAttributeConfig)
+        )
+        .filter((item) => Boolean(item.name) || Boolean(item.entity));
     }
 
     return [];
@@ -232,25 +242,57 @@ export class WfcCurrentWeather extends LitElement {
   private getSecondaryWeatherAttribute(): SecondaryInfo | null {
     const forecast = this.hourlyForecast;
 
-    const secondaryInfoAttribute =
+    const rawSecondaryInfoAttribute =
       this.config.current?.secondary_info_attribute;
-    if (secondaryInfoAttribute) {
-      if (secondaryInfoAttribute in this.weatherEntity.attributes) {
+
+    if (rawSecondaryInfoAttribute) {
+      // Normalize to object form
+      const secondaryAttr =
+        typeof rawSecondaryInfoAttribute === "string"
+          ? { name: rawSecondaryInfoAttribute as CurrentWeatherAttributes }
+          : rawSecondaryInfoAttribute;
+
+      const { name, entity: customEntityId, icon: explicitIcon } = secondaryAttr;
+
+      if (customEntityId) {
+        // Custom entity path: skip the in-attributes check
+        const value = formatCustomEntityAttributeValue(
+          this.hass,
+          this.weatherEntity,
+          this.config,
+          name,
+          customEntityId
+        );
+
+        if (value != null) {
+          const customEntity = this.hass.states[customEntityId];
+          const icon =
+            explicitIcon ??
+            customEntity?.attributes?.icon ??
+            (name
+              ? (EXTENDED_WEATHER_ATTRIBUTE_ICON_MAP as Record<string, string>)[
+                  name
+                ]
+              : undefined);
+
+          return { icon, value };
+        }
+      } else if (name && name in this.weatherEntity.attributes) {
+        // Weather entity path: existing behavior
+        const nameAsKnown = name as CurrentWeatherAttributes;
         const weatherAttrIcon =
-          EXTENDED_WEATHER_ATTRIBUTE_ICON_MAP[secondaryInfoAttribute];
+          EXTENDED_WEATHER_ATTRIBUTE_ICON_MAP[nameAsKnown];
 
         const value = formatWeatherEntityAttributeValue(
           this.hass,
           this.weatherEntity,
           this.config,
-          secondaryInfoAttribute
+          name
         );
 
         if (value != null) {
-          return {
-            icon: weatherAttrIcon,
-            value,
-          };
+          const icon = explicitIcon ?? weatherAttrIcon;
+          return { icon, value };
         }
       }
     }
