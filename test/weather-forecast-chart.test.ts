@@ -1205,17 +1205,21 @@ describe("weather-forecast-card chart", () => {
       expect(largerChart.options.layout?.padding?.bottom).toBe(14);
     });
 
-    it("should keep top padding fixed at 10 regardless of font size", async () => {
+    it("should reserve top padding for the high temperature label (issue #139)", async () => {
+      // The top padding holds the high label (which hangs above the line) in pixels
+      // so it is never clipped at the canvas edge — the font size plus a fixed
+      // allowance (10) for the label box and offset, independent of the spread.
       const { chart: defaultChart } = await createCardFixture();
       // @ts-expect-error: layout type
-      expect(defaultChart.options.layout?.padding?.top).toBe(10);
+      expect(defaultChart.options.layout?.padding?.top).toBe(22); // 12 + 10
 
+      // A larger font needs proportionally more room for the taller label.
       const { chart: largerChart } = await createCardFixture(
         {},
         { "--wfc-chart-font-size": "16" }
       );
       // @ts-expect-error: layout type
-      expect(largerChart.options.layout?.padding?.top).toBe(10);
+      expect(largerChart.options.layout?.padding?.top).toBe(26); // 16 + 10
     });
 
     it("should scale bar label offset with font size", async () => {
