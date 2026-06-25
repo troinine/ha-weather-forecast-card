@@ -20,4 +20,14 @@ describe("getUvIndexColor", () => {
   ] as const)("maps UV %i to %s", (value, expected) => {
     expect(getUvIndexColor(value)).toBe(expected);
   });
+
+  it.each([
+    [2.4, "--wfc-uv-low"],
+    [2.6, "--wfc-uv-moderate"],
+    [5.5, "--wfc-uv-high"],
+    [7.5, "--wfc-uv-very-high"],
+    [10.5, "--wfc-uv-extreme"],
+  ] as const)("buckets fractional UV %f by its rounded value to %s", (value, expected) => {
+    expect(getUvIndexColor(value)).toBe(expected);
+  });
 });
