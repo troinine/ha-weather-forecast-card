@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { LitElement, html, TemplateResult, nothing } from "lit";
+import { LitElement, html, css, TemplateResult, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
+import { mdiDelete, mdiPlaylistPlus } from "@mdi/js";
 import memoizeOne from "memoize-one";
 import { capitalize } from "lodash-es";
 import {
@@ -94,6 +95,37 @@ export class WeatherForecastCardEditor
 {
   @property({ attribute: false }) public hass!: ExtendedHomeAssistant;
   @state() private _config!: WeatherForecastCardEditorConfig;
+
+  static styles = css`
+    ha-expansion-panel {
+      display: block;
+      margin-top: 24px;
+      --expansion-panel-content-padding: 0;
+      border-radius: var(--ha-border-radius-md, 12px);
+      --ha-card-border-radius: var(--ha-border-radius-md, 12px);
+    }
+    .custom-attributes {
+      padding: 12px;
+    }
+    .custom-attributes p {
+      margin: 0 0 24px;
+    }
+    .custom-attribute-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .custom-attribute-row ha-form {
+      flex: 1;
+      min-width: 0;
+    }
+    .custom-attribute-row ha-icon-button {
+      --mdc-icon-button-size: 40px;
+      color: var(--secondary-text-color);
+      margin-top: 4px;
+    }
+  `;
 
   public setConfig(config: WeatherForecastCardEditorConfig): void {
     this._config = config;
@@ -555,7 +587,128 @@ export class WeatherForecastCardEditor
         @value-changed=${this._valueChanged}
       >
       </ha-form>
+      ${this._renderCustomAttributes()}
     `;
+  }
+
+  private _renderCustomAttributes(): TemplateResult {
+    const customItems = extractCustomAttributes(
+      this._config.current?.show_attributes
+    );
+
+    return html`
+      <ha-expansion-panel outlined>
+        <div slot="header" role="heading" aria-level="3">
+          Custom entity attributes
+        </div>
+        <div class="custom-attributes">
+          <p>
+            Display any entity's state as an attribute. Pick an entity and
+            optionally override its label and icon.
+          </p>
+          ${customItems.map((item, index) =>
+            this._renderCustomAttributeRow(item, index)
+          )}
+          <ha-button
+            size="small"
+            appearance="filled"
+            variant="brand"
+            @click=${this._addCustomAttribute}
+          >
+            <ha-svg-icon slot="start" .path=${mdiPlaylistPlus}></ha-svg-icon>
+            ${this.hass.localize("ui.panel.lovelace.editor.entities.add") ||
+            "Add entity"}
+          </ha-button>
+        </div>
+      </ha-expansion-panel>
+    `;
+  }
+
+  private _renderCustomAttributeRow(
+    item: CurrentWeatherAttributeConfig,
+    index: number
+  ): TemplateResult {
+    return html`
+      <div class="custom-attribute-row">
+        <ha-form
+          .hass=${this.hass}
+          .data=${item}
+          .schema=${CUSTOM_ATTRIBUTE_ROW_SCHEMA}
+          .computeLabel=${this._computeCustomAttributeLabel}
+          @value-changed=${(ev: CustomEvent) =>
+            this._customAttributeChanged(index, ev)}
+        ></ha-form>
+        <ha-icon-button
+          .path=${mdiDelete}
+          .label=${"Remove"}
+          @click=${() => this._removeCustomAttribute(index)}
+        ></ha-icon-button>
+      </div>
+    `;
+  }
+
+  private _computeCustomAttributeLabel = (schema: { name: string }): string => {
+    switch (schema.name) {
+      case "entity":
+        return (
+          this.hass.localize("ui.panel.lovelace.editor.card.generic.entity") ||
+          "Entity"
+        );
+      case "label":
+        return (
+          this.hass.localize("ui.panel.lovelace.editor.card.generic.name") ||
+          "Name"
+        );
+      case "icon":
+        return (
+          this.hass.localize("ui.panel.lovelace.editor.card.generic.icon") ||
+          "Icon"
+        );
+      default:
+        return schema.name;
+    }
+  };
+
+  private _addCustomAttribute = (): void => {
+    const custom = extractCustomAttributes(
+      this._config.current?.show_attributes
+    );
+    this._commitCustomAttributes([...custom, {}]);
+  };
+
+  private _removeCustomAttribute = (index: number): void => {
+    const custom = extractCustomAttributes(
+      this._config.current?.show_attributes
+    );
+    custom.splice(index, 1);
+    this._commitCustomAttributes(custom);
+  };
+
+  private _customAttributeChanged = (
+    index: number,
+    ev: CustomEvent
+  ): void => {
+    ev.stopPropagation();
+    const custom = extractCustomAttributes(
+      this._config.current?.show_attributes
+    );
+    custom[index] = ev.detail.value as CurrentWeatherAttributeConfig;
+    this._commitCustomAttributes(custom);
+  };
+
+  private _commitCustomAttributes(
+    custom: CurrentWeatherAttributeConfig[]
+  ): void {
+    const known = extractKnownItems(this._config.current?.show_attributes);
+    const newConfig: WeatherForecastCardEditorConfig = {
+      ...this._config,
+      current: {
+        ...this._config.current,
+        show_attributes: [...known, ...custom],
+      },
+    };
+
+    fireEvent(this, "config-changed", { config: newConfig });
   }
 
   private _getSelectedAttributes(
@@ -942,6 +1095,49 @@ export const buildShowAttributes = (
   return [...known, ...customItems];
 };
 
+// Schema for a single custom-attribute editor row (entity + optional label/icon).
+const CUSTOM_ATTRIBUTE_ROW_SCHEMA = [
+  { name: "entity", selector: { entity: {} } },
+  { name: "label", selector: { text: {} } },
+  { name: "icon", selector: { icon: {} } },
+] as const;
+
+// Returns the KNOWN items (verbatim) from a show_attributes config value.
+// Complements extractCustomAttributes so the two together reconstruct the list.
+export const extractKnownItems = (
+  showAttributes: unknown
+): (CurrentWeatherAttributes | CurrentWeatherAttributeConfig)[] => {
+  if (showAttributes === true) {
+    return [...CURRENT_WEATHER_ATTRIBUTES];
+  }
+  if (typeof showAttributes === "string") {
+    return isKnownAttribute(showAttributes) ? [showAttributes] : [];
+  }
+  if (!Array.isArray(showAttributes)) {
+    return [];
+  }
+
+  const result: (CurrentWeatherAttributes | CurrentWeatherAttributeConfig)[] =
+    [];
+
+  for (const item of showAttributes) {
+    if (item == null) continue;
+
+    if (typeof item === "string") {
+      if (isKnownAttribute(item)) {
+        result.push(item);
+      }
+    } else if (typeof item === "object") {
+      const cfg = item as CurrentWeatherAttributeConfig;
+      if (isKnownAttribute(cfg.name)) {
+        result.push(cfg);
+      }
+    }
+  }
+
+  return result;
+};
+
 const moveDottedKeysToNested = (obj: Record<string, any>) => {
   const result: Record<string, any> = { ...obj };
 
@@ -998,7 +1194,7 @@ export const denormalizeConfig = (obj: Record<string, any>) => {
   // Handle show_attributes: extract only KNOWN items for the multiselect;
   // flatten per-attribute entity/label/icon overrides for the form fields.
   // Custom items (entity-only or arbitrary-name) are preserved via _valueChanged
-  // reading this._config directly — do NOT put them in normalizedAttrs.
+  // reading this._config directly, so do NOT put them in normalizedAttrs.
   const showAttrs = result["current.show_attributes"];
   if (Array.isArray(showAttrs)) {
     const normalizedAttrs: string[] = [];

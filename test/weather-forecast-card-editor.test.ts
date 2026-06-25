@@ -3,6 +3,7 @@ import { CURRENT_WEATHER_ATTRIBUTES } from "../src/types";
 import {
   isKnownAttribute,
   extractCustomAttributes,
+  extractKnownItems,
   buildShowAttributes,
   denormalizeConfig,
 } from "../src/editor/weather-forecast-card-editor";
@@ -284,5 +285,87 @@ describe("round-trip preservation", () => {
     expect(humidityItem).toBeDefined();
     expect(humidityItem?.entity).toBe("sensor.my_hum");
     expect(humidityItem?.label).toBe("Hum");
+  });
+});
+
+describe("extractKnownItems", () => {
+  it("expands true to all 10 known attributes", () => {
+    expect(extractKnownItems(true)).toEqual([...CURRENT_WEATHER_ATTRIBUTES]);
+  });
+
+  it("returns known strings and known objects, excludes custom", () => {
+    const result = extractKnownItems(workedExampleShowAttributes);
+    expect(result).toHaveLength(2);
+    expect(result).toContain("wind_speed");
+    expect(result).toContainEqual({
+      name: "humidity",
+      entity: "sensor.my_hum",
+      label: "Hum",
+    });
+    expect(
+      result.some(
+        (item) =>
+          typeof item === "object" &&
+          (item as { entity?: string }).entity === "sensor.time"
+      )
+    ).toBe(false);
+  });
+
+  it("returns the single known string", () => {
+    expect(extractKnownItems("humidity")).toEqual(["humidity"]);
+  });
+
+  it("returns [] for an unknown string, false and undefined", () => {
+    expect(extractKnownItems("soil_moisture")).toEqual([]);
+    expect(extractKnownItems(false)).toEqual([]);
+    expect(extractKnownItems(undefined)).toEqual([]);
+  });
+
+  it("drops null entries", () => {
+    expect(extractKnownItems([null, "humidity"])).toEqual(["humidity"]);
+  });
+});
+
+describe("custom entity attributes editor merge (add/remove)", () => {
+  it("partitions every item into exactly one of known or custom", () => {
+    const known = extractKnownItems(workedExampleShowAttributes);
+    const custom = extractCustomAttributes(workedExampleShowAttributes);
+    expect(known.length + custom.length).toBe(
+      workedExampleShowAttributes.length
+    );
+  });
+
+  it("adding a blank custom row keeps known and existing custom items", () => {
+    const known = extractKnownItems(workedExampleShowAttributes);
+    const custom = [
+      ...extractCustomAttributes(workedExampleShowAttributes),
+      {},
+    ];
+    const merged = [...known, ...custom];
+
+    expect(merged).toContain("wind_speed");
+    expect(merged).toContainEqual({ entity: "sensor.time" });
+    expect(merged[merged.length - 1]).toEqual({});
+  });
+
+  it("removing a custom row keeps the rest intact", () => {
+    const known = extractKnownItems(workedExampleShowAttributes);
+    const custom = extractCustomAttributes(workedExampleShowAttributes);
+    custom.splice(0, 1); // remove sensor.time
+    const merged = [...known, ...custom];
+
+    expect(
+      merged.some(
+        (item) =>
+          typeof item === "object" &&
+          (item as { entity?: string }).entity === "sensor.time"
+      )
+    ).toBe(false);
+    expect(merged).toContain("wind_speed");
+    expect(merged).toContainEqual({
+      entity: "sensor.wash",
+      icon: "mdi:abacus",
+      label: "kokkeli",
+    });
   });
 });
