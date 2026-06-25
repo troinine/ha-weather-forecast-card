@@ -177,29 +177,6 @@ export class WeatherForecastCardEditor
         },
       },
       {
-        name: "forecast_types",
-        default: "both",
-        optional: true,
-        selector: {
-          select: {
-            options: [
-              {
-                value: "both",
-                label: "Hourly and daily",
-              },
-              {
-                value: "daily",
-                label: "Daily only",
-              },
-              {
-                value: "hourly",
-                label: "Hourly only",
-              },
-            ],
-          },
-        },
-      },
-      {
         name: "show_condition_effects",
         default: false,
         optional: true,
@@ -493,6 +470,29 @@ export class WeatherForecastCardEditor
         type: "expandable",
         flatten: true,
         schema: [
+          {
+            name: "forecast_types",
+            default: "both",
+            optional: true,
+            selector: {
+              select: {
+                options: [
+                  {
+                    value: "both",
+                    label: "Hourly and daily",
+                  },
+                  {
+                    value: "daily",
+                    label: "Daily only",
+                  },
+                  {
+                    value: "hourly",
+                    label: "Hourly only",
+                  },
+                ],
+              },
+            },
+          },
           {
             name: "icons_path",
             selector: { text: {} },
