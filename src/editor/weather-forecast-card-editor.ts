@@ -640,7 +640,7 @@ export class WeatherForecastCardEditor
         ></ha-form>
         <ha-icon-button
           .path=${mdiDelete}
-          .label=${"Remove"}
+          .label=${this.hass.localize("ui.common.remove") || "Remove"}
           @click=${() => this._removeCustomAttribute(index)}
         ></ha-icon-button>
       </div>
@@ -699,12 +699,14 @@ export class WeatherForecastCardEditor
   private _commitCustomAttributes(
     custom: CurrentWeatherAttributeConfig[]
   ): void {
-    const known = extractKnownItems(this._config.current?.show_attributes);
     const newConfig: WeatherForecastCardEditorConfig = {
       ...this._config,
       current: {
         ...this._config.current,
-        show_attributes: [...known, ...custom],
+        show_attributes: rebuildShowAttributesWithCustom(
+          this._config.current?.show_attributes,
+          custom
+        ),
       },
     };
 
@@ -1063,7 +1065,7 @@ export const buildShowAttributes = (
     icon: Record<string, string>;
   },
   customItems: CurrentWeatherAttributeConfig[]
-): true | (string | CurrentWeatherAttributeConfig)[] => {
+): true | (CurrentWeatherAttributes | CurrentWeatherAttributeConfig)[] => {
   const allKnownSelected = CURRENT_WEATHER_ATTRIBUTES.every((attr) =>
     selectedKnownNames.includes(attr)
   );
@@ -1076,7 +1078,7 @@ export const buildShowAttributes = (
     return true;
   }
 
-  const known: (string | CurrentWeatherAttributeConfig)[] =
+  const known: (CurrentWeatherAttributes | CurrentWeatherAttributeConfig)[] =
     selectedKnownNames.map((name) => {
       const e = overrides.entity[name];
       const l = overrides.label[name];
@@ -1089,7 +1091,7 @@ export const buildShowAttributes = (
           ...(i ? { icon: i } : {}),
         };
       }
-      return name;
+      return name as CurrentWeatherAttributes;
     });
 
   return [...known, ...customItems];
@@ -1136,6 +1138,36 @@ export const extractKnownItems = (
   }
 
   return result;
+};
+
+// Rebuilds show_attributes from the existing known items plus an edited set of
+// custom items. Routes through buildShowAttributes so canonicalization (e.g.
+// collapsing back to `true` when all known attributes remain with no overrides
+// or custom items) stays consistent with the main form's update path.
+export const rebuildShowAttributesWithCustom = (
+  previousShowAttributes: unknown,
+  custom: CurrentWeatherAttributeConfig[]
+): true | (CurrentWeatherAttributes | CurrentWeatherAttributeConfig)[] => {
+  const known = extractKnownItems(previousShowAttributes);
+  const selectedKnownNames: string[] = [];
+  const overrides = {
+    entity: {} as Record<string, string>,
+    label: {} as Record<string, string>,
+    icon: {} as Record<string, string>,
+  };
+
+  for (const item of known) {
+    if (typeof item === "string") {
+      selectedKnownNames.push(item);
+    } else if (item.name) {
+      selectedKnownNames.push(item.name);
+      if (item.entity) overrides.entity[item.name] = item.entity;
+      if (item.label) overrides.label[item.name] = item.label;
+      if (item.icon) overrides.icon[item.name] = item.icon;
+    }
+  }
+
+  return buildShowAttributes(selectedKnownNames, overrides, custom);
 };
 
 const moveDottedKeysToNested = (obj: Record<string, any>) => {

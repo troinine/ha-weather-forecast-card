@@ -5,6 +5,7 @@ import {
   extractCustomAttributes,
   extractKnownItems,
   buildShowAttributes,
+  rebuildShowAttributesWithCustom,
   denormalizeConfig,
 } from "../src/editor/weather-forecast-card-editor";
 
@@ -363,6 +364,49 @@ describe("custom entity attributes editor merge (add/remove)", () => {
     ).toBe(false);
     expect(merged).toContain("wind_speed");
     expect(merged).toContainEqual({
+      entity: "sensor.wash",
+      icon: "mdi:abacus",
+      label: "kokkeli",
+    });
+  });
+});
+
+describe("rebuildShowAttributesWithCustom", () => {
+  it("restores the compact `true` form after adding then removing a custom row", () => {
+    // Start from "all known attributes".
+    let showAttributes: unknown = true;
+
+    // Add a blank custom row.
+    showAttributes = rebuildShowAttributesWithCustom(showAttributes, [
+      ...extractCustomAttributes(showAttributes),
+      {},
+    ]);
+    expect(Array.isArray(showAttributes)).toBe(true);
+
+    // Remove it again — should canonicalize back to `true`, not an expanded array.
+    showAttributes = rebuildShowAttributesWithCustom(
+      showAttributes,
+      extractCustomAttributes(showAttributes).filter((_, i) => i !== 0)
+    );
+    expect(showAttributes).toBe(true);
+  });
+
+  it("preserves known overrides and custom items", () => {
+    const result = rebuildShowAttributesWithCustom(
+      workedExampleShowAttributes,
+      extractCustomAttributes(workedExampleShowAttributes)
+    );
+
+    expect(Array.isArray(result)).toBe(true);
+    const arr = result as unknown[];
+    expect(arr).toContain("wind_speed");
+    expect(arr).toContainEqual({
+      name: "humidity",
+      entity: "sensor.my_hum",
+      label: "Hum",
+    });
+    expect(arr).toContainEqual({ entity: "sensor.time" });
+    expect(arr).toContainEqual({
       entity: "sensor.wash",
       icon: "mdi:abacus",
       label: "kokkeli",
