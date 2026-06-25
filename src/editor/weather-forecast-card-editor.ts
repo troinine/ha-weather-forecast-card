@@ -44,6 +44,7 @@ type HaFormSelector =
   | { entity: { domain?: string; device_class?: string | string[] } }
   | { boolean: {} }
   | { text: {} }
+  | { icon: {} }
   | { entity_name: {} }
   | { number: { min?: number; max?: number } }
   | { ui_action: { default_action: string } }
@@ -63,6 +64,8 @@ type HaFormSchema = {
     | `current.${keyof WeatherForecastCardCurrentConfig}`
     | `forecast_action.${keyof WeatherForecastCardForecastActionConfig}`
     | `current.attribute_entity_${CurrentWeatherAttributes}`
+    | `current.attribute_label_${CurrentWeatherAttributes}`
+    | `current.attribute_icon_${CurrentWeatherAttributes}`
     | "attribute_entities"
     | "";
   type?: string;
@@ -445,16 +448,28 @@ export class WeatherForecastCardEditor
       return [];
     }
 
-    const attributeEntitySchemas: HaFormSchema[] = selectedAttributes.map(
+    const attributeFieldSchemas: HaFormSchema[] = selectedAttributes.flatMap(
       (attribute) => {
         const deviceClass = ATTRIBUTE_DEVICE_CLASS_MAP[attribute];
-        return {
-          name: `current.attribute_entity_${attribute}`,
-          optional: true,
-          selector: deviceClass
-            ? { entity: { domain: "sensor", device_class: deviceClass } }
-            : { entity: { domain: "sensor" } },
-        };
+        return [
+          {
+            name: `current.attribute_entity_${attribute}` as const,
+            optional: true,
+            selector: deviceClass
+              ? { entity: { domain: "sensor", device_class: deviceClass } }
+              : { entity: { domain: "sensor" } },
+          },
+          {
+            name: `current.attribute_label_${attribute}` as const,
+            optional: true,
+            selector: { text: {} },
+          },
+          {
+            name: `current.attribute_icon_${attribute}` as const,
+            optional: true,
+            selector: { icon: {} },
+          },
+        ];
       }
     );
 
@@ -463,7 +478,7 @@ export class WeatherForecastCardEditor
         name: "attribute_entities",
         type: "expandable",
         flatten: true,
-        schema: attributeEntitySchemas,
+        schema: attributeFieldSchemas,
       },
     ];
   };
@@ -566,6 +581,22 @@ export class WeatherForecastCardEditor
   }
 
   private _computeLabel = (schema: HaFormSchema): string | undefined => {
+    if (schema.name.startsWith("current.attribute_label_")) {
+      const attribute = schema.name.replace("current.attribute_label_", "");
+      const attributeLabel =
+        this.localize(`ui.card.weather.attributes.${attribute}`) ||
+        capitalize(attribute).replace(/_/g, " ");
+      return `${attributeLabel} label`;
+    }
+
+    if (schema.name.startsWith("current.attribute_icon_")) {
+      const attribute = schema.name.replace("current.attribute_icon_", "");
+      const attributeLabel =
+        this.localize(`ui.card.weather.attributes.${attribute}`) ||
+        capitalize(attribute).replace(/_/g, " ");
+      return `${attributeLabel} icon`;
+    }
+
     if (schema.name.startsWith("current.attribute_entity_")) {
       const attribute = schema.name.replace("current.attribute_entity_", "");
       const attributeLabel =
@@ -764,42 +795,47 @@ export class WeatherForecastCardEditor
       }
     }
 
-    // Convert show_attributes to object format if custom entities are specified
+    // Convert show_attributes to object format, preserving custom items and
+    // collecting per-attribute entity/label/icon overrides from the flat form keys
     if (newConfig?.current) {
-      const attributeEntities: Record<string, string> = {};
+      const entityOverrides: Record<string, string> = {};
+      const labelOverrides: Record<string, string> = {};
+      const iconOverrides: Record<string, string> = {};
 
       for (const key of Object.keys(newConfig.current)) {
         if (key.startsWith("attribute_entity_")) {
-          const attribute = key.replace(
-            "attribute_entity_",
-            ""
-          ) as CurrentWeatherAttributes;
-          const entity = newConfig.current[key];
-          if (entity) {
-            attributeEntities[attribute] = entity;
+          const attribute = key.replace("attribute_entity_", "");
+          const value = newConfig.current[key];
+          if (value) {
+            entityOverrides[attribute] = value;
+          }
+          delete newConfig.current[key];
+        } else if (key.startsWith("attribute_label_")) {
+          const attribute = key.replace("attribute_label_", "");
+          const value = newConfig.current[key];
+          if (value) {
+            labelOverrides[attribute] = value;
+          }
+          delete newConfig.current[key];
+        } else if (key.startsWith("attribute_icon_")) {
+          const attribute = key.replace("attribute_icon_", "");
+          const value = newConfig.current[key];
+          if (value) {
+            iconOverrides[attribute] = value;
           }
           delete newConfig.current[key];
         }
       }
 
       if (Array.isArray(newConfig.current.show_attributes)) {
-        const hasCustomEntities = Object.keys(attributeEntities).length > 0;
-        const allSelected = CURRENT_WEATHER_ATTRIBUTES.every((attribute) =>
-          newConfig.current.show_attributes.includes(attribute)
+        const customItems = extractCustomAttributes(
+          this._config?.current?.show_attributes
         );
-
-        if (hasCustomEntities) {
-          newConfig.current.show_attributes =
-            newConfig.current.show_attributes.map((attr: string) => {
-              const entity = attributeEntities[attr];
-              if (entity) {
-                return { name: attr, entity };
-              }
-              return attr;
-            });
-        } else if (allSelected) {
-          newConfig.current.show_attributes = true;
-        }
+        newConfig.current.show_attributes = buildShowAttributes(
+          newConfig.current.show_attributes,
+          { entity: entityOverrides, label: labelOverrides, icon: iconOverrides },
+          customItems
+        );
       }
     }
 
@@ -832,6 +868,80 @@ export class WeatherForecastCardEditor
   };
 }
 
+export const isKnownAttribute = (
+  name: unknown
+): name is CurrentWeatherAttributes =>
+  typeof name === "string" &&
+  (CURRENT_WEATHER_ATTRIBUTES as ReadonlyArray<string>).includes(name);
+
+export const extractCustomAttributes = (
+  showAttributes: unknown
+): CurrentWeatherAttributeConfig[] => {
+  if (!Array.isArray(showAttributes)) {
+    return [];
+  }
+
+  const result: CurrentWeatherAttributeConfig[] = [];
+
+  for (const item of showAttributes) {
+    if (item == null) continue;
+
+    if (typeof item === "string") {
+      if (!isKnownAttribute(item)) {
+        result.push({ name: item });
+      }
+    } else if (typeof item === "object") {
+      const cfg = item as CurrentWeatherAttributeConfig;
+      // Custom = no name OR name is not a known attribute
+      if (!isKnownAttribute(cfg.name)) {
+        result.push(cfg);
+      }
+    }
+  }
+
+  return result;
+};
+
+export const buildShowAttributes = (
+  selectedKnownNames: string[],
+  overrides: {
+    entity: Record<string, string>;
+    label: Record<string, string>;
+    icon: Record<string, string>;
+  },
+  customItems: CurrentWeatherAttributeConfig[]
+): true | (string | CurrentWeatherAttributeConfig)[] => {
+  const allKnownSelected = CURRENT_WEATHER_ATTRIBUTES.every((attr) =>
+    selectedKnownNames.includes(attr)
+  );
+  const hasOverrides =
+    Object.keys(overrides.entity).length > 0 ||
+    Object.keys(overrides.label).length > 0 ||
+    Object.keys(overrides.icon).length > 0;
+
+  if (customItems.length === 0 && !hasOverrides && allKnownSelected) {
+    return true;
+  }
+
+  const known: (string | CurrentWeatherAttributeConfig)[] =
+    selectedKnownNames.map((name) => {
+      const e = overrides.entity[name];
+      const l = overrides.label[name];
+      const i = overrides.icon[name];
+      if (e || l || i) {
+        return {
+          name: name as CurrentWeatherAttributes,
+          ...(e ? { entity: e } : {}),
+          ...(l ? { label: l } : {}),
+          ...(i ? { icon: i } : {}),
+        };
+      }
+      return name;
+    });
+
+  return [...known, ...customItems];
+};
+
 const moveDottedKeysToNested = (obj: Record<string, any>) => {
   const result: Record<string, any> = { ...obj };
 
@@ -860,7 +970,7 @@ const moveDottedKeysToNested = (obj: Record<string, any>) => {
   return result;
 };
 
-const denormalizeConfig = (obj: Record<string, any>) => {
+export const denormalizeConfig = (obj: Record<string, any>) => {
   const result = flattenNestedKeys(obj);
 
   result.forecast_mode =
@@ -885,21 +995,35 @@ const denormalizeConfig = (obj: Record<string, any>) => {
     result["current.show_attributes"] = [...CURRENT_WEATHER_ATTRIBUTES];
   }
 
-  // Handle show_attributes that may contain objects with entity references
+  // Handle show_attributes: extract only KNOWN items for the multiselect;
+  // flatten per-attribute entity/label/icon overrides for the form fields.
+  // Custom items (entity-only or arbitrary-name) are preserved via _valueChanged
+  // reading this._config directly — do NOT put them in normalizedAttrs.
   const showAttrs = result["current.show_attributes"];
   if (Array.isArray(showAttrs)) {
-    // Extract attribute entities and normalize the array
     const normalizedAttrs: string[] = [];
 
     for (const item of showAttrs) {
       if (typeof item === "string") {
-        normalizedAttrs.push(item);
-      } else if (typeof item === "object" && item.name) {
-        normalizedAttrs.push(item.name);
-        // Store entity in flattened format for the form
-        if (item.entity) {
-          result[`current.attribute_entity_${item.name}`] = item.entity;
+        if (isKnownAttribute(item)) {
+          normalizedAttrs.push(item);
         }
+        // unknown string custom items: skip (preserved via this._config)
+      } else if (typeof item === "object" && item !== null) {
+        const cfg = item as CurrentWeatherAttributeConfig;
+        if (isKnownAttribute(cfg.name)) {
+          normalizedAttrs.push(cfg.name);
+          if (cfg.entity) {
+            result[`current.attribute_entity_${cfg.name}`] = cfg.entity;
+          }
+          if (cfg.label) {
+            result[`current.attribute_label_${cfg.name}`] = cfg.label;
+          }
+          if (cfg.icon) {
+            result[`current.attribute_icon_${cfg.name}`] = cfg.icon;
+          }
+        }
+        // custom object items: skip (preserved via this._config)
       }
     }
 
