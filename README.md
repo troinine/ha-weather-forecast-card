@@ -94,8 +94,8 @@ The `current` object controls the display of current weather information and att
 | Name                       | Type                       | Default  | Description                                                                                                                                                                                                                                                                                                                                                |
 | :------------------------- | :------------------------- | :------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `temperature_entity`       | `string`                   | optional | Bring your own temperature entity to override the temperature from the main weather `entity`. **Note:** The root level `temperature_entity` is deprecated but still supported and will be migrated automatically when editing the card using the card editor.                                                                                              |
-| `show_attributes`          | `boolean`/`string`/`array` | optional | Display weather attributes below current conditions. Set to `true` to show all available attributes, `false` to hide all, a single attribute name (e.g., `"humidity"`), or an array of attribute names or objects. See [Custom Attribute Entities](#custom-attribute-entities) for advanced configuration.                                                 |
-| `secondary_info_attribute` | `string`                   | optional | Controls which secondary info is displayed below current temperature. Supports all available weather attributes. If not set, or if the given attribute is not available in the weather entity, it will default to temperature extrema (high/low) if available, if not available then `precipitation` and if precipitation isn't available then `humidity`. |
+| `show_attributes`          | `boolean`/`string`/`array` | optional | Display weather attributes below current conditions. Set to `true` to show all available attributes, `false` to hide all, a single attribute name (e.g., `"humidity"`), or an array of attribute names or objects. Objects can override the value `entity`, `label` and `icon`, or display an arbitrary entity. See [Custom Attributes](#custom-attributes) for advanced configuration.                                                 |
+| `secondary_info_attribute` | `string`/`object`          | optional | Controls which secondary info is displayed below current temperature. Supports all available weather attributes. Can also be an object `{ name?, entity?, icon? }` to source the value from a custom entity (see [Custom Attributes](#custom-attributes); note that `label` is not rendered for secondary info). If not set, or if the given attribute is not available in the weather entity, it will default to temperature extrema (high/low) if available, if not available then `precipitation` and if precipitation isn't available then `humidity`. |
 | `temperature_precision`    | `number`                   | optional | Number of decimal places to display for temperature values (0-2). Applies to current temperature, high/low temperatures, and temperature-related attributes like dew point and apparent temperature.                                                                                                                                                       |
 
 **Available attributes:**
@@ -114,16 +114,21 @@ The `current` object controls the display of current weather information and att
 > [!NOTE]
 > Attributes are only rendered if the data is available from your weather entity (or custom sensor entity if configured). If an attribute is not provided by your weather integration, it will not be displayed even if configured.
 
-#### Custom Attribute Entities
+#### Custom Attributes
 
-Similar to the `current.temperature_entity` option, you can override individual attribute values with custom sensor entities. This is useful when your weather integration doesn't provide certain attributes or when you have more accurate local sensors.
+Similar to the `current.temperature_entity` option, each displayed attribute can be customized. You can override an attribute's value with a custom sensor entity (useful when your weather integration doesn't provide it, or when you have a more accurate local sensor), give it a custom `label` or `icon`, or display an arbitrary entity that isn't a standard weather attribute at all.
 
 **Object format for attributes:**
 
-| Property | Type     | Description                                                            |
-| :------- | :------- | :--------------------------------------------------------------------- |
-| `name`   | `string` | The attribute name (e.g., `humidity`, `pressure`)                      |
-| `entity` | `string` | Optional sensor entity ID to use instead of the weather entity's value |
+| Property | Type     | Description                                                                                                                          |
+| :------- | :------- | :--------------------------------------------------------------------------------------------------------------------------------- |
+| `name`   | `string` | Optional. A known weather attribute (e.g., `humidity`, `pressure`). Omit it for an entity-only item that displays a custom entity's state. |
+| `entity` | `string` | Optional. Entity ID to source the value from instead of the weather entity. **Required when `name` is omitted.**                    |
+| `label`  | `string` | Optional. Custom label shown instead of the derived attribute name or the entity's friendly name.                                   |
+| `icon`   | `string` | Optional. Custom icon (e.g., `mdi:weather-windy`) shown instead of the default attribute or entity icon.                            |
+
+> [!NOTE]
+> Each item must have a `name`, an `entity`, or both. An entity-only item (no `name`) is displayed as an "arbitrary" attribute: its value is the entity's state and its label defaults to the entity's friendly name unless you set `label`.
 
 **Configuration examples:**
 
@@ -157,8 +162,28 @@ current:
     - wind_speed # Uses weather entity
 ```
 
+```yaml
+# Custom label and icon
+current:
+  show_attributes:
+    - name: wind_speed
+      label: Wind
+      icon: mdi:weather-windy
+```
+
+```yaml
+# Arbitrary entities (no weather attribute name) — displays the entity's state
+current:
+  show_attributes:
+    - entity: sensor.pollen_count
+      label: Pollen
+      icon: mdi:flower
+    - entity: sensor.uv_today # label defaults to the entity's friendly name
+    - humidity # Standard weather attribute alongside custom ones
+```
+
 > [!TIP]
-> The card editor provides entity selectors with appropriate device class filtering when you select attributes. Expand the "Attribute entities" section to configure custom sensors for each selected attribute.
+> The card editor provides entity selectors with appropriate device class filtering when you select attributes, plus optional label and icon fields per attribute. Expand the "Attribute entities" section to configure them. Entity-only (arbitrary) attributes are preserved when editing but are currently authored in YAML.
 
 ### Forecast Object
 
