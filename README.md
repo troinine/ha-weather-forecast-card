@@ -116,7 +116,7 @@ The `current` object controls the display of current weather information and att
 
 #### Custom Attributes
 
-Similar to the `current.temperature_entity` option, each displayed attribute can be customized. You can override an attribute's value with a custom sensor entity (useful when your weather integration doesn't provide it, or when you have a more accurate local sensor), give it a custom `label` or `icon`, or display an arbitrary entity that isn't a standard weather attribute at all.
+Similar to the `current.temperature_entity` option, each displayed attribute can be customized. You can override an attribute's value with a custom sensor entity (useful when your weather integration doesn't provide it, or when you have a more accurate local sensor), give it a custom `label` or `icon`, or display an arbitrary entity that isn't a standard weather attribute.
 
 **Object format for attributes:**
 
@@ -172,7 +172,7 @@ current:
 ```
 
 ```yaml
-# Arbitrary entities (no weather attribute name) — displays the entity's state
+# Arbitrary entities (no weather attribute name), shows the entity state
 current:
   show_attributes:
     - entity: sensor.pollen_count
@@ -183,7 +183,7 @@ current:
 ```
 
 > [!TIP]
-> The card editor provides entity selectors with appropriate device class filtering when you select attributes, plus optional label and icon fields per attribute. Expand the "Attribute entities" section to configure them. Entity-only (arbitrary) attributes are preserved when editing but are currently authored in YAML.
+> The card editor supports this too. When you select standard attributes, the "Attribute entities" section provides an entity selector (with device class filtering) plus optional label and icon fields for each. Arbitrary entity attributes can be added and removed under the "Custom entity attributes" section.
 
 ### Forecast Object
 
