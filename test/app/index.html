@@ -140,6 +140,25 @@
       <div class="test-card">
         <weather-forecast-card id="test-card-bug-14-2"></weather-forecast-card>
       </div>
+      <h3>#139 - 1 (issue body — chart font 15px, 14° out of bounds)</h3>
+      <div class="test-card">
+        <weather-forecast-card
+          id="test-card-bug-139"
+          style="--weather-forecast-card-chart-font-size: 15px"
+        ></weather-forecast-card>
+      </div>
+      <h3>#139 - 2 (DWD comment)</h3>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-bug-139-2"></weather-forecast-card>
+      </div>
+      <h3>#139 - 3 (screenshot report, 6 days)</h3>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-bug-139-3"></weather-forecast-card>
+      </div>
+      <h3>#139 - 4 (screenshot report, 5 days)</h3>
+      <div class="test-card">
+        <weather-forecast-card id="test-card-bug-139-4"></weather-forecast-card>
+      </div>
       <div id="error">
         <p id="error-message"></p>
       </div>
@@ -150,6 +169,10 @@
         MockHass,
         ISSUE_14_DAILY_FORECAST,
         ISSUE_14_DAILY_FORECAST_2,
+        ISSUE_139_DAILY_FORECAST,
+        ISSUE_139_DAILY_FORECAST_2,
+        ISSUE_139_DAILY_FORECAST_3,
+        ISSUE_139_DAILY_FORECAST_4,
         TEST_FORECAST_HOURLY_CARDINAL_WIND_BEARING,
         TEST_FORECAST_DAILY_CARDINAL_WIND_BEARING,
       } from "../mocks/index.ts";
@@ -387,6 +410,82 @@
             },
           },
           hassIssue14_2.getHass()
+        );
+
+        // Report 1 (issue body) — the original report. The
+        // distinguishing factor is the larger chart font (15px, set via the
+        // card's inline style in the markup above): it pushes the peak "14°"
+        // label out of the chart bounds so it clips behind the weather icon.
+        const hassIssue139 = new MockHass();
+        hassIssue139.dailyForecast = ISSUE_139_DAILY_FORECAST;
+
+        initializeCard(
+          "test-card-bug-139",
+          {
+            entity: "weather.demo",
+            default_forecast: "daily",
+            forecast: {
+              mode: "chart",
+              daily_slots: 5,
+              use_color_thresholds: true,
+              extra_attribute: "wind_bearing",
+            },
+          },
+          hassIssue139.getHass()
+        );
+
+        // Report 2 (DWD comment) — config mirrors the reporter's YAML.
+        const hassIssue139_2 = new MockHass();
+        hassIssue139_2.dailyForecast = ISSUE_139_DAILY_FORECAST_2;
+
+        initializeCard(
+          "test-card-bug-139-2",
+          {
+            entity: "weather.demo",
+            default_forecast: "daily",
+            forecast: {
+              mode: "chart",
+              daily_slots: 5,
+              use_color_thresholds: true,
+              extra_attribute: "wind_bearing",
+              temperature_precision: 0,
+            },
+          },
+          hassIssue139_2.getHass()
+        );
+
+        // Report 3 — near-flat curve, peaks clustered at 22.5°.
+        const hassIssue139_3 = new MockHass();
+        hassIssue139_3.dailyForecast = ISSUE_139_DAILY_FORECAST_3;
+
+        initializeCard(
+          "test-card-bug-139-3",
+          {
+            entity: "weather.demo",
+            default_forecast: "daily",
+            forecast: {
+              mode: "chart",
+              extra_attribute: "wind_direction",
+            },
+          },
+          hassIssue139_3.getHass()
+        );
+
+        // Report 4 — three identical 22° peaks in a row.
+        const hassIssue139_4 = new MockHass();
+        hassIssue139_4.dailyForecast = ISSUE_139_DAILY_FORECAST_4;
+
+        initializeCard(
+          "test-card-bug-139-4",
+          {
+            entity: "weather.demo",
+            default_forecast: "daily",
+            forecast: {
+              mode: "chart",
+              extra_attribute: "wind_direction",
+            },
+          },
+          hassIssue139_4.getHass()
         );
       });
     </script>
