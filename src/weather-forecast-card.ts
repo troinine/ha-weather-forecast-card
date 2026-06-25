@@ -7,6 +7,7 @@ import {
   actionHandler,
   isInvalidEntityIdError,
   isSubscriptionNotFoundError,
+  LovelaceGridOptions,
 } from "./hass";
 import {
   ForecastActionEvent,
@@ -175,6 +176,82 @@ export class WeatherForecastCard extends LitElement {
 
     this.config = merge({}, DEFAULT_CONFIG, migratedConfig);
     this._currentForecastType = this.config.default_forecast || "daily";
+  }
+
+  /**
+   * Reports sizing to Home Assistant's Sections view so the card snaps to whole
+   * grid rows instead of taking an arbitrary fractional height.
+   *
+   * Row counts are derived from the enabled blocks; the content is vertically
+   * centered (see CSS) when the user sizes the card taller than it needs, so a
+   * slightly generous estimate only adds whitespace rather than clipping.
+   */
+  public getGridOptions(): LovelaceGridOptions {
+    const { rows, minRows, minColumns } = this.computeRowSizing();
+
+    return {
+      columns: 12,
+      rows,
+      min_rows: minRows,
+      min_columns: minColumns,
+    };
+  }
+
+  /**
+   * Reports sizing for the legacy masonry view (units of ~50px). Reuses the same
+   * block accounting as {@link getGridOptions}.
+   */
+  public getCardSize(): number {
+    return this.computeRowSizing().rows;
+  }
+
+  /**
+   * Derives the card's grid sizing from the enabled blocks (current weather and
+   * the simple/chart forecast). Pure function of the config with no `hass`/DOM
+   * dependency, so it is safe to call before the first render.
+   */
+  private computeRowSizing(): {
+    rows: number;
+    minRows: number;
+    minColumns: number;
+  } {
+    const showCurrent = this.config?.show_current !== false;
+    const showForecast = this.config?.show_forecast !== false;
+    const isChart = this.config?.forecast?.mode === ForecastMode.Chart;
+
+    // Base allowance for card padding and the gap between blocks.
+    let rows = 1;
+    let minRows = 1;
+
+    if (showCurrent) {
+      // Conditions icon + name + temperature.
+      rows += 2;
+      minRows += 2;
+
+      // The optional attribute list adds a variable amount of height; reserve a
+      // little extra so the default size does not clip a typical attribute list.
+      if (this.config?.current?.show_attributes) {
+        rows += 1;
+      }
+    }
+
+    if (showForecast) {
+      if (isChart) {
+        // Optional settings bar + 130px chart + header/footer labels.
+        rows += 3;
+        minRows += 3;
+      } else {
+        // Simple forecast column (time + icon + temperature + precipitation).
+        rows += 2;
+        minRows += 2;
+      }
+    }
+
+    return {
+      rows,
+      minRows,
+      minColumns: showCurrent && showForecast ? 6 : 4,
+    };
   }
 
   public connectedCallback(): void {
