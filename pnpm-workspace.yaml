@@ -1,0 +1,12 @@
+# Settings only; not a real workspace.
+
+# Delay installing versions published in the last 5 days (supply-chain cooldown).
+minimumReleaseAge: 7200
+
+# Native deps run from prebuilt binaries; block their build scripts.
+allowBuilds:
+  "@parcel/watcher": false
+  "@swc/core": false
+  esbuild: false
+  lmdb: false
+  msgpackr-extract: false

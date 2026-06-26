@@ -5,6 +5,7 @@
   "browserslist": "ios >= 15, safari >= 15, last 2 versions, not dead",
   "author": "troinine",
   "license": "MIT",
+  "packageManager": "pnpm@11.9.0",
   "keywords": [
     "home-assistant",
     "weather-forecast",
@@ -37,31 +38,31 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "chart.js": "^4.5.1",
-    "chartjs-plugin-datalabels": "^2.2.0",
-    "consola": "^3.4.2",
-    "custom-card-helpers": "^1.9.0",
-    "home-assistant-js-websocket": "^9.5.0",
-    "lit": "^3.1.0",
-    "lodash-es": "^4.17.22",
-    "memoize-one": "^6.0.0",
-    "suncalc": "^1.9.0"
+    "chart.js": "4.5.1",
+    "chartjs-plugin-datalabels": "2.2.0",
+    "consola": "3.4.2",
+    "custom-card-helpers": "1.9.0",
+    "home-assistant-js-websocket": "9.6.0",
+    "lit": "3.3.3",
+    "lodash-es": "4.18.1",
+    "memoize-one": "6.0.0",
+    "suncalc": "1.9.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@mdi/js": "^7.4.47",
-    "@open-wc/testing": "^4.0.0",
-    "@parcel/transformer-inline-string": "^2.16.3",
-    "@types/lodash-es": "^4.17.12",
-    "@types/node": "^20.10.0",
-    "@types/suncalc": "^1.9.2",
-    "eslint": "^9.39.2",
-    "eslint-config-prettier": "^10.1.8",
-    "happy-dom": "^20.0.11",
-    "parcel": "^2.16.1",
-    "prettier": "^3.7.4",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0",
-    "vitest": "^4.0.16"
+    "@eslint/js": "10.0.1",
+    "@mdi/js": "7.4.47",
+    "@open-wc/testing": "4.0.0",
+    "@parcel/transformer-inline-string": "2.16.4",
+    "@types/lodash-es": "4.17.12",
+    "@types/node": "24.13.2",
+    "@types/suncalc": "1.9.2",
+    "eslint": "10.5.0",
+    "eslint-config-prettier": "10.1.8",
+    "happy-dom": "20.10.6",
+    "parcel": "2.16.4",
+    "prettier": "3.8.4",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.61.1",
+    "vitest": "4.1.9"
   }
 }
