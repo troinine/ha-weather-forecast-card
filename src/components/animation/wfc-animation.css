@@ -69,6 +69,31 @@
     --weather-forecast-card-effects-clear-night-horizon,
     rgba(236, 72, 153, 0.4)
   );
+  --overcast-sky-color: var(
+    --weather-forecast-card-effects-overcast-sky-color,
+    rgba(118, 132, 148, 0.42)
+  );
+  --overcast-sky-accent: var(
+    --weather-forecast-card-effects-overcast-sky-accent,
+    rgba(152, 165, 180, 0.34)
+  );
+  --overcast-sky-horizon: var(
+    --weather-forecast-card-effects-overcast-sky-horizon,
+    rgba(196, 206, 216, 0.24)
+  );
+  --overcast-night-color: var(
+    --weather-forecast-card-effects-overcast-night-color,
+    rgba(38, 44, 56, 0.8)
+  );
+  --overcast-night-accent: var(
+    --weather-forecast-card-effects-overcast-night-accent,
+    rgba(55, 62, 76, 0.65)
+  );
+  --overcast-night-horizon: var(
+    --weather-forecast-card-effects-overcast-night-horizon,
+    rgba(78, 86, 100, 0.45)
+  );
+  --cloud-color: var(--weather-forecast-card-effects-cloud-color, #f4f7fb);
 }
 
 :host(.dark) {
@@ -110,6 +135,31 @@
     --weather-forecast-card-effects-clear-night-horizon,
     rgba(40, 25, 100, 0.4)
   );
+  --overcast-sky-color: var(
+    --weather-forecast-card-effects-overcast-sky-color,
+    rgba(60, 70, 82, 0.55)
+  );
+  --overcast-sky-accent: var(
+    --weather-forecast-card-effects-overcast-sky-accent,
+    rgba(78, 89, 102, 0.45)
+  );
+  --overcast-sky-horizon: var(
+    --weather-forecast-card-effects-overcast-sky-horizon,
+    rgba(102, 113, 126, 0.3)
+  );
+  --overcast-night-color: var(
+    --weather-forecast-card-effects-overcast-night-color,
+    rgba(16, 20, 28, 0.88)
+  );
+  --overcast-night-accent: var(
+    --weather-forecast-card-effects-overcast-night-accent,
+    rgba(30, 36, 47, 0.7)
+  );
+  --overcast-night-horizon: var(
+    --weather-forecast-card-effects-overcast-night-horizon,
+    rgba(48, 55, 68, 0.5)
+  );
+  --cloud-color: var(--weather-forecast-card-effects-cloud-color, #dfe6ee);
 }
 
 /* Modern browsers with color-mix support */
@@ -232,6 +282,24 @@
   pointer-events: none;
 }
 
+/* Overcast deck for the `cloudy` condition (day) */
+.sky.overcast {
+  background: linear-gradient(
+    180deg,
+    var(--overcast-sky-color) 0%,
+    var(--overcast-sky-accent) 55%,
+    var(--overcast-sky-horizon) 100%
+  );
+}
+
+.sky.overcast::before {
+  background: radial-gradient(
+    circle at 50% 10%,
+    rgba(255, 255, 255, 0.18) 0%,
+    transparent 55%
+  );
+}
+
 .sun {
   position: absolute;
   top: calc(var(--sun-size) * -0.95);
@@ -307,6 +375,20 @@
   pointer-events: none;
 }
 
+/* Overcast deck for the `cloudy` condition (night) */
+.night-sky.overcast {
+  background: linear-gradient(
+    180deg,
+    var(--overcast-night-color) 0%,
+    var(--overcast-night-accent) 55%,
+    var(--overcast-night-horizon) 100%
+  );
+}
+
+.night-sky.overcast::before {
+  background: none;
+}
+
 .moon {
   position: absolute;
   top: calc(var(--moon-size) * -0.85);
@@ -328,6 +410,147 @@
   border-radius: 50%;
   animation: twinkle 3s ease-in-out infinite;
   box-shadow: 0 0 3px 1px var(--star-color);
+}
+
+/* ---- Clouds ----
+   A double-width track holds two identical cloud sets; translating it by -50%
+   slides the second copy into the first's start position for a seamless drift. */
+.cloud-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.cloud-track {
+  position: absolute;
+  inset: 0;
+  width: 200%;
+  z-index: 0;
+  animation: cloud-drift var(--cloud-drift-duration, 80s) linear infinite;
+  will-change: transform;
+}
+
+/* Wind blowing toward the east drifts the deck rightward (the track is two
+   identical tiles, so reversing the same keyframe stays seamless). */
+.cloud-track.drift-right {
+  animation-direction: reverse;
+}
+
+.cloud-set {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+}
+
+.cloud-set-second {
+  left: 50%;
+}
+
+.cloud {
+  position: absolute;
+  /* Soft elliptical billows are merged into a cumulus silhouette by the child's
+     blur+contrast, then the edges are roughened by the SVG turbulence filter. */
+  filter: url(#wfc-cloud-rough);
+}
+
+/* Night clouds are dimmed so they read as a subtle silhouette, not bright puffs. */
+.cloud.night {
+  filter: url(#wfc-cloud-rough) brightness(0.5);
+}
+
+.cloud-puffs {
+  position: absolute;
+  inset: 0;
+  filter: blur(6px) contrast(22);
+}
+
+.cloud-puffs::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+}
+
+/* Five silhouette layouts (+ random horizontal flip in JS) keep clouds from
+   looking like one repeated sprite. */
+.cloud-shape-1 .cloud-puffs::before {
+  background:
+    radial-gradient(28% 42% at 22% 58%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(34% 60% at 42% 46%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(30% 50% at 62% 52%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(24% 38% at 80% 60%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(90% 26% at 50% 74%, var(--cloud-color) 0 60%, transparent 64%);
+}
+
+.cloud-shape-2 .cloud-puffs::before {
+  background:
+    radial-gradient(30% 55% at 28% 50%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(26% 44% at 50% 58%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(34% 60% at 70% 47%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(20% 32% at 90% 62%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(92% 24% at 50% 76%, var(--cloud-color) 0 60%, transparent 64%);
+}
+
+.cloud-shape-3 .cloud-puffs::before {
+  background:
+    radial-gradient(20% 34% at 14% 62%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(32% 64% at 35% 40%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(26% 48% at 56% 54%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(22% 40% at 75% 56%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(94% 24% at 50% 75%, var(--cloud-color) 0 60%, transparent 64%);
+}
+
+/* A compact, puffier two-lobe cloud. */
+.cloud-shape-4 .cloud-puffs::before {
+  background:
+    radial-gradient(34% 66% at 34% 44%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(38% 70% at 62% 42%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(22% 40% at 84% 58%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(74% 26% at 48% 76%, var(--cloud-color) 0 60%, transparent 64%);
+}
+
+/* A long, low bank with many small billows. */
+.cloud-shape-5 .cloud-puffs::before {
+  background:
+    radial-gradient(18% 32% at 12% 60%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(22% 44% at 30% 52%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(24% 46% at 48% 50%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(22% 42% at 66% 52%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(18% 34% at 84% 58%, var(--cloud-color) 0 60%, transparent 62%),
+    radial-gradient(96% 22% at 50% 76%, var(--cloud-color) 0 60%, transparent 64%);
+}
+
+.cloud.grey .cloud-puffs::before {
+  filter: brightness(0.86) saturate(0.55);
+}
+
+/* Volumetric shading: shadowed underside, highlighted top-left. */
+.cloud-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      55% 45% at 50% 92%,
+      rgba(90, 100, 115, 0.5) 0%,
+      rgba(90, 100, 115, 0) 70%
+    ),
+    radial-gradient(
+      50% 45% at 38% 26%,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(255, 255, 255, 0) 70%
+    );
+  mix-blend-mode: soft-light;
+}
+
+@keyframes cloud-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes twinkle {

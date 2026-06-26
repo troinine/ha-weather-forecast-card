@@ -313,16 +313,17 @@ show_condition_effects: false
 
 ### Available Effects
 
-The card provides six different effect types that can be individually enabled or disabled:
+The card provides seven different effect types that can be individually enabled or disabled:
 
-| Effect Type     | Description                                                                                                                                                                               | Weather Conditions Applied              |
-| :-------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------- |
-| **`rain`**      | Animated raindrops falling with realistic wind drift. Droplet angle and speed adapt to wind conditions from weather data. Includes splash effects on landing.                             | `rainy`, `pouring`, `lightning-rainy`   |
-| **`snow`**      | Snowflakes falling with smooth sinusoidal drift patterns. Each flake follows a unique non-linear trajectory with varying sizes, opacity, and depths for realistic parallax effects.       | `snowy`, `snowy-rainy`                  |
-| **`lightning`** | Dramatic lightning flash sequences with multiple strikes and residual flickers, creating an authentic storm atmosphere.                                                                   | `lightning`, `lightning-rainy`          |
-| **`sky`**       | Visually pleasing gradient sky background that adapts to time of day if sun times are enabled.                                                                                            | `sunny`, `clear-night`                  |
-| **`sun`**       | Animated sun with rotating rays positioned at the top of the card. Creates a warm, dynamic daytime atmosphere. Automatically switches to moon effect after sunset if sun times are shown. | `sunny`                                 |
-| **`moon`**      | Crescent moon with animated twinkling stars scattered across the card. Stars have randomized positions, sizes, and twinkle animations for a serene nighttime atmosphere.                  | `clear-night`, `sunny` (with sun times) |
+| Effect Type     | Description                                                                                                                                                                               | Weather Conditions Applied                          |
+| :-------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------- |
+| **`rain`**      | Animated raindrops falling with realistic wind drift. Droplet angle and speed adapt to wind conditions from weather data. Includes splash effects on landing.                             | `rainy`, `pouring`, `lightning-rainy`               |
+| **`snow`**      | Snowflakes falling with smooth sinusoidal drift patterns. Each flake follows a unique non-linear trajectory with varying sizes, opacity, and depths for realistic parallax effects.       | `snowy`, `snowy-rainy`                              |
+| **`lightning`** | Dramatic lightning flash sequences with multiple strikes and residual flickers, creating an authentic storm atmosphere.                                                                   | `lightning`, `lightning-rainy`                      |
+| **`sky`**       | Visually pleasing gradient sky background that adapts to time of day if sun times are enabled. Renders a soft overcast deck for `cloudy`.                                                  | `sunny`, `clear-night`, `cloudy`, `partlycloudy`    |
+| **`sun`**       | Animated sun with rotating rays positioned at the top of the card. Creates a warm, dynamic daytime atmosphere. Automatically switches to moon effect after sunset if sun times are shown. | `sunny`, `partlycloudy`                             |
+| **`moon`**      | Crescent moon with animated twinkling stars scattered across the card. Stars have randomized positions, sizes, and twinkle animations for a serene nighttime atmosphere.                  | `clear-night`, `partlycloudy`/`sunny` (with sun times) |
+| **`cloud`**     | Soft, realistic clouds drifting across the sky, their speed influenced by wind. `cloudy` shows a fuller grey deck over an overcast sky; `partlycloudy` shows a few lighter clouds alongside the sun or moon. Clouds are dimmed at night. | `cloudy`, `partlycloudy`                            |
 
 ## Custom Icons
 
@@ -439,6 +440,13 @@ Customize the appearance of animated weather effects when `show_condition_effect
 | `weather-forecast-card-effects-clear-night-sky-color`  | Light: `rgba(49, 46, 129, 0.7)` / Dark: `rgba(10, 15, 40, 0.85)`   | Night clear sky gradient primary color                 |
 | `weather-forecast-card-effects-clear-night-sky-accent` | Light: `rgba(88, 28, 135, 0.55)` / Dark: `rgba(20, 30, 80, 0.6)`   | Night clear sky gradient accent color                  |
 | `weather-forecast-card-effects-clear-night-horizon`    | Light: `rgba(236, 72, 153, 0.4)` / Dark: `rgba(40, 25, 100, 0.4)`  | Night clear sky gradient horizon color                 |
+| `weather-forecast-card-effects-overcast-sky-color`     | Light: `rgba(118, 132, 148, 0.42)` / Dark: `rgba(60, 70, 82, 0.55)` | Day overcast (`cloudy`) sky gradient primary color    |
+| `weather-forecast-card-effects-overcast-sky-accent`    | Light: `rgba(152, 165, 180, 0.34)` / Dark: `rgba(78, 89, 102, 0.45)` | Day overcast sky gradient accent color               |
+| `weather-forecast-card-effects-overcast-sky-horizon`   | Light: `rgba(196, 206, 216, 0.24)` / Dark: `rgba(102, 113, 126, 0.3)` | Day overcast sky gradient horizon color             |
+| `weather-forecast-card-effects-overcast-night-color`   | Light: `rgba(38, 44, 56, 0.8)` / Dark: `rgba(16, 20, 28, 0.88)`    | Night overcast sky gradient primary color              |
+| `weather-forecast-card-effects-overcast-night-accent`  | Light: `rgba(55, 62, 76, 0.65)` / Dark: `rgba(30, 36, 47, 0.7)`    | Night overcast sky gradient accent color               |
+| `weather-forecast-card-effects-overcast-night-horizon` | Light: `rgba(78, 86, 100, 0.45)` / Dark: `rgba(48, 55, 68, 0.5)`   | Night overcast sky gradient horizon color              |
+| `weather-forecast-card-effects-cloud-color`            | Light: `#f4f7fb` / Dark: `#dfe6ee`                                 | Base color of the drifting clouds                      |
 
 > [!NOTE]
 > Weather effects variables support both light and dark themes. Colors automatically adjust based on your theme's dark mode setting, with separate default values optimized for each mode.

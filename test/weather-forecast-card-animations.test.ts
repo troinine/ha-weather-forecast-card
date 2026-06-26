@@ -8,6 +8,8 @@ import {
   WeatherForecastCardConfig,
 } from "../src/types";
 import { WeatherForecastCard } from "../src/weather-forecast-card";
+import { WeatherAnimationProvider } from "../src/components/animation/wfc-animation-provider";
+import { ForecastAttribute, WeatherEntity } from "../src/data/weather";
 
 import "../src/index";
 
@@ -87,6 +89,25 @@ describe("weather-forecast-card-animations", () => {
       expect(
         queryAnimationAll(element, ".raindrop-path").length
       ).toBeGreaterThan(1);
+    });
+
+    it("should render clouds and an overcast sky for cloudy weather", async () => {
+      const element = await createFixture("cloudy", true);
+
+      expect(queryAnimationAll(element, ".cloud").length).toBeGreaterThan(0);
+      expect(queryAnimation(element, ".sky.overcast")).not.toBeNull();
+      // Fully overcast: no sun or moon behind the cloud deck.
+      expect(queryAnimation(element, ".sun")).toBeNull();
+      expect(queryAnimation(element, ".moon")).toBeNull();
+    });
+
+    it("should render clouds, sky and sun for partly cloudy weather", async () => {
+      const element = await createFixture("partlycloudy", true);
+
+      expect(queryAnimationAll(element, ".cloud").length).toBeGreaterThan(0);
+      expect(queryAnimation(element, ".sky")).not.toBeNull();
+      expect(queryAnimation(element, ".sky.overcast")).toBeNull();
+      expect(queryAnimation(element, ".sun")).not.toBeNull();
     });
   });
 
@@ -171,6 +192,26 @@ describe("weather-forecast-card-animations", () => {
         queryAnimationAll(element, ".raindrop-path").length
       ).toBeGreaterThan(1);
     });
+
+    it("should render clouds but no sky when only cloud is enabled", async () => {
+      const element = await createFixture("cloudy", ["cloud"]);
+
+      expect(queryAnimationAll(element, ".cloud").length).toBeGreaterThan(0);
+      expect(queryAnimation(element, ".sky")).toBeNull();
+    });
+
+    it("should render the overcast sky but no clouds when only sky is enabled", async () => {
+      const element = await createFixture("cloudy", ["sky"]);
+
+      expect(queryAnimation(element, ".sky.overcast")).not.toBeNull();
+      expect(queryAnimationAll(element, ".cloud").length).toBe(0);
+    });
+
+    it("should not render clouds for cloudy when cloud is not enabled", async () => {
+      const element = await createFixture("cloudy", ["rain", "snow"]);
+
+      expect(queryAnimationAll(element, ".cloud").length).toBe(0);
+    });
   });
 
   describe("combined effect scenarios", () => {
@@ -193,7 +234,94 @@ describe("weather-forecast-card-animations", () => {
       expect(queryAnimation(element, ".sun")).toBeNull();
     });
   });
+
+  describe("cloud stability", () => {
+    it("should not regenerate clouds when the weather entity refreshes", async () => {
+      const mockHass = new MockHass({ currentCondition: "cloudy" });
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const entity = hass.states["weather.demo"] as WeatherEntity;
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        show_condition_effects: true,
+        forecast: { show_sun_times: false },
+      };
+
+      const provider = await fixture<WeatherAnimationProvider>(
+        html`<wfc-animation-provider
+          .hass=${hass}
+          .config=${config}
+          .weatherEntity=${entity}
+        ></wfc-animation-provider>`
+      );
+      await provider.updateComplete;
+
+      const before = cloudFingerprints(provider);
+      expect(before.length).toBeGreaterThan(0);
+
+      // A hass refresh hands the provider a new entity object (e.g. temperature
+      // ticked) while the condition stays cloudy: clouds must not jump.
+      provider.weatherEntity = {
+        ...entity,
+        attributes: { ...entity.attributes, temperature: 9 },
+      } as WeatherEntity;
+      await provider.updateComplete;
+
+      expect(cloudFingerprints(provider)).toEqual(before);
+    });
+  });
+
+  describe("cloud drift direction", () => {
+    const driftsRight = async (windBearing: number): Promise<boolean> => {
+      const mockHass = new MockHass({ currentCondition: "cloudy" });
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const entity = hass.states["weather.demo"] as WeatherEntity;
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        show_condition_effects: true,
+        forecast: { show_sun_times: false },
+      };
+      const forecast = {
+        datetime: "2026-01-01T00:00:00Z",
+        wind_bearing: windBearing,
+        wind_speed: 10,
+      } as ForecastAttribute;
+
+      const provider = await fixture<WeatherAnimationProvider>(
+        html`<wfc-animation-provider
+          .hass=${hass}
+          .config=${config}
+          .weatherEntity=${entity}
+          .currentForecast=${forecast}
+        ></wfc-animation-provider>`
+      );
+      await provider.updateComplete;
+
+      return (
+        provider.shadowRoot
+          ?.querySelector(".cloud-track")
+          ?.classList.contains("drift-right") ?? false
+      );
+    };
+
+    it("drifts right when the wind blows toward the east (from the west)", async () => {
+      expect(await driftsRight(270)).toBe(true);
+    });
+
+    it("drifts left when the wind blows toward the west (from the east)", async () => {
+      expect(await driftsRight(90)).toBe(false);
+    });
+  });
 });
+
+const cloudFingerprints = (provider: WeatherAnimationProvider): string[] =>
+  Array.from(provider.shadowRoot?.querySelectorAll(".cloud") ?? []).map(
+    // Normalize whitespace: the serialized style string spacing can differ
+    // between renders even when the values (positions/sizes) are identical.
+    (el) =>
+      `${el.className}|${(el.getAttribute("style") ?? "").replace(/\s+/g, "")}`
+  );
 
 const createFixture = async (
   condition: string,

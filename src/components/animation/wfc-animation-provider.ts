@@ -12,6 +12,7 @@ import { getSuntimesInfo } from "../../helpers";
 import {
   ForecastAttribute,
   getMaxPrecipitationForUnit,
+  getNormalizedWindBearing,
   getNormalizedWindSpeed,
   getWeatherUnit,
   WeatherEntity,
@@ -22,6 +23,19 @@ const PRECIPITATION_INTENSITY_MEDIUM = 3;
 const WIND_SPEED_MS_MAX = 14;
 const SNOW_MAX_PARTICLES = 75;
 const RAIN_MAX_PARTICLES = 75;
+const CLOUD_COUNT_OVERCAST = 4;
+const CLOUD_COUNT_PARTLY = 3;
+// Depth layers for parallax: clouds are split across these, each drifting at its
+// own speed (far = slower, near = faster) for a sense of depth.
+const CLOUD_DEPTH_LAYERS = 2;
+// Drift-duration multiplier per layer (index 0 = far/slow, last = near/fast).
+const CLOUD_LAYER_SPEED = [1.45, 0.7];
+// Seconds for a cloud layer to drift one card-width. Calm skies drift slowly,
+// windy skies faster.
+const CLOUD_DRIFT_DURATION_CALM_S = 90;
+const CLOUD_DRIFT_DURATION_WINDY_S = 50;
+// Minimum horizontal drift so clouds keep moving gently in calm or N-S winds.
+const CLOUD_DRIFT_BASELINE_FACTOR = 0.15;
 
 type BaseParticle = {
   x: string;
@@ -58,7 +72,24 @@ type SunRay = {
   width: string;
 };
 
-type WeatherParticle = Snowflake | Raindrop | Star | SunRay;
+type Cloud = {
+  type: "cloud";
+  variant: "white" | "grey";
+  night: boolean;
+  // Depth layer (0 = far) drives size, height, opacity and drift speed (parallax).
+  layer: number;
+  // Silhouette variant (1-5) and a horizontal flip give each cloud a distinct
+  // shape so the deck does not look like one repeated sprite.
+  shape: number;
+  flip: boolean;
+  x: string;
+  y: string;
+  width: string;
+  height: string;
+  opacity: string;
+};
+
+type WeatherParticle = Snowflake | Raindrop | Star | SunRay | Cloud;
 
 @customElement("wfc-animation-provider")
 export class WeatherAnimationProvider extends LitElement {
@@ -72,6 +103,12 @@ export class WeatherAnimationProvider extends LitElement {
 
   private _particles: WeatherParticle[] = [];
   private _resizeObserver?: ResizeObserver;
+
+  // Clouds are regenerated only when their defining inputs (coverage, day/night)
+  // change, not on every hass refresh, so a state update does not make the clouds
+  // jump to new random positions.
+  private _cloudParticles: Cloud[] = [];
+  private _cloudSignature?: string;
 
   static styles = styles;
 
@@ -144,6 +181,8 @@ export class WeatherAnimationProvider extends LitElement {
             return this.renderSnow();
           case "lightning":
             return this.renderLightning();
+          case "cloud":
+            return this.renderClouds();
           default:
             return nothing;
         }
@@ -168,6 +207,9 @@ export class WeatherAnimationProvider extends LitElement {
           break;
         case "sun":
           particles.push(...this.computeSunRayParticles());
+          break;
+        case "cloud":
+          particles.push(...this.getStableCloudParticles());
           break;
         default:
           break;
@@ -356,37 +398,53 @@ export class WeatherAnimationProvider extends LitElement {
     }
 
     const isClearState = state === "sunny" || state === "clear-night";
+    const isCloudy = state === "cloudy";
+    const isPartlyCloudy = state === "partlycloudy";
 
-    if (isClearState) {
+    // Sky backdrop for clear skies, partly cloudy and overcast `cloudy`.
+    if (isClearState || isPartlyCloudy || isCloudy) {
       if (isEnabled("sky")) effects.add("sky");
+    }
 
-      let isNight = state === "clear-night";
-
-      if (this.config.forecast?.show_sun_times) {
-        const suntimes = getSuntimesInfo(this.hass, new Date());
-        if (suntimes?.isNightTime) {
-          isNight = true;
-        }
-      }
-
-      if (isNight) {
+    // Sun or moon for clear skies and partly cloudy. Fully overcast `cloudy`
+    // hides the celestial body behind the cloud deck.
+    if (isClearState || isPartlyCloudy) {
+      if (this.isNightTime()) {
         if (isEnabled("moon")) effects.add("moon");
       } else {
         if (isEnabled("sun")) effects.add("sun");
       }
     }
 
+    // Drifting clouds for cloudy and partly cloudy.
+    if (isCloudy || isPartlyCloudy) {
+      if (isEnabled("cloud")) effects.add("cloud");
+    }
+
     return Array.from(effects);
   }
 
-  private renderSky() {
-    let isNight = this.weatherEntity.state === "clear-night";
-
-    if (this.config.forecast?.show_sun_times) {
-      isNight = getSuntimesInfo(this.hass, new Date())?.isNightTime ?? isNight;
+  /**
+   * Whether the card should render a night-time sky. `clear-night` is inherently
+   * night; other states rely on the sun times helper when those are enabled.
+   */
+  private isNightTime(): boolean {
+    if (this.weatherEntity?.state === "clear-night") {
+      return true;
     }
 
-    return html`<div class="${isNight ? "night-sky" : "sky"}"></div>`;
+    if (this.config.forecast?.show_sun_times) {
+      return getSuntimesInfo(this.hass, new Date())?.isNightTime ?? false;
+    }
+
+    return false;
+  }
+
+  private renderSky() {
+    const base = this.isNightTime() ? "night-sky" : "sky";
+    const isOvercast = this.weatherEntity?.state === "cloudy";
+
+    return html`<div class="${isOvercast ? `${base} overcast` : base}"></div>`;
   }
 
   private renderSun() {
@@ -420,6 +478,239 @@ export class WeatherAnimationProvider extends LitElement {
       height: `${random(100, 200)}`,
       width: `${random(5, 15)}`,
     }));
+  }
+
+  /**
+   * Returns cloud particles, reusing the previously generated set unless the
+   * clouds' defining inputs (coverage and day/night) have changed. This keeps the
+   * clouds stable across hass refreshes and container resizes instead of
+   * re-randomizing their positions on every update.
+   */
+  private getStableCloudParticles(): Cloud[] {
+    const isOvercast = this.weatherEntity?.state === "cloudy";
+    const signature = `${isOvercast ? "overcast" : "partly"}:${this.isNightTime()}`;
+
+    if (signature !== this._cloudSignature || !this._cloudParticles.length) {
+      this._cloudParticles = this.computeCloudParticles();
+      this._cloudSignature = signature;
+    }
+
+    return this._cloudParticles;
+  }
+
+  /**
+   * Computes drifting cloud sprites. Overcast (`cloudy`) produces a denser deck of
+   * larger, lower, grey clouds; partly cloudy produces fewer, smaller, lighter white
+   * clouds. Clouds are split across depth layers (far = small/faint/high, near =
+   * large/bold/low). Sizes are in pixels and `x` is a percentage of the card width
+   * so clouds scale naturally with the card. Drift speed is layer-wide (see
+   * renderClouds).
+   */
+  private computeCloudParticles(): Cloud[] {
+    const isOvercast = this.weatherEntity?.state === "cloudy";
+    const isNight = this.isNightTime();
+    const count = isOvercast ? CLOUD_COUNT_OVERCAST : CLOUD_COUNT_PARTLY;
+    const slot = 100 / count;
+    const clouds: Cloud[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const layer = i % CLOUD_DEPTH_LAYERS;
+      const isFar = layer === 0;
+
+      // Spread clouds across the width with jitter so the deck looks organic.
+      const x = i * slot + random(0, slot * 0.5) - slot * 0.25;
+
+      // Depth: far clouds are smaller, higher and fainter; near clouds are larger,
+      // lower and bolder. Wide ranges plus aspect-ratio jitter keep footprints
+      // varied rather than all sharing one shape.
+      const width = isOvercast
+        ? isFar
+          ? random(140, 200)
+          : random(215, 285)
+        : isFar
+          ? random(110, 165)
+          : random(180, 240);
+      const height = width * random(0.38, 0.5, true);
+      // Anchored toward the top so clouds hug the upper edge and leave the lower
+      // card area clear for the weather text.
+      const y = isOvercast
+        ? isFar
+          ? random(-26, -12)
+          : random(-16, -2)
+        : isFar
+          ? random(-10, 4)
+          : random(-4, 12);
+
+      // Overcast clouds stay translucent so the card surface shows through and
+      // text keeps its contrast; partly cloudy clouds are more solid. Far clouds
+      // are fainter than near ones, and night dims both into a subtle silhouette.
+      let opacity = isOvercast
+        ? isFar
+          ? random(0.36, 0.5, true)
+          : random(0.5, 0.64, true)
+        : isFar
+          ? random(0.68, 0.8, true)
+          : random(0.82, 0.92, true);
+      if (isNight) {
+        opacity *= 0.7;
+      }
+
+      clouds.push({
+        type: "cloud",
+        variant: isOvercast ? "grey" : "white",
+        night: isNight,
+        layer,
+        shape: random(1, 5),
+        flip: random(0, 1) === 1,
+        x: x.toFixed(1),
+        y: y.toFixed(0),
+        width: width.toFixed(0),
+        height: height.toFixed(0),
+        opacity: opacity.toFixed(2),
+      });
+    }
+
+    return clouds;
+  }
+
+  /**
+   * Drift direction and duration for a cloud layer, derived from the wind. Clouds
+   * move in the direction the wind blows: `wind_bearing` is the meteorological
+   * direction the wind comes *from*, so the rightward (eastward) component is
+   * `-sin(bearing)` — a wind from the west (270°) drifts clouds to the right, a
+   * wind from the east (90°) to the left. Horizontal speed scales with both wind
+   * speed and how east-west the wind blows, with a small baseline so clouds keep
+   * drifting gently in calm or purely north-south winds.
+   */
+  private computeCloudDrift(): { duration: number; driftRight: boolean } {
+    const forecast = this.currentForecast;
+    const speedMS = forecast
+      ? getNormalizedWindSpeed(this.hass, this.weatherEntity, forecast) || 0
+      : 0;
+    const speedFactor = Math.min(speedMS, WIND_SPEED_MS_MAX) / WIND_SPEED_MS_MAX;
+
+    // Signed horizontal component in [-1, 1]; positive points right (east).
+    // getNormalizedWindBearing handles numeric and cardinal (e.g. "NW") bearings.
+    const bearing = forecast ? getNormalizedWindBearing(forecast) : undefined;
+    const horizontal =
+      bearing !== undefined ? -Math.sin((bearing * Math.PI) / 180) : 0;
+
+    const horizontalFactor = Math.max(
+      CLOUD_DRIFT_BASELINE_FACTOR,
+      speedFactor * Math.abs(horizontal)
+    );
+
+    const duration =
+      CLOUD_DRIFT_DURATION_CALM_S -
+      horizontalFactor *
+        (CLOUD_DRIFT_DURATION_CALM_S - CLOUD_DRIFT_DURATION_WINDY_S);
+
+    return {
+      duration,
+      driftRight: horizontal >= 0,
+    };
+  }
+
+  private renderCloudFilter() {
+    // A single turbulence filter roughens the soft cloud silhouettes into organic,
+    // billowy edges. Defined in this shadow root so `filter: url(#wfc-cloud-rough)`
+    // resolves locally; if a browser cannot resolve it, the clouds gracefully fall
+    // back to the smooth gooey silhouette.
+    return html`
+      <svg class="cloud-defs" width="0" height="0" aria-hidden="true">
+        <defs>
+          <filter
+            id="wfc-cloud-rough"
+            x="-25%"
+            y="-25%"
+            width="150%"
+            height="150%"
+            color-interpolation-filters="sRGB"
+          >
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.012 0.018"
+              numOctaves="5"
+              seed="7"
+              stitchTiles="stitch"
+              result="noise"
+            ></feTurbulence>
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="noise"
+              scale="42"
+              xChannelSelector="R"
+              yChannelSelector="G"
+              result="disp"
+            ></feDisplacementMap>
+            <feGaussianBlur in="disp" stdDeviation="0.6"></feGaussianBlur>
+          </filter>
+        </defs>
+      </svg>
+    `;
+  }
+
+  private renderClouds() {
+    const clouds = this._particles.filter(
+      (p): p is Cloud => p.type === "cloud"
+    );
+
+    if (!clouds.length) return nothing;
+
+    const { duration, driftRight } = this.computeCloudDrift();
+
+    const renderCloud = (c: Cloud) => {
+      const classes = [
+        "cloud",
+        `cloud-shape-${c.shape}`,
+        c.variant === "grey" ? "grey" : "",
+        c.night ? "night" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      return html`<div
+        class="${classes}"
+        style="${styleMap({
+          left: `${c.x}%`,
+          top: `${c.y}px`,
+          width: `${c.width}px`,
+          height: `${c.height}px`,
+          opacity: c.opacity,
+          transform: c.flip ? "scaleX(-1)" : "none",
+        })}"
+      >
+        <div class="cloud-puffs"></div>
+        <div class="cloud-shade"></div>
+      </div>`;
+    };
+
+    // One drifting track per depth layer, each at its own parallax speed but the
+    // same wind direction. Each track renders its clouds twice inside a
+    // double-width track: translating by -50% slides the second copy into the
+    // first's start position for a seamless loop without needing the card width.
+    return html`
+      ${this.renderCloudFilter()}
+      ${Array.from({ length: CLOUD_DEPTH_LAYERS }, (_unused, layer) => {
+        const layerClouds = clouds.filter((c) => c.layer === layer);
+        if (!layerClouds.length) return nothing;
+
+        // Round to a coarse bucket so small wind fluctuations between refreshes do
+        // not change the duration and visibly nudge the running drift.
+        const layerDuration =
+          Math.round((duration * (CLOUD_LAYER_SPEED[layer] ?? 1)) / 5) * 5;
+
+        return html`<div
+          class="cloud-track ${driftRight ? "drift-right" : ""}"
+          style="${styleMap({ "--cloud-drift-duration": `${layerDuration}s` })}"
+        >
+          <div class="cloud-set">${layerClouds.map(renderCloud)}</div>
+          <div class="cloud-set cloud-set-second">
+            ${layerClouds.map(renderCloud)}
+          </div>
+        </div>`;
+      })}
+    `;
   }
 
   private renderSnow() {
