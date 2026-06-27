@@ -225,6 +225,12 @@ export class WeatherForecastCardEditor
           },
         },
       },
+      {
+        name: "show_moon_phase",
+        selector: { boolean: {} },
+        default: true,
+        optional: true,
+      },
     ] as const;
 
   private _currentWeatherSchema = (localize: LocalizeFunc): HaFormSchema[] =>
@@ -849,6 +855,8 @@ export class WeatherForecastCardEditor
         );
       case "show_condition_effects":
         return "Show condition effects";
+      case "show_moon_phase":
+        return "Show moon phase";
       case "attribute_entities":
         return `${
           this.hass!.localize(
@@ -906,6 +914,8 @@ export class WeatherForecastCardEditor
         return "Overrides the friendly name of the entity.";
       case "show_condition_effects":
         return "Select which weather conditions initiate visual effects and animations on the card.";
+      case "show_moon_phase":
+        return "Shades the night-time moon to match the current lunar phase based on your Home Assistant location. Disable to always show a full moon.";
       case "attribute_entities":
         return "Override weather attribute values with custom sensor entities.";
       default:

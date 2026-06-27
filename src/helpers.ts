@@ -228,6 +228,53 @@ export const getSuntimesInfo = (
   };
 };
 
+export interface MoonPhaseInfo {
+  /** Illuminated fraction of the disc, 0 (new moon) to 1 (full moon). */
+  fraction: number;
+  /** Whether the lit limb is on the right (waxing in the northern hemisphere). */
+  litRight: boolean;
+}
+
+export const getMoonPhaseInfo = (
+  hass: HomeAssistant | undefined,
+  datetime: string | Date
+): MoonPhaseInfo => {
+  const date = toDate(datetime);
+  const { fraction, phase } = SunCalc.getMoonIllumination(date);
+  // phase runs 0 (new) -> 0.5 (full) -> 1 (new); rising toward full is waxing.
+  const waxing = phase <= 0.5;
+  const southernHemisphere = (hass?.config?.latitude ?? 0) < 0;
+  return { fraction, litRight: waxing !== southernHemisphere };
+};
+
+/**
+ * SVG path (viewBox `0 0 100 100`) for the moon's unlit region. The terminator
+ * is a half-ellipse whose radius collapses to 0 at the quarters and grows to
+ * full at new/full moon; the unlit side is boxed out past the disc so the limb
+ * stays solid once the shadow is blurred and clipped.
+ */
+export const moonShadowPath = (fraction: number, litRight: boolean): string => {
+  const f = Math.min(1, Math.max(0, fraction));
+  const rx = (50 * Math.abs(1 - 2 * f)).toFixed(2);
+  const crescent = f < 0.5;
+  const termSweep = litRight === crescent ? 0 : 1;
+  const boxX = litRight ? -60 : 160;
+  return `M50 0 L${boxX} 0 L${boxX} 100 L50 100 A${rx} 50 0 0 ${termSweep} 50 0 Z`;
+};
+
+/**
+ * SVG path for the moon's lit region (the complement of moonShadowPath).
+ * Blurred behind the disc, it makes only the sunlit limb glow.
+ */
+export const moonLitPath = (fraction: number, litRight: boolean): string => {
+  const f = Math.min(1, Math.max(0, fraction));
+  const rx = (50 * Math.abs(1 - 2 * f)).toFixed(2);
+  const outerSweep = litRight ? 1 : 0;
+  const crescent = f < 0.5;
+  const termSweep = litRight === crescent ? 0 : 1;
+  return `M50 0 A50 50 0 0 ${outerSweep} 50 100 A${rx} 50 0 0 ${termSweep} 50 0 Z`;
+};
+
 export const average = (data: number[]): number => {
   if (data.length === 0) return 0;
   return data.reduce((a, b) => a + b, 0) / data.length;

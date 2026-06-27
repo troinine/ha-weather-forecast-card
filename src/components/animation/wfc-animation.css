@@ -4,7 +4,7 @@
     --weather-forecast-card-effects-sun-spin-duration,
     100s
   );
-  --moon-size: var(--weather-forecast-card-effects-moon-size, 80px);
+  --moon-size: var(--weather-forecast-card-effects-moon-size, 100px);
   --sky-visibility: var(
     --weather-forecast-card-effects-sky-visibility,
     visible
@@ -40,6 +40,14 @@
   --moon-color: var(
     --weather-forecast-card-effects-moon-color,
     rgba(220, 220, 230, 1)
+  );
+  --moon-shadow-color: var(
+    --weather-forecast-card-effects-moon-shadow-color,
+    rgba(28, 32, 54, 0.6)
+  );
+  --moon-glow-color: var(
+    --weather-forecast-card-effects-moon-glow-color,
+    rgba(214, 224, 255, 0.5)
   );
   --star-color: var(--weather-forecast-card-effects-star-color, #ffffff);
   --snow-color: var(--weather-forecast-card-effects-snow-color, #cbd5e1);
@@ -106,6 +114,14 @@
   --moon-color: var(
     --weather-forecast-card-effects-moon-color,
     rgba(220, 220, 230, 1)
+  );
+  --moon-shadow-color: var(
+    --weather-forecast-card-effects-moon-shadow-color,
+    rgba(8, 10, 24, 0.72)
+  );
+  --moon-glow-color: var(
+    --weather-forecast-card-effects-moon-glow-color,
+    rgba(214, 224, 255, 0.55)
   );
   --star-color: var(--weather-forecast-card-effects-star-color, #ffffff);
   --snow-color: var(--weather-forecast-card-effects-snow-color, #ffffff);
@@ -389,19 +405,61 @@
   background: none;
 }
 
-.moon {
+.moon-body {
   position: absolute;
-  top: calc(var(--moon-size) * -0.85);
+  top: calc(var(--moon-size) * -0.32);
   right: 30%;
   transform: translateX(50%);
   width: var(--moon-size);
   height: var(--moon-size);
+}
+
+/* Blurred copy of the lit region behind the disc, so only the sunlit limb glows. */
+.moon-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: visible;
+  filter: blur(calc(var(--moon-size) * 0.06));
+  pointer-events: none;
+}
+
+.moon-glow path {
+  fill: var(--moon-glow-color);
+}
+
+.moon {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   border-radius: 50%;
-  background: var(--moon-color);
-  box-shadow:
-    0px 0px 25px 5px rgba(255, 255, 255, 0.2),
-    0px 0px 50px 15px rgba(200, 210, 255, 0.1);
-  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.1));
+  /* Moon surface image (override with --weather-forecast-card-effects-moon-image);
+     moon-color is the fallback. */
+  background-color: var(--moon-color);
+  background-image: var(
+    --weather-forecast-card-effects-moon-image,
+    var(--moon-texture)
+  );
+  background-size: cover;
+  background-position: center;
+}
+
+/* Shadow extends past the disc; CSS blur softens the terminator, clip-path trims
+   to the disc. clip-path here (not a parent's rounded overflow) so WebKit clips
+   the blurred shape. */
+.moon-phase {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: blur(calc(var(--moon-size) * 0.045));
+  clip-path: circle(50%);
+  pointer-events: none;
+}
+
+.moon-phase path {
+  fill: var(--moon-shadow-color);
 }
 
 .star {

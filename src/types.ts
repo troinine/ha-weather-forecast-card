@@ -132,6 +132,7 @@ export interface WeatherForecastCardConfig {
   forecast_types?: ForecastTypesOption;
   icons_path?: string;
   show_condition_effects?: boolean | WeatherEffect[];
+  show_moon_phase?: boolean;
   current?: WeatherForecastCardCurrentConfig;
   forecast?: WeatherForecastCardForecastConfig;
   forecast_action?: WeatherForecastCardForecastActionConfig;

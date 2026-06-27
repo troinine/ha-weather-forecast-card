@@ -8,7 +8,13 @@ import {
 import { styles } from "./wfc-animation.styles";
 import { styleMap } from "lit/directives/style-map.js";
 import { random } from "lodash-es";
-import { getSuntimesInfo } from "../../helpers";
+import {
+  getMoonPhaseInfo,
+  getSuntimesInfo,
+  moonLitPath,
+  moonShadowPath,
+  MoonPhaseInfo,
+} from "../../helpers";
 import {
   ForecastAttribute,
   getMaxPrecipitationForUnit,
@@ -771,8 +777,13 @@ export class WeatherAnimationProvider extends LitElement {
   }
 
   private renderMoon() {
+    const phase =
+      this.config.show_moon_phase === false
+        ? null
+        : getMoonPhaseInfo(this.hass, new Date());
+
+    // Stars render before the moon so the moon paints over any star behind it.
     return html`
-      <div class="moon"></div>
       ${(this._particles.filter((p) => p.type === "star") as Star[]).map(
         (p) => html`
           <div
@@ -788,6 +799,49 @@ export class WeatherAnimationProvider extends LitElement {
           ></div>
         `
       )}
+      <div class="moon-body">
+        ${this.renderMoonGlow(phase)}
+        <div class="moon">${this.renderMoonPhase(phase)}</div>
+      </div>
+    `;
+  }
+
+  /** Glow behind the disc, shaped to the lit region so only the sunlit limb glows. */
+  private renderMoonGlow(phase: MoonPhaseInfo | null) {
+    const litPath = phase
+      ? moonLitPath(phase.fraction, phase.litRight)
+      : moonLitPath(1, true);
+
+    return html`
+      <svg
+        class="moon-glow"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path d=${litPath}></path>
+      </svg>
+    `;
+  }
+
+  /**
+   * Shades the moon to match the current lunar phase. Returns nothing when the
+   * feature is disabled, leaving a fully lit moon.
+   */
+  private renderMoonPhase(phase: MoonPhaseInfo | null) {
+    if (!phase) {
+      return nothing;
+    }
+
+    return html`
+      <svg
+        class="moon-phase"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path d=${moonShadowPath(phase.fraction, phase.litRight)}></path>
+      </svg>
     `;
   }
 

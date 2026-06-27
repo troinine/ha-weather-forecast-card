@@ -41,6 +41,30 @@ describe("weather-forecast-card-animations", () => {
       expect(queryAnimationAll(element, ".star").length).toBeGreaterThan(1);
     });
 
+    it("should shade the moon with a phase shadow by default", async () => {
+      const element = await createFixture("clear-night", true);
+
+      expect(queryAnimation(element, ".moon-phase")).not.toBeNull();
+      expect(queryAnimation(element, ".moon-phase path")).not.toBeNull();
+    });
+
+    it("should render a glow behind the moon", async () => {
+      const element = await createFixture("clear-night", true);
+
+      expect(queryAnimation(element, ".moon-glow path")).not.toBeNull();
+    });
+
+    it("should not shade the moon when show_moon_phase is false", async () => {
+      const element = await createFixture("clear-night", true, {
+        show_moon_phase: false,
+      });
+
+      expect(queryAnimation(element, ".moon")).not.toBeNull();
+      expect(queryAnimation(element, ".moon-phase")).toBeNull();
+      // the glow is still present, just symmetric (whole disc lit)
+      expect(queryAnimation(element, ".moon-glow path")).not.toBeNull();
+    });
+
     it("should render rain for rainy weather", async () => {
       const element = await createFixture("rainy", true);
 
@@ -325,7 +349,8 @@ const cloudFingerprints = (provider: WeatherAnimationProvider): string[] =>
 
 const createFixture = async (
   condition: string,
-  showConditionEffects: boolean | WeatherEffect[] = true
+  showConditionEffects: boolean | WeatherEffect[] = true,
+  extraConfig: Partial<WeatherForecastCardConfig> = {}
 ) => {
   const mockHass = new MockHass({ currentCondition: condition });
   const hass = mockHass.getHass() as ExtendedHomeAssistant;
@@ -336,6 +361,7 @@ const createFixture = async (
     forecast: {
       show_sun_times: false,
     },
+    ...extraConfig,
   };
 
   const element = await fixture<WeatherForecastCard>(
