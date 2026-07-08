@@ -8,6 +8,7 @@ import {
   handleAction,
   hasAction,
 } from "custom-card-helpers";
+import { HassEntity } from "home-assistant-js-websocket";
 import {
   CURRENT_WEATHER_ATTRIBUTES,
   CurrentWeatherAttributes,
@@ -36,6 +37,7 @@ export type NormalizedAttributeConfig = {
 
 type SecondaryInfo = {
   icon?: string;
+  stateObj?: HassEntity;
   value?: string;
 };
 
@@ -120,15 +122,24 @@ export class WfcCurrentWeather extends LitElement {
             ${secondaryInfo
               ? html`
                   <div class="wfc-current-secondary-info">
-                    ${secondaryInfo.icon
+                    ${secondaryInfo.stateObj
                       ? html`
-                          <ha-attribute-icon
+                          <ha-state-icon
                             class="wfc-current-secondary-icon wfc-secondary"
                             .hass=${this.hass}
+                            .stateObj=${secondaryInfo.stateObj}
                             .icon=${secondaryInfo.icon}
-                          ></ha-attribute-icon>
+                          ></ha-state-icon>
                         `
-                      : nothing}
+                      : secondaryInfo.icon
+                        ? html`
+                            <ha-attribute-icon
+                              class="wfc-current-secondary-icon wfc-secondary"
+                              .hass=${this.hass}
+                              .icon=${secondaryInfo.icon}
+                            ></ha-attribute-icon>
+                          `
+                        : nothing}
                     <span class="wfc-current-secondary-value wfc-secondary"
                       >${secondaryInfo.value}</span
                     >
@@ -266,14 +277,18 @@ export class WfcCurrentWeather extends LitElement {
 
         if (value != null) {
           const customEntity = this.hass.states[customEntityId];
+
+          if (!name) {
+            // Entity-only: let ha-state-icon resolve the entity's own icon.
+            return { stateObj: customEntity, icon: explicitIcon, value };
+          }
+
           const icon =
             explicitIcon ??
             customEntity?.attributes?.icon ??
-            (name
-              ? (EXTENDED_WEATHER_ATTRIBUTE_ICON_MAP as Record<string, string>)[
-                  name
-                ]
-              : undefined);
+            (EXTENDED_WEATHER_ATTRIBUTE_ICON_MAP as Record<string, string>)[
+              name
+            ];
 
           return { icon, value };
         }

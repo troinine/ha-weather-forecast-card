@@ -94,17 +94,34 @@ export class WfcCurrentWeatherAttributes extends LitElement {
     const customEntity = customEntityId
       ? this.hass.states[customEntityId]
       : undefined;
-    const icon = resolveAttributeIcon(attribute, explicitIcon, customEntity);
+
+    // A pure custom-entity item (an entity with no weather-attribute name) lets HA's
+    // ha-state-icon resolve the icon, so it honors the entity's own icon from any source
+    // (state attribute, registry, icons.json translations, device_class default). An
+    // attribute-backed item keeps the weather-attribute icon so it matches its label.
+    const iconTemplate =
+      customEntity && !attribute
+        ? html`
+            <ha-state-icon
+              class="wfc-current-attribute-icon"
+              .hass=${this.hass}
+              .stateObj=${customEntity}
+              .icon=${explicitIcon}
+            ></ha-state-icon>
+          `
+        : html`
+            <ha-attribute-icon
+              class="wfc-current-attribute-icon"
+              .hass=${this.hass}
+              .stateObj=${stateObj}
+              .attribute=${attribute}
+              .icon=${resolveAttributeIcon(attribute, explicitIcon, customEntity)}
+            ></ha-attribute-icon>
+          `;
 
     return html`
       <div class="wfc-current-attribute">
-        <ha-attribute-icon
-          class="wfc-current-attribute-icon"
-          .hass=${this.hass}
-          .stateObj=${stateObj}
-          .attribute=${attribute}
-          .icon=${icon}
-        ></ha-attribute-icon>
+        ${iconTemplate}
         <span class="wfc-current-attribute-name">
           ${this.resolveLabel(attribute, explicitLabel, customEntity)}
         </span>

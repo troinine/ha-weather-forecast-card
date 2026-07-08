@@ -403,6 +403,46 @@ describe("secondary_info_attribute", () => {
     expect(value?.textContent?.trim()).toBe("1013 hPa");
   });
 
+  it("renders secondary info from an entity-only custom sensor via ha-state-icon", async () => {
+    const mockHass = new MockHass();
+    const testHass = mockHass.getHass() as ExtendedHomeAssistant;
+    testHass.states["weather.demo"] = weatherEntity;
+
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${testHass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            secondary_info_attribute: {
+              entity: "sensor.custom_pressure",
+            } as CurrentWeatherAttributeConfig,
+          },
+        }}
+        .hourlyForecast=${mockHass.hourlyForecast}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const secondaryInfo = el.querySelector(".wfc-current-secondary-info");
+    expect(secondaryInfo).not.toBeNull();
+
+    // Icon resolution is delegated to HA, not force-fed as mdi:gauge.
+    expect(secondaryInfo?.querySelector("ha-attribute-icon")).toBeNull();
+
+    const stateIcon = secondaryInfo?.querySelector("ha-state-icon");
+    expect(stateIcon).not.toBeNull();
+    // @ts-expect-error mock property
+    expect(stateIcon?.stateObj?.entity_id).toBe("sensor.custom_pressure");
+    // @ts-expect-error mock property
+    expect(stateIcon?.icon).toBeUndefined();
+
+    const value = secondaryInfo?.querySelector(".wfc-current-secondary-value");
+    expect(value?.textContent?.trim()).toBe("1025 hPa");
+  });
+
   it("falls back to extrema when secondary_info_attribute is non-existent", async () => {
     const mockHass = new MockHass();
     mockHass.hourlyForecast = [
@@ -809,6 +849,91 @@ describe("custom entity attributes", () => {
     // explicit label override works on an entity-only item
     expect(labels[1]).toBe("Outside");
     expect(values[1]).toBe("1025 hPa");
+  });
+
+  it("delegates entity-only icons to ha-state-icon instead of forcing mdi:gauge", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { entity: "sensor.custom_pressure" },
+            ] as CurrentWeatherAttributeConfig[],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes")!;
+
+    // The entity's own icon is resolved by HA, not force-fed as mdi:gauge.
+    expect(attrEl.querySelector("ha-attribute-icon")).toBeNull();
+
+    const stateIcon = attrEl.querySelector("ha-state-icon");
+    expect(stateIcon).not.toBeNull();
+    // @ts-expect-error mock property
+    expect(stateIcon?.stateObj?.entity_id).toBe("sensor.custom_pressure");
+    // No explicit icon -> delegated to ha-state-icon (undefined prop).
+    // @ts-expect-error mock property
+    expect(stateIcon?.icon).toBeUndefined();
+  });
+
+  it("passes an explicit icon through to ha-state-icon for entity-only items", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { entity: "sensor.custom_pressure", icon: "mdi:abacus" },
+            ] as CurrentWeatherAttributeConfig[],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes")!;
+    const stateIcon = attrEl.querySelector("ha-state-icon");
+    expect(stateIcon).not.toBeNull();
+    // @ts-expect-error mock property
+    expect(stateIcon?.icon).toBe("mdi:abacus");
+  });
+
+  it("keeps the weather-attribute icon for an attribute backed by a custom entity", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: [
+              { name: "humidity", entity: "sensor.custom_humidity" },
+            ] as CurrentWeatherAttributeConfig[],
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes")!;
+    // A named attribute keeps the attribute icon so it matches its label.
+    expect(attrEl.querySelector("ha-state-icon")).toBeNull();
+
+    const attrIcon = attrEl.querySelector("ha-attribute-icon");
+    expect(attrIcon).not.toBeNull();
+    // @ts-expect-error mock property
+    expect(attrIcon?.icon).toBe("mdi:water-percent");
   });
 
   it("skips attribute when custom entity is unavailable", async () => {
