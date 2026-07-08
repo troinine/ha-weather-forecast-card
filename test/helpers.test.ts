@@ -85,6 +85,30 @@ describe("getReferencedCurrentEntities", () => {
     ).toEqual([]);
   });
 
+  it("excludes a current-section entity that equals the primary entity", () => {
+    expect(
+      getReferencedCurrentEntities(
+        baseConfig({
+          temperature_entity: "weather.demo",
+          show_attributes: [{ entity: "weather.demo" }],
+        })
+      )
+    ).toEqual([]);
+  });
+
+  it("ignores non-string entity values from misconfigured yaml", () => {
+    expect(
+      getReferencedCurrentEntities(
+        baseConfig({
+          show_attributes: [{ entity: 123 as unknown as string }],
+          secondary_info_attribute: {
+            entity: 456 as unknown as string,
+          },
+        })
+      )
+    ).toEqual([]);
+  });
+
   it("de-duplicates entities referenced from multiple sources", () => {
     expect(
       getReferencedCurrentEntities(

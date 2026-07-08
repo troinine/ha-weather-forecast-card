@@ -292,10 +292,14 @@ export const endOfHour = (input: Date | string): Date => {
   return d;
 };
 
-const entityOf = (item: unknown): string | undefined =>
-  item != null && typeof item === "object"
-    ? (item as CurrentWeatherAttributeConfig).entity
-    : undefined;
+const entityOf = (item: unknown): string | undefined => {
+  const entity =
+    item != null && typeof item === "object"
+      ? (item as CurrentWeatherAttributeConfig).entity
+      : undefined;
+
+  return typeof entity === "string" ? entity : undefined;
+};
 
 /**
  * Collects the entity ids the current-weather section reads from `hass.states`
@@ -337,6 +341,10 @@ export const getReferencedCurrentEntities = (
       ids.add(entity);
     }
   }
+
+  // The primary entity is tracked separately by hasConfigOrEntityChanged; drop it
+  // if a current-section entity happens to point at the same id.
+  ids.delete(config.entity);
 
   return [...ids];
 };
