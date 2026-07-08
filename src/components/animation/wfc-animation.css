@@ -414,14 +414,29 @@
   height: var(--moon-size);
 }
 
-/* Blurred copy of the lit region behind the disc, so only the sunlit limb glows. */
+/* Blurred copy of the lit region behind the disc, so only the sunlit limb glows.
+   The wrapper is padded a quarter-disc past the moon on every side so the blur fades
+   to zero inside its box: WebKit clips a composited filter:blur() to its layer bounds,
+   which otherwise slices the glow into a hard rectangle. translateZ(0) pins it to a
+   stable GPU layer so that clip stays consistent during interaction. The inner svg is
+   given an EXPLICIT width/height: Safari won't stretch a replaced element to `inset`
+   and falls back to its intrinsic default, which blows the glow up into a stray blob. */
 .moon-glow {
   position: absolute;
-  inset: 0;
+  inset: calc(var(--moon-size) * -0.25);
   z-index: 0;
   overflow: visible;
   filter: blur(calc(var(--moon-size) * 0.06));
+  transform: translateZ(0);
   pointer-events: none;
+}
+
+.moon-glow svg {
+  position: absolute;
+  top: calc(var(--moon-size) * 0.25);
+  left: calc(var(--moon-size) * 0.25);
+  width: var(--moon-size);
+  height: var(--moon-size);
 }
 
 .moon-glow path {

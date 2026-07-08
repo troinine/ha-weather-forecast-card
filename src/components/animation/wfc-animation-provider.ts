@@ -820,15 +820,21 @@ export class WeatherAnimationProvider extends LitElement {
       ? moonLitPath(phase.fraction, phase.litRight)
       : moonLitPath(1, true);
 
+    // The blur lives on the padded wrapper div, not the svg (see the CSS). The svg
+    // keeps the original 0 0 100 100 viewBox and carries explicit width/height so
+    // Safari sizes it from the disc, not from an svg's 300x150 intrinsic default.
     return html`
-      <svg
-        class="moon-glow"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path d=${litPath}></path>
-      </svg>
+      <div class="moon-glow">
+        <svg
+          viewBox="0 0 100 100"
+          width="100"
+          height="100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path d=${litPath}></path>
+        </svg>
+      </div>
     `;
   }
 
