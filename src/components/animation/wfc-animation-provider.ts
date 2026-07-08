@@ -165,6 +165,14 @@ export class WeatherAnimationProvider extends LitElement {
     if (changedProps.has("hass")) {
       this.onThemeChanged();
     }
+
+    // Reflect whether the cloud deck is active so the card can lift the current
+    // weather text off the clouds only when they are actually present (not for
+    // clear/sunny effects).
+    this.toggleAttribute(
+      "has-clouds",
+      this.getActiveEffects().includes("cloud")
+    );
   }
 
   protected render() {

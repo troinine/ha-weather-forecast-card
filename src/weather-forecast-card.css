@@ -113,6 +113,15 @@
     64px
   );
   --indicator-width: 20px;
+  --wfc-effects-text-shadow: var(
+    --weather-forecast-card-effects-text-shadow,
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 0 4px rgba(0, 0, 0, 0.35)
+  );
+  --wfc-effects-text-shadow-secondary: var(
+    --weather-forecast-card-effects-text-shadow-secondary,
+    0 1px 2px rgba(0, 0, 0, 0.55)
+  );
 }
 
 /* Modern browsers with color-mix support */
@@ -236,6 +245,20 @@ ha-card {
   font-size: var(--ha-font-size-3xl);
   line-height: var(--ha-line-height-condensed);
   white-space: nowrap;
+}
+
+wfc-animation-provider[has-clouds] ~ .wfc-container .wfc-current-state,
+wfc-animation-provider[has-clouds] ~ .wfc-container .wfc-current-temperature {
+  text-shadow: var(--wfc-effects-text-shadow);
+}
+
+wfc-animation-provider[has-clouds] ~ .wfc-container .wfc-name,
+wfc-animation-provider[has-clouds] ~ .wfc-container .wfc-current-secondary-value {
+  text-shadow: var(--wfc-effects-text-shadow-secondary);
+}
+
+wfc-animation-provider[has-clouds] ~ .wfc-container .wfc-current-secondary-icon {
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.5));
 }
 
 .wfc-current-attributes {
