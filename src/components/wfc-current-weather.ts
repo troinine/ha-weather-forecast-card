@@ -8,7 +8,7 @@ import {
   handleAction,
   hasAction,
 } from "custom-card-helpers";
-import { HassEntity } from "home-assistant-js-websocket";
+import type { HassEntity } from "home-assistant-js-websocket";
 import {
   CURRENT_WEATHER_ATTRIBUTES,
   CurrentWeatherAttributes,

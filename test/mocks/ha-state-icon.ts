@@ -1,6 +1,6 @@
 import { LitElement, html, TemplateResult, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { HassEntity } from "home-assistant-js-websocket";
+import type { HassEntity } from "home-assistant-js-websocket";
 import type { ExtendedHomeAssistant } from "../../src/types";
 
 /**
