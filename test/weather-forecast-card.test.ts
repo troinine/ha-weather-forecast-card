@@ -1093,6 +1093,204 @@ describe("weather-forecast-card", () => {
     });
   });
 
+  describe("current entity reactivity", () => {
+    const reactiveConfig: WeatherForecastCardConfig = {
+      type: "custom:weather-forecast-card",
+      entity: "weather.demo",
+      current: {
+        temperature_entity: "sensor.temperature_outdoor",
+      },
+      forecast: {
+        show_sun_times: false,
+      },
+    };
+
+    const currentTemperatureText = (el: WeatherForecastCard): string =>
+      el.shadowRoot!.querySelector(".wfc-current-temperature")
+        ?.textContent?.trim() ?? "";
+
+    // Same weather.demo reference, only the temperature sensor state object changes.
+    // This is exactly the case hasConfigOrEntityChanged misses (issue #160).
+    const withChangedTemperature = (
+      base: ExtendedHomeAssistant,
+      state: string
+    ): ExtendedHomeAssistant =>
+      ({
+        ...base,
+        states: {
+          ...base.states,
+          "sensor.temperature_outdoor": {
+            ...base.states["sensor.temperature_outdoor"],
+            state,
+          },
+        },
+      }) as ExtendedHomeAssistant;
+
+    it("re-renders when temperature_entity changes without a weather entity change", async () => {
+      const baseHass = mockHassInstance.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${baseHass}
+          .config=${reactiveConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(reactiveConfig);
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      expect(currentTemperatureText(testCard)).toBe(
+        `${baseHass.states["sensor.temperature_outdoor"].state}°C`
+      );
+
+      const changedHass = withChangedTemperature(baseHass, "42");
+      // The primary weather entity is untouched, so only the new watching logic
+      // can trigger the update.
+      expect(changedHass.states["weather.demo"]).toBe(
+        baseHass.states["weather.demo"]
+      );
+
+      testCard.hass = changedHass;
+      await testCard.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(currentTemperatureText(testCard)).toBe("42°C");
+    });
+
+    it("shouldUpdate returns true when a referenced current entity changes", async () => {
+      const baseHass = mockHassInstance.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${baseHass}
+          .config=${reactiveConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(reactiveConfig);
+      await testCard.updateComplete;
+
+      testCard.hass = withChangedTemperature(baseHass, "42");
+
+      // @ts-expect-error: accessing protected method
+      expect(testCard.shouldUpdate(new Map([["hass", baseHass]]))).toBe(true);
+    });
+
+    it("shouldUpdate returns true when a show_attributes custom entity changes", async () => {
+      const baseHass = mockHassInstance.getHass() as ExtendedHomeAssistant;
+
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        current: {
+          show_attributes: [
+            "humidity",
+            { name: "pressure", entity: "sensor.custom_pressure" },
+          ],
+        },
+        forecast: { show_sun_times: false },
+      };
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${baseHass}
+          .config=${config}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(config);
+      await testCard.updateComplete;
+
+      // Only the custom attribute sensor changes; weather.demo is untouched.
+      testCard.hass = {
+        ...baseHass,
+        states: {
+          ...baseHass.states,
+          "sensor.custom_pressure": {
+            ...baseHass.states["sensor.custom_pressure"],
+            state: "999",
+          },
+        },
+      } as ExtendedHomeAssistant;
+
+      // @ts-expect-error: accessing protected method
+      expect(testCard.shouldUpdate(new Map([["hass", baseHass]]))).toBe(true);
+    });
+
+    it("shouldUpdate returns true when a secondary_info_attribute custom entity changes", async () => {
+      const baseHass = mockHassInstance.getHass() as ExtendedHomeAssistant;
+
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        current: {
+          secondary_info_attribute: {
+            name: "humidity",
+            entity: "sensor.custom_humidity",
+          },
+        },
+        forecast: { show_sun_times: false },
+      };
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${baseHass}
+          .config=${config}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(config);
+      await testCard.updateComplete;
+
+      testCard.hass = {
+        ...baseHass,
+        states: {
+          ...baseHass.states,
+          "sensor.custom_humidity": {
+            ...baseHass.states["sensor.custom_humidity"],
+            state: "1",
+          },
+        },
+      } as ExtendedHomeAssistant;
+
+      // @ts-expect-error: accessing protected method
+      expect(testCard.shouldUpdate(new Map([["hass", baseHass]]))).toBe(true);
+    });
+
+    it("shouldUpdate returns false when only an unwatched entity changes", async () => {
+      const baseHass = mockHassInstance.getHass() as ExtendedHomeAssistant;
+
+      const testCard = await fixture<WeatherForecastCard>(
+        html`<weather-forecast-card
+          .hass=${baseHass}
+          .config=${reactiveConfig}
+        ></weather-forecast-card>`
+      );
+
+      testCard.setConfig(reactiveConfig);
+      await testCard.updateComplete;
+
+      // Change an entity the card does not reference; weather + temperature sensor
+      // references are preserved.
+      const unrelatedHass = {
+        ...baseHass,
+        states: {
+          ...baseHass.states,
+          "sensor.custom_humidity": {
+            ...baseHass.states["sensor.custom_humidity"],
+            state: "1",
+          },
+        },
+      } as ExtendedHomeAssistant;
+
+      testCard.hass = unrelatedHass;
+
+      // @ts-expect-error: accessing protected method
+      expect(testCard.shouldUpdate(new Map([["hass", baseHass]]))).toBe(false);
+    });
+  });
+
   describe("websocket reconnection", () => {
     it("should resubscribe after the websocket reconnects", async () => {
       const forecastHass = new MockHass();

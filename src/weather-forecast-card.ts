@@ -1,7 +1,11 @@
 import { merge } from "lodash-es";
 import { property, query, state } from "lit/decorators.js";
 import { styles } from "./weather-forecast-card.styles";
-import { createWarningText, normalizeDate } from "./helpers";
+import {
+  createWarningText,
+  getReferencedCurrentEntities,
+  normalizeDate,
+} from "./helpers";
 import { logger } from "./logger";
 import {
   actionHandler,
@@ -295,6 +299,7 @@ export class WeatherForecastCard extends LitElement {
   protected shouldUpdate(changedProperties: PropertyValues): boolean {
     return (
       hasConfigOrEntityChanged(this, changedProperties, false) ||
+      this.hasReferencedCurrentEntityChanged(changedProperties) ||
       changedProperties.has("_dailyForecastEvent") ||
       changedProperties.has("_hourlyForecastEvent") ||
       changedProperties.has("_currentForecastType") ||
@@ -1015,6 +1020,30 @@ export class WeatherForecastCard extends LitElement {
     const newEntityState = newHass.states[this.config.entity];
 
     return !!oldEntityState !== !!newEntityState;
+  }
+
+  private hasReferencedCurrentEntityChanged(
+    changedProps: PropertyValues
+  ): boolean {
+    if (!changedProps.has("hass") || !this.config) {
+      return false;
+    }
+
+    const oldHass = changedProps.get("hass") as
+      | ExtendedHomeAssistant
+      | undefined;
+    const newHass = this.hass;
+
+    if (!oldHass || !newHass) {
+      return false;
+    }
+
+    // hasConfigOrEntityChanged only tracks the primary weather entity, but the
+    // current section can also read custom sensors (temperature_entity,
+    // secondary info, show_attributes). React when any of those change too.
+    return getReferencedCurrentEntities(this.config).some(
+      (entityId) => oldHass.states[entityId] !== newHass.states[entityId]
+    );
   }
 
   private onForecastAction = (event: ForecastActionEvent): void => {
