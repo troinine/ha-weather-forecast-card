@@ -337,6 +337,47 @@ describe("weather-forecast-card-animations", () => {
       expect(await driftsRight(90)).toBe(false);
     });
   });
+
+  describe("cloud text-shadow theming", () => {
+    const cloudProvider = async (darkMode: boolean) => {
+      const mockHass = new MockHass({ currentCondition: "cloudy", darkMode });
+      const hass = mockHass.getHass() as ExtendedHomeAssistant;
+      const entity = hass.states["weather.demo"] as WeatherEntity;
+      const config: WeatherForecastCardConfig = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        show_condition_effects: true,
+        forecast: { show_sun_times: false },
+      };
+
+      const provider = await fixture<WeatherAnimationProvider>(
+        html`<wfc-animation-provider
+          .hass=${hass}
+          .config=${config}
+          .weatherEntity=${entity}
+        ></wfc-animation-provider>`
+      );
+      await provider.updateComplete;
+
+      return provider;
+    };
+
+    it("marks the cloud deck as dark so the legibility shadow applies", async () => {
+      const provider = await cloudProvider(true);
+
+      expect(provider.hasAttribute("has-clouds")).toBe(true);
+      expect(provider.classList.contains("dark")).toBe(true);
+      expect(provider.classList.contains("light")).toBe(false);
+    });
+
+    it("marks the cloud deck as light so no legibility shadow applies", async () => {
+      const provider = await cloudProvider(false);
+
+      expect(provider.hasAttribute("has-clouds")).toBe(true);
+      expect(provider.classList.contains("light")).toBe(true);
+      expect(provider.classList.contains("dark")).toBe(false);
+    });
+  });
 });
 
 const cloudFingerprints = (provider: WeatherAnimationProvider): string[] =>

@@ -358,7 +358,7 @@ export class MockHass {
     return {
       connected: this.options.connected ?? true,
       themes: {
-        darkMode: this.options.darkMode || true,
+        darkMode: this.options.darkMode ?? true,
       },
       states: {
         "sensor.temperature_outdoor": {
