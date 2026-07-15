@@ -306,21 +306,25 @@ describe("weather-forecast-card theme variables", () => {
 
   describe("cloud text-shadow theming", () => {
     it("should apply the primary text-shadow only in dark theme", () => {
-      expect(cssContent).toContain(
-        "wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-state"
-      );
-      expect(cssContent).not.toContain(
-        "wfc-animation-provider[has-clouds] ~ .wfc-container .wfc-current-state"
-      );
+      for (const target of [".wfc-current-state", ".wfc-current-temperature"]) {
+        expect(cssContent).toContain(
+          `wfc-animation-provider.dark[has-clouds] ~ .wfc-container ${target}`
+        );
+        expect(cssContent).not.toContain(
+          `wfc-animation-provider[has-clouds] ~ .wfc-container ${target}`
+        );
+      }
     });
 
     it("should apply the secondary text-shadow only in dark theme", () => {
-      expect(cssContent).toContain(
-        "wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-name"
-      );
-      expect(cssContent).not.toContain(
-        "wfc-animation-provider[has-clouds] ~ .wfc-container .wfc-name"
-      );
+      for (const target of [".wfc-name", ".wfc-current-secondary-value"]) {
+        expect(cssContent).toContain(
+          `wfc-animation-provider.dark[has-clouds] ~ .wfc-container ${target}`
+        );
+        expect(cssContent).not.toContain(
+          `wfc-animation-provider[has-clouds] ~ .wfc-container ${target}`
+        );
+      }
     });
 
     it("should apply the secondary icon drop-shadow only in dark theme", () => {
