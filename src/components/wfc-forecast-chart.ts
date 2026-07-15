@@ -210,7 +210,7 @@ export class WfcForecastChart extends LitElement {
               <div class="wfc-forecast-chart-attribute-selector">
                 <ha-button
                   class="wfc-settings-toggle-button"
-                  size="small"
+                  size="s"
                   appearance="filled"
                   variant="brand"
                   @click=${this._onSettingsToggle}

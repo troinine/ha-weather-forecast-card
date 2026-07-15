@@ -616,7 +616,7 @@ export class WeatherForecastCardEditor
             this._renderCustomAttributeRow(item, index)
           )}
           <ha-button
-            size="small"
+            size="s"
             appearance="filled"
             variant="brand"
             @click=${this._addCustomAttribute}
