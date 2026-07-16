@@ -295,17 +295,34 @@ describe("compact attributes layout", () => {
     ).toBe(3);
   });
 
-  it("exposes the label as a title on each chip for accessibility", async () => {
+  it("exposes an accessible name and tooltip on each compact chip", async () => {
     const attrEl = await renderAttributes("compact");
-
-    const titles = Array.from(
+    const chips = Array.from(
       attrEl.querySelectorAll(".wfc-current-attribute")
-    ).map((node) => node.getAttribute("title"));
+    );
 
-    expect(titles).toEqual(["Humidity", "Pressure", "Wind speed"]);
+    // role="img" + aria-label make each chip announce as one named unit
+    // ("Humidity, 40 %") rather than a bare value, which title alone cannot
+    // reliably guarantee across screen readers.
+    expect(chips.map((c) => c.getAttribute("role"))).toEqual([
+      "img",
+      "img",
+      "img",
+    ]);
+    expect(chips.map((c) => c.getAttribute("aria-label"))).toEqual([
+      "Humidity, 40 %",
+      "Pressure, 1000 hPa",
+      "Wind speed, 5 m/s",
+    ]);
+    // title stays as a hover tooltip for sighted users (labels are hidden).
+    expect(chips.map((c) => c.getAttribute("title"))).toEqual([
+      "Humidity",
+      "Pressure",
+      "Wind speed",
+    ]);
   });
 
-  it("keeps labels and sets no title in the default layout", async () => {
+  it("keeps labels and sets no compact a11y attributes in the default layout", async () => {
     const attrEl = await renderAttributes("default");
 
     const labels = Array.from(
@@ -313,6 +330,10 @@ describe("compact attributes layout", () => {
     ).map((node) => node.textContent?.trim());
     expect(labels).toEqual(["Humidity", "Pressure", "Wind speed"]);
 
+    expect(attrEl.querySelector(".wfc-current-attribute[role]")).toBeNull();
+    expect(
+      attrEl.querySelector(".wfc-current-attribute[aria-label]")
+    ).toBeNull();
     expect(attrEl.querySelector(".wfc-current-attribute[title]")).toBeNull();
   });
 });

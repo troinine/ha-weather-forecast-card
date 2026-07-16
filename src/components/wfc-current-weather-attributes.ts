@@ -133,7 +133,12 @@ export class WfcCurrentWeatherAttributes extends LitElement {
     const label = this.resolveLabel(attribute, explicitLabel, customEntity);
 
     return html`
-      <div class="wfc-current-attribute" title=${compact ? label : nothing}>
+      <div
+        class="wfc-current-attribute"
+        role=${compact ? "img" : nothing}
+        aria-label=${compact ? `${label}, ${value}` : nothing}
+        title=${compact ? label : nothing}
+      >
         ${iconTemplate}
         ${compact
           ? nothing
