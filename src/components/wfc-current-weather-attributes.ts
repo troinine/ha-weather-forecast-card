@@ -1,5 +1,6 @@
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { classMap } from "lit/directives/class-map.js";
 import { capitalize } from "lodash-es";
 import memoizeOne from "memoize-one";
 import {
@@ -36,8 +37,10 @@ export class WfcCurrentWeatherAttributes extends LitElement {
       return nothing;
     }
 
+    const compact = this.config?.current?.attributes_layout === "compact";
+
     const attributeTemplates = this.attributeConfigs
-      .map((attrConfig) => this._renderAttribute(attrConfig))
+      .map((attrConfig) => this._renderAttribute(attrConfig, compact))
       .filter((template) => template !== nothing);
 
     if (attributeTemplates.length === 0) {
@@ -45,12 +48,20 @@ export class WfcCurrentWeatherAttributes extends LitElement {
     }
 
     return html`
-      <div class="wfc-current-attributes">${attributeTemplates}</div>
+      <div
+        class=${classMap({
+          "wfc-current-attributes": true,
+          "wfc-compact": compact,
+        })}
+      >
+        ${attributeTemplates}
+      </div>
     `;
   }
 
   private _renderAttribute(
-    attrConfig: NormalizedAttributeConfig
+    attrConfig: NormalizedAttributeConfig,
+    compact: boolean
   ): TemplateResult | typeof nothing {
     if (!attrConfig || (!attrConfig.name && !attrConfig.entity)) {
       return nothing;
@@ -119,12 +130,14 @@ export class WfcCurrentWeatherAttributes extends LitElement {
             ></ha-attribute-icon>
           `;
 
+    const label = this.resolveLabel(attribute, explicitLabel, customEntity);
+
     return html`
-      <div class="wfc-current-attribute">
+      <div class="wfc-current-attribute" title=${compact ? label : nothing}>
         ${iconTemplate}
-        <span class="wfc-current-attribute-name">
-          ${this.resolveLabel(attribute, explicitLabel, customEntity)}
-        </span>
+        ${compact
+          ? nothing
+          : html`<span class="wfc-current-attribute-name">${label}</span>`}
         <span class="wfc-current-attribute-value">${value}</span>
       </div>
     `;

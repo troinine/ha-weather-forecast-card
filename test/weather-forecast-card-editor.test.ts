@@ -143,6 +143,18 @@ describe("denormalizeConfig", () => {
       ...CURRENT_WEATHER_ATTRIBUTES,
     ]);
   });
+
+  it("flattens current.attributes_layout onto the form", () => {
+    const form = denormalizeConfig({
+      type: "custom:weather-forecast-card",
+      entity: "weather.demo",
+      current: {
+        show_attributes: ["humidity"],
+        attributes_layout: "compact",
+      },
+    });
+    expect(form["current.attributes_layout"]).toBe("compact");
+  });
 });
 
 describe("buildShowAttributes", () => {

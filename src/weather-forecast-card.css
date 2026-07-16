@@ -298,6 +298,41 @@ wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-
   flex: 1;
 }
 
+.wfc-current-attributes.wfc-compact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--ha-space-5, 20px);
+  row-gap: var(--ha-space-1, 4px);
+  align-items: center;
+}
+
+.wfc-current-attributes.wfc-compact .wfc-current-attribute {
+  justify-content: flex-start;
+  gap: var(--ha-space-2, 8px);
+  min-width: 0;
+}
+
+.wfc-current-attributes.wfc-compact .wfc-current-attribute-icon {
+  padding-left: 0;
+  flex: 0 0 auto;
+}
+
+.wfc-current-attributes.wfc-compact .wfc-current-attribute-value {
+  flex: 1;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.wfc-current-attributes.wfc-compact .wfc-current-attribute:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+.wfc-current-attributes.wfc-compact
+  .wfc-current-attribute:nth-child(even)
+  .wfc-current-attribute-value {
+  text-align: right;
+}
+
 .wfc-forecast-container {
   pointer-events: auto;
 }

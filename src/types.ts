@@ -73,6 +73,14 @@ export interface CurrentWeatherAttributeConfig {
   icon?: string;
 }
 
+export const CURRENT_WEATHER_ATTRIBUTES_LAYOUTS = [
+  "default",
+  "compact",
+] as const;
+
+export type CurrentWeatherAttributesLayout =
+  (typeof CURRENT_WEATHER_ATTRIBUTES_LAYOUTS)[number];
+
 export type WeatherEffect = (typeof WEATHER_EFFECTS)[number];
 
 export enum ForecastMode {
@@ -112,6 +120,7 @@ export interface WeatherForecastCardCurrentConfig {
   temperature_precision?: number;
   secondary_info_attribute?: CurrentWeatherAttributes | CurrentWeatherAttributeConfig;
   temperature_entity?: string;
+  attributes_layout?: CurrentWeatherAttributesLayout;
 }
 
 export interface WeatherForecastCardForecastActionConfig {

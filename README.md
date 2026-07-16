@@ -98,6 +98,7 @@ The `current` object controls the display of current weather information and att
 | `show_attributes`          | `boolean`/`string`/`array` | optional | Display weather attributes below current conditions. Set to `true` to show all available attributes, `false` to hide all, a single attribute name (e.g., `"humidity"`), or an array of attribute names or objects. Objects can override the value `entity`, `label` and `icon`, or display an arbitrary entity. See [Custom Attributes](#custom-attributes) for advanced configuration.                                                 |
 | `secondary_info_attribute` | `string`/`object`          | optional | Controls which secondary info is displayed below current temperature. Supports all available weather attributes. Can also be an object `{ name?, entity?, icon? }` to source the value from a custom entity (see [Custom Attributes](#custom-attributes); note that `label` is not rendered for secondary info). If not set, or if the given attribute is not available in the weather entity, it will default to temperature extrema (high/low) if available, if not available then `precipitation` and if precipitation isn't available then `humidity`. |
 | `temperature_precision`    | `number`                   | optional | Number of decimal places to display for temperature values (0-2). Applies to current temperature, high/low temperatures, and temperature-related attributes like dew point and apparent temperature.                                                                                                                                                       |
+| `attributes_layout`        | `string`                   | `default` | Layout of the attributes list. `default` is a full-width vertical list (icon + label + value, one per line). `compact` is a fixed two-column grid of icon + value chips: labels are dropped (kept as a hover tooltip), and the right column is mirrored so icons sit against both card edges.                                                              |
 
 **Available attributes:**
 
@@ -181,6 +182,17 @@ current:
       icon: mdi:flower
     - entity: sensor.uv_today # label defaults to the entity's friendly name
     - humidity # Standard weather attribute alongside custom ones
+```
+
+```yaml
+# Compact two-column layout (icon + value chips, no labels)
+current:
+  attributes_layout: compact
+  show_attributes:
+    - humidity
+    - pressure
+    - wind_speed
+    - visibility
 ```
 
 > [!TIP]

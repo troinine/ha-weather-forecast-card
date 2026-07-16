@@ -215,6 +215,108 @@ describe("wfc-current-weather attributes", () => {
   });
 });
 
+describe("compact attributes layout", () => {
+  let hass: ExtendedHomeAssistant;
+  let weatherEntity: WeatherEntity;
+
+  beforeEach(() => {
+    const mockHass = new MockHass();
+    hass = mockHass.getHass() as ExtendedHomeAssistant;
+
+    const original = hass.states["weather.demo"] as WeatherEntity;
+    weatherEntity = {
+      ...original,
+      attributes: {
+        ...original.attributes,
+        humidity: 40,
+        pressure: 1000,
+        wind_speed: 5,
+        wind_bearing: undefined,
+      },
+    } as WeatherEntity;
+
+    hass.states["weather.demo"] = weatherEntity;
+  });
+
+  const renderAttributes = async (
+    layout?: "default" | "compact"
+  ): Promise<Element> => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: ["humidity", "pressure", "wind_speed"],
+            ...(layout ? { attributes_layout: layout } : {}),
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const attrEl = el.querySelector("wfc-current-weather-attributes");
+    expect(attrEl).not.toBeNull();
+    return attrEl!;
+  };
+
+  it("applies the compact grid class when attributes_layout is compact", async () => {
+    const attrEl = await renderAttributes("compact");
+
+    const container = attrEl.querySelector(".wfc-current-attributes");
+    expect(container?.classList.contains("wfc-compact")).toBe(true);
+  });
+
+  it("does not apply the compact class by default", async () => {
+    const attrEl = await renderAttributes();
+
+    const container = attrEl.querySelector(".wfc-current-attributes");
+    expect(container).not.toBeNull();
+    expect(container?.classList.contains("wfc-compact")).toBe(false);
+  });
+
+  it("does not apply the compact class when attributes_layout is default", async () => {
+    const attrEl = await renderAttributes("default");
+
+    const container = attrEl.querySelector(".wfc-current-attributes");
+    expect(container?.classList.contains("wfc-compact")).toBe(false);
+  });
+
+  it("drops the visible labels but keeps the values in compact layout", async () => {
+    const attrEl = await renderAttributes("compact");
+
+    expect(
+      attrEl.querySelectorAll(".wfc-current-attribute-name").length
+    ).toBe(0);
+    expect(
+      attrEl.querySelectorAll(".wfc-current-attribute-value").length
+    ).toBe(3);
+  });
+
+  it("exposes the label as a title on each chip for accessibility", async () => {
+    const attrEl = await renderAttributes("compact");
+
+    const titles = Array.from(
+      attrEl.querySelectorAll(".wfc-current-attribute")
+    ).map((node) => node.getAttribute("title"));
+
+    expect(titles).toEqual(["Humidity", "Pressure", "Wind speed"]);
+  });
+
+  it("keeps labels and sets no title in the default layout", async () => {
+    const attrEl = await renderAttributes("default");
+
+    const labels = Array.from(
+      attrEl.querySelectorAll(".wfc-current-attribute-name")
+    ).map((node) => node.textContent?.trim());
+    expect(labels).toEqual(["Humidity", "Pressure", "Wind speed"]);
+
+    expect(attrEl.querySelector(".wfc-current-attribute[title]")).toBeNull();
+  });
+});
+
 describe("secondary_info_attribute", () => {
   let hass: ExtendedHomeAssistant;
   let weatherEntity: WeatherEntity;

@@ -13,6 +13,7 @@ import {
 import {
   CHART_ATTRIBUTES,
   CURRENT_WEATHER_ATTRIBUTES,
+  CURRENT_WEATHER_ATTRIBUTES_LAYOUTS,
   CurrentWeatherAttributes,
   CurrentWeatherAttributeConfig,
   ExtendedHomeAssistant,
@@ -269,6 +270,19 @@ export class WeatherForecastCardEditor
               label:
                 localize(`ui.card.weather.attributes.${attribute}`) ||
                 capitalize(attribute).replace(/_/g, " "),
+            })),
+          },
+        },
+      },
+      {
+        name: "current.attributes_layout",
+        default: "default",
+        optional: true,
+        selector: {
+          select: {
+            options: CURRENT_WEATHER_ATTRIBUTES_LAYOUTS.map((layout) => ({
+              value: layout,
+              label: capitalize(layout),
             })),
           },
         },
@@ -948,6 +962,10 @@ export class WeatherForecastCardEditor
 
     if (newConfig?.forecast?.extra_attribute === "none") {
       delete newConfig.forecast.extra_attribute;
+    }
+
+    if (newConfig?.current?.attributes_layout === "default") {
+      delete newConfig.current.attributes_layout;
     }
 
     if (Array.isArray(newConfig.show_condition_effects)) {
