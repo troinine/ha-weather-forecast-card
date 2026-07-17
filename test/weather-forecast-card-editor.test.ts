@@ -155,6 +155,20 @@ describe("denormalizeConfig", () => {
     });
     expect(form["current.attributes_layout"]).toBe("compact");
   });
+
+  it("preserves historical weather editor options", () => {
+    const form = denormalizeConfig({
+      type: "custom:weather-forecast-card",
+      entity: "weather.demo",
+      forecast: {
+        show_history: true,
+        history_hours: 96,
+      },
+    });
+
+    expect(form["forecast.show_history"]).toBe(true);
+    expect(form["forecast.history_hours"]).toBe(96);
+  });
 });
 
 describe("buildShowAttributes", () => {

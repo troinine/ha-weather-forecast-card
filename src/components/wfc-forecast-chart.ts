@@ -43,6 +43,7 @@ import {
   Color,
   ChartDataset,
   ChartOptions,
+  Plugin,
 } from "chart.js";
 
 import "./wfc-forecast-header-items";
@@ -114,7 +115,11 @@ export class WfcForecastChart extends LitElement {
   @property({ attribute: false }) isTwiceDailyEntity = false;
   @property({ attribute: false }) itemWidth: number = 0;
   @property({ attribute: false }) isScrollable = false;
+  @property({ attribute: false }) historyCount = 0;
+  @property({ attribute: false }) historyLoading = false;
+  @property({ attribute: false }) historyHasMore = false;
   @query("canvas") private _canvas?: HTMLCanvasElement;
+  @query(".wfc-scroll-container") private _scrollContainer?: HTMLElement;
 
   @state() private _settingsOpen = false;
   @state() private _selectedAttribute: ChartAttributes =
@@ -123,6 +128,38 @@ export class WfcForecastChart extends LitElement {
   private _lastChartEvent: PointerEvent | null = null;
   private _chart: Chart | null = null;
   private _temperatureColors: Record<string, string> | null = null;
+  private _visibleHistoryCount = 0;
+  private _nowMarkerPlugin: Plugin = {
+    id: "wfc-now-marker",
+    afterDraw: (chart) => {
+      if (this.forecastType !== "hourly" || this._visibleHistoryCount <= 0) {
+        return;
+      }
+
+      const xScale = chart.scales.x;
+      if (!xScale) {
+        return;
+      }
+
+      const x = xScale.getPixelForValue(this._visibleHistoryCount);
+      const { top, bottom } = chart.chartArea;
+      const style = getComputedStyle(this);
+      const color =
+        style.getPropertyValue("--wfc-now-marker-color").trim() ||
+        style.getPropertyValue("--primary-color").trim() ||
+        "#03a9f4";
+
+      chart.ctx.save();
+      chart.ctx.beginPath();
+      chart.ctx.setLineDash([4, 4]);
+      chart.ctx.strokeStyle = color;
+      chart.ctx.lineWidth = 2;
+      chart.ctx.moveTo(x, top);
+      chart.ctx.lineTo(x, bottom);
+      chart.ctx.stroke();
+      chart.ctx.restore();
+    },
+  };
   private _scrollController = new DragScrollController(this, {
     selector: ".wfc-scroll-container",
     childSelector: ".wfc-forecast-slot",
@@ -153,7 +190,8 @@ export class WfcForecastChart extends LitElement {
       changedProps.has("weatherEntity") ||
       changedProps.has("hass") ||
       changedProps.has("forecastType") ||
-      changedProps.has("itemWidth");
+      changedProps.has("itemWidth") ||
+      changedProps.has("historyCount");
 
     if (hasChanged && this.itemWidth > 0 && this.forecast?.length) {
       if (!this._chart) {
@@ -164,13 +202,16 @@ export class WfcForecastChart extends LitElement {
         this.updateChartData(structuralChange);
       }
     }
+
+    this._preserveHistoryScrollPosition(changedProps);
   }
 
   render(): TemplateResult | typeof nothing {
-    const forecast = this.safeForecast;
+    const { forecast, historyCount } = this.safeTimeline;
     if (!forecast?.length || this.itemWidth <= 0) {
       return nothing;
     }
+    this._visibleHistoryCount = historyCount;
 
     const count = forecast.length;
     const gaps = Math.max(count - 1, 0);
@@ -243,6 +284,13 @@ export class WfcForecastChart extends LitElement {
           "is-scrollable": this.isScrollable,
         })}"
       >
+        ${this.historyLoading
+          ? html`<div
+              class="wfc-history-loading"
+              role="status"
+              aria-label="Loading historical weather"
+            ></div>`
+          : nothing}
         <div
           class="wfc-scroll-container"
           style=${styleMap(scrollContainerStyle)}
@@ -254,9 +302,10 @@ export class WfcForecastChart extends LitElement {
           })}
           @pointerdown=${this._onPointerDown}
           @action=${this._onForecastAction}
+          @scroll=${this._onScroll}
         >
           <div class="wfc-forecast-chart-header">
-            ${this.renderHeaderItems(forecast)}
+            ${this.renderHeaderItems(forecast, historyCount)}
           </div>
 
           <div class="wfc-chart-clipper" style=${styleMap(clipperStyle)}>
@@ -272,7 +321,13 @@ export class WfcForecastChart extends LitElement {
           <div class="wfc-forecast-chart-footer">
             ${forecast.map(
               (item, index) => html`
-                <div class="wfc-forecast-slot" data-index=${index}>
+                <div
+                  class=${classMap({
+                    "wfc-forecast-slot": true,
+                    "wfc-history-slot": index < historyCount,
+                  })}
+                  data-index=${index}
+                >
                   <wfc-forecast-info
                     .hass=${this.hass}
                     .weatherEntity=${this.weatherEntity}
@@ -359,7 +414,8 @@ export class WfcForecastChart extends LitElement {
   }
 
   private getChartConfig(): ChartConfiguration {
-    const data = this.safeForecast;
+    const { forecast: data, historyCount } = this.safeTimeline;
+    this._visibleHistoryCount = historyCount;
     const style = getComputedStyle(this);
     const gridColor = style.getPropertyValue("--wfc-chart-grid-color");
     const fontSize = this._getChartFontSize();
@@ -417,17 +473,24 @@ export class WfcForecastChart extends LitElement {
       },
     };
 
+    let config: ChartConfiguration;
     switch (this._selectedAttribute) {
       case "uv_index":
-        return this._getUVIndexConfig(data, style, baseOptions);
+        config = this._getUVIndexConfig(data, style, baseOptions);
+        break;
       case "humidity":
       case "pressure":
       case "apparent_temperature":
-        return this._getSelectedAttributeConfig(data, style, baseOptions);
+        config = this._getSelectedAttributeConfig(data, style, baseOptions);
+        break;
       case "temperature_and_precipitation":
       default:
-        return this._getDefaultWeatherConfig(data, style, baseOptions);
+        config = this._getDefaultWeatherConfig(data, style, baseOptions);
+        break;
     }
+
+    config.plugins = [...(config.plugins ?? []), this._nowMarkerPlugin];
+    return config;
   }
 
   private _getDefaultWeatherConfig(
@@ -849,7 +912,10 @@ export class WfcForecastChart extends LitElement {
     return { minTemp, maxTemp };
   }
 
-  private renderHeaderItems(forecast: ForecastAttribute[]): TemplateResult[] {
+  private renderHeaderItems(
+    forecast: ForecastAttribute[],
+    historyCount: number
+  ): TemplateResult[] {
     const parts: TemplateResult[] = [];
     let currentDay: string | undefined;
 
@@ -871,7 +937,15 @@ export class WfcForecastChart extends LitElement {
       }
 
       parts.push(html`
-        <div class="wfc-forecast-slot" data-index=${index}>
+        <div
+          class=${classMap({
+            "wfc-forecast-slot": true,
+            "wfc-history-slot": index < historyCount,
+            "wfc-now-slot": historyCount > 0 && index === historyCount,
+          })}
+          data-index=${index}
+          data-now-label=${this._nowLabel()}
+        >
           <wfc-forecast-header-items
             .hass=${this.hass}
             .forecast=${item}
@@ -890,24 +964,44 @@ export class WfcForecastChart extends LitElement {
    * Returns a subset of the forecast that fits within the hardware canvas limit.
    * This calculation includes the gap width to ensure exact layout synchronization.
    */
-  private get safeForecast(): ForecastAttribute[] {
-    if (!this.forecast?.length || this.itemWidth <= 0) return [];
+  private get safeTimeline(): {
+    forecast: ForecastAttribute[];
+    historyCount: number;
+  } {
+    if (!this.forecast?.length || this.itemWidth <= 0) {
+      return { forecast: [], historyCount: 0 };
+    }
 
-    const gap = this._getGapValue();
-
-    const maxItems = Math.floor(
-      (MAX_CANVAS_WIDTH + gap) / (this.itemWidth + gap)
-    );
+    const maxItems = this._getMaxTimelineItems();
 
     if (this.forecast.length > maxItems) {
+      const gap = this._getGapValue();
+      const trimHistory = Math.min(
+        this.historyCount,
+        this.forecast.length - maxItems
+      );
       logger.debug(
         `Truncating forecast to ${maxItems} items to stay under ${MAX_CANVAS_WIDTH}px (including ${gap}px gaps).`
       );
 
-      return this.forecast.slice(0, maxItems);
+      return {
+        forecast: this.forecast.slice(trimHistory, trimHistory + maxItems),
+        historyCount: this.historyCount - trimHistory,
+      };
     }
 
-    return this.forecast;
+    return {
+      forecast: this.forecast,
+      historyCount: this.historyCount,
+    };
+  }
+
+  /**
+   * Retained for existing callers and tests that inspect the chart's safe,
+   * canvas-bounded forecast collection.
+   */
+  private get safeForecast(): ForecastAttribute[] {
+    return this.safeTimeline.forecast;
   }
 
   private _getGapValue(): number {
@@ -916,6 +1010,22 @@ export class WfcForecastChart extends LitElement {
     const gapValue = style.getPropertyValue("--forecast-item-gap").trim();
 
     return parseFloat(gapValue) || 0;
+  }
+
+  private _getMaxTimelineItems(): number {
+    const gap = this._getGapValue();
+    return Math.floor((MAX_CANVAS_WIDTH + gap) / (this.itemWidth + gap));
+  }
+
+  private _getVisibleHistoryCount(
+    totalItems: number,
+    historyCount: number
+  ): number {
+    const trimmedHistory = Math.min(
+      historyCount,
+      Math.max(0, totalItems - this._getMaxTimelineItems())
+    );
+    return historyCount - trimmedHistory;
   }
 
   private _onPointerDown(event: PointerEvent) {
@@ -961,6 +1071,9 @@ export class WfcForecastChart extends LitElement {
     const label = xScale.getLabelForValue(dataX);
     const index = this._chart.data.labels?.indexOf(label as string) ?? -1;
     if (index === -1) return;
+    if (this._visibleHistoryCount > 0 && index <= this._visibleHistoryCount) {
+      return;
+    }
 
     const selectedForecast = this.safeForecast[index];
     if (!selectedForecast) return;
@@ -1023,6 +1136,67 @@ export class WfcForecastChart extends LitElement {
           : WEATHER_ATTRIBUTE_ICON_MAP[attr as CurrentWeatherAttributes],
       value: attr,
     }));
+  }
+
+  private _preserveHistoryScrollPosition(changedProps: PropertyValues): void {
+    if (
+      this.forecastType !== "hourly" ||
+      this.historyCount <= 0 ||
+      !this._scrollContainer ||
+      this.itemWidth <= 0
+    ) {
+      return;
+    }
+
+    const oldHistoryCount =
+      (changedProps.get("historyCount") as number | undefined) ?? 0;
+    const forecastTypeChanged = changedProps.has("forecastType");
+
+    requestAnimationFrame(() => {
+      if (!this._scrollContainer) {
+        return;
+      }
+
+      if (forecastTypeChanged || oldHistoryCount === 0) {
+        this._scrollContainer.scrollLeft =
+          this._visibleHistoryCount * this.itemWidth;
+      } else if (this.historyCount > oldHistoryCount) {
+        const addedHistory = this.historyCount - oldHistoryCount;
+        const oldVisibleHistoryCount = this._getVisibleHistoryCount(
+          this.forecast.length - addedHistory,
+          oldHistoryCount
+        );
+        const visibleAdded = this._visibleHistoryCount - oldVisibleHistoryCount;
+        this._scrollContainer.scrollLeft += visibleAdded * this.itemWidth;
+      }
+    });
+  }
+
+  private _onScroll = (): void => {
+    if (
+      !this._scrollContainer ||
+      !this.historyHasMore ||
+      this.historyLoading ||
+      this._visibleHistoryCount === 0
+    ) {
+      return;
+    }
+
+    const threshold = Math.max(this.itemWidth * 1.5, 80);
+    if (this._scrollContainer.scrollLeft <= threshold) {
+      this.dispatchEvent(
+        new CustomEvent("history-load-requested", {
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  };
+
+  private _nowLabel(): string {
+    const key = "ui.common.now";
+    const localized = this.hass.localize(key);
+    return localized && localized !== key ? localized : "Now";
   }
 
   private _onAttributesSelected(e: CustomEvent): void {

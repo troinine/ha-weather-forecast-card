@@ -213,9 +213,32 @@ current:
 | `use_color_thresholds`    | boolean | `true`                          | Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode. Colors transition at fixed intervals: -10° (Cold), 0° (Freezing), 8° (Chilly), 18° (Mild), 26° (Warm), and 34° (Hot). These thresholds are specified in degrees Celsius (°C). |
 | `show_attribute_selector` | boolean | `false`                         | Displays a settings icon in the top-right corner of the chart for quick access to the attribute selector. The attribute selector is also accessible via hold action by default. See [Chart Attribute Selector](#chart-attribute-selector).                                            |
 | `default_chart_attribute` | string  | `temperature_and_precipitation` | The weather attribute to display by default in chart mode. See [Chart Attribute Selector](#chart-attribute-selector) for available values.                                                                                                                                            |
+| `show_history`            | boolean | `false`                         | Loads observed hourly weather from Home Assistant Recorder before the hourly forecast. The first 24 hours load initially and older pages load while scrolling backwards. Daily and twice-daily views remain forecast-only.                                                            |
+| `history_hours`           | number  | `72`                            | Maximum observed history available while scrolling backwards (`24`-`168` hours). Actual availability depends on Recorder retention and whether the weather entity is recorded.                                                                                                        |
 
 > [!IMPORTANT]
 > **Canvas width limit:** To ensure cross-browser compatibility and prevent rendering issues, the canvas width is capped at 16384 pixels in `chart` mode. At a standard item width of 50px, this supports approximately 320 entries (roughly two weeks of data) which is more than enough to cover reliable weather data from most forecast services. Any data exceeding this limit will be truncated.
+
+### Historical Weather
+
+Historical weather is opt-in and applies to the hourly view in both `simple` and `chart` modes:
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+default_forecast: hourly
+forecast:
+  show_history: true
+  history_hours: 72
+```
+
+The card loads the most recent 24 hours of observed weather, positions the view at the **Now** boundary, and loads older 24-hour pages as you scroll backwards. Historical entries come from the recorded states and attributes of the configured `weather` entity; they are observations, not archived copies of earlier forecasts.
+
+> [!IMPORTANT]
+> Historical availability is controlled by Home Assistant Recorder. Raw states are retained for `purge_keep_days` (10 days by default), may be excluded by Recorder configuration, and can contain gaps when an integration did not update. The card cannot recover purged or unrecorded data.
+
+> [!NOTE]
+> Daily history is not derived because weather entity snapshots do not reliably provide daily condition summaries or observed precipitation totals. Historical precipitation is therefore omitted unless Home Assistant adds it to the recorded weather entity state.
 
 ### Forecast Actions
 

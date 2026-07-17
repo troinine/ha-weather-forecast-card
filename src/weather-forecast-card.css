@@ -79,6 +79,10 @@
     --weather-forecast-card-sunset-color,
     var(--purple-color, #926bc7)
   );
+  --wfc-now-marker-color: var(
+    --weather-forecast-card-now-marker-color,
+    var(--primary-color, #03a9f4)
+  );
   --wfc-day-indicator-color: var(
     --weather-forecast-card-day-indicator-color,
     #056bb8
@@ -350,6 +354,7 @@ wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-
 }
 
 .wfc-mask-container {
+  position: relative;
   width: 100%;
 }
 
@@ -401,6 +406,58 @@ wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-
   max-width: var(--forecast-item-width);
   gap: var(--ha-space-1, 4px);
   scroll-snap-align: start;
+}
+
+.wfc-history-slot {
+  opacity: 0.72;
+}
+
+.wfc-now-slot::before {
+  content: attr(data-now-label);
+  position: absolute;
+  top: 0;
+  left: 4px;
+  z-index: 4;
+  color: var(--wfc-now-marker-color);
+  background: var(--ha-card-background, var(--card-background-color, #fff));
+  font-size: var(--ha-font-size-s, 12px);
+  font-weight: 600;
+  line-height: 20px;
+  padding: 0 3px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.wfc-now-slot::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  border-left: 2px dashed var(--wfc-now-marker-color);
+  pointer-events: none;
+}
+
+.wfc-history-loading {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  z-index: 6;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border: 2px solid var(--divider-color, rgba(127, 127, 127, 0.3));
+  border-top-color: var(--primary-color, #03a9f4);
+  border-radius: 50%;
+  animation: wfc-history-spin 0.8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes wfc-history-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .wfc-label {
