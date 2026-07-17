@@ -27,7 +27,10 @@ describe("getUvIndexColor", () => {
     [5.5, "--wfc-uv-high"],
     [7.5, "--wfc-uv-very-high"],
     [10.5, "--wfc-uv-extreme"],
-  ] as const)("buckets fractional UV %f by its rounded value to %s", (value, expected) => {
-    expect(getUvIndexColor(value)).toBe(expected);
-  });
+  ] as const)(
+    "buckets fractional UV %f by its rounded value to %s",
+    (value, expected) => {
+      expect(getUvIndexColor(value)).toBe(expected);
+    }
+  );
 });

@@ -117,8 +117,11 @@ export interface WeatherForecastCardCurrentConfig {
     | CurrentWeatherAttributes[]
     | CurrentWeatherAttributeConfig
     | (CurrentWeatherAttributes | CurrentWeatherAttributeConfig)[];
+  attributes_collapsible?: boolean;
   temperature_precision?: number;
-  secondary_info_attribute?: CurrentWeatherAttributes | CurrentWeatherAttributeConfig;
+  secondary_info_attribute?:
+    | CurrentWeatherAttributes
+    | CurrentWeatherAttributeConfig;
   temperature_entity?: string;
   attributes_layout?: CurrentWeatherAttributesLayout;
 }

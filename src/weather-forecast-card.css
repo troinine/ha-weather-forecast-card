@@ -188,6 +188,12 @@ ha-card {
   width: 100%;
 }
 
+.wfc-current-attributes-toggle:focus-visible {
+  border-radius: var(--ha-card-border-radius, 12px);
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .wfc-name,
 .wfc-name-state,
 .wfc-current-state {
@@ -247,17 +253,28 @@ ha-card {
   white-space: nowrap;
 }
 
+.wfc-current-state {
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
 wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-state,
-wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-temperature {
+wfc-animation-provider.dark[has-clouds]
+  ~ .wfc-container
+  .wfc-current-temperature {
   text-shadow: var(--wfc-effects-text-shadow);
 }
 
 wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-name,
-wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-value {
+wfc-animation-provider.dark[has-clouds]
+  ~ .wfc-container
+  .wfc-current-secondary-value {
   text-shadow: var(--wfc-effects-text-shadow-secondary);
 }
 
-wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-icon {
+wfc-animation-provider.dark[has-clouds]
+  ~ .wfc-container
+  .wfc-current-secondary-icon {
   filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.5));
 }
 

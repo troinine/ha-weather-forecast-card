@@ -213,6 +213,98 @@ describe("wfc-current-weather attributes", () => {
     )?.textContent;
     expect(value?.trim()).toBe("5 m/s");
   });
+  it("toggles collapsible attributes with mouse and keyboard", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: ["humidity", "pressure"],
+            attributes_collapsible: true,
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const toggle = el.querySelector<HTMLElement>(
+      ".wfc-current-attributes-toggle"
+    );
+
+    expect(toggle).not.toBeNull();
+    expect(toggle?.getAttribute("role")).toBe("button");
+    expect(toggle?.getAttribute("tabindex")).toBe("0");
+    expect(toggle?.getAttribute("aria-expanded")).toBe("false");
+    expect(toggle?.getAttribute("aria-label")).toBe(
+      "Show current weather attributes"
+    );
+    expect(el.querySelector("wfc-current-weather-attributes")).toBeNull();
+
+    toggle?.click();
+    await el.updateComplete;
+
+    expect(toggle?.getAttribute("aria-expanded")).toBe("true");
+    expect(toggle?.getAttribute("aria-label")).toBe(
+      "Hide current weather attributes"
+    );
+    expect(el.querySelector("wfc-current-weather-attributes")).not.toBeNull();
+
+    toggle?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true })
+    );
+    await el.updateComplete;
+
+    expect(toggle?.getAttribute("aria-expanded")).toBe("false");
+    expect(el.querySelector("wfc-current-weather-attributes")).toBeNull();
+
+    toggle?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: " ", bubbles: true })
+    );
+    await el.updateComplete;
+
+    expect(toggle?.getAttribute("aria-expanded")).toBe("true");
+
+    toggle?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: " ", bubbles: true })
+    );
+    await el.updateComplete;
+
+    expect(toggle?.getAttribute("aria-expanded")).toBe("false");
+    expect(toggle?.getAttribute("aria-label")).toBe(
+      "Show current weather attributes"
+    );
+    expect(el.querySelector("wfc-current-weather-attributes")).toBeNull();
+  });
+
+  it("does not add toggle semantics when no attributes are configured", async () => {
+    const el = await fixture<WfcCurrentWeather>(
+      html`<wfc-current-weather
+        .hass=${hass}
+        .weatherEntity=${weatherEntity}
+        .config=${{
+          ...baseConfig,
+          current: {
+            show_attributes: false,
+            attributes_collapsible: true,
+          },
+        }}
+      ></wfc-current-weather>`
+    );
+
+    await el.updateComplete;
+
+    const conditions = el.querySelector<HTMLElement>(".wfc-current-conditions");
+
+    expect(
+      conditions?.classList.contains("wfc-current-attributes-toggle")
+    ).toBe(false);
+    expect(conditions?.hasAttribute("role")).toBe(false);
+    expect(conditions?.hasAttribute("tabindex")).toBe(false);
+    expect(conditions?.hasAttribute("aria-expanded")).toBe(false);
+  });
 });
 
 describe("compact attributes layout", () => {
@@ -287,19 +379,17 @@ describe("compact attributes layout", () => {
   it("drops the visible labels but keeps the values in compact layout", async () => {
     const attrEl = await renderAttributes("compact");
 
-    expect(
-      attrEl.querySelectorAll(".wfc-current-attribute-name").length
-    ).toBe(0);
-    expect(
-      attrEl.querySelectorAll(".wfc-current-attribute-value").length
-    ).toBe(3);
+    expect(attrEl.querySelectorAll(".wfc-current-attribute-name").length).toBe(
+      0
+    );
+    expect(attrEl.querySelectorAll(".wfc-current-attribute-value").length).toBe(
+      3
+    );
   });
 
   it("exposes an accessible name and tooltip on each compact chip", async () => {
     const attrEl = await renderAttributes("compact");
-    const chips = Array.from(
-      attrEl.querySelectorAll(".wfc-current-attribute")
-    );
+    const chips = Array.from(attrEl.querySelectorAll(".wfc-current-attribute"));
 
     // role="img" + aria-label make each chip announce as one named unit
     // ("Humidity, 40 %") rather than a bare value, which title alone cannot

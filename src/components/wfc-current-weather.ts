@@ -1,5 +1,5 @@
 import { html, LitElement, nothing, TemplateResult } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { actionHandler } from "../hass";
 import { getSuntimesInfo, normalizeDate } from "../helpers";
 import {
@@ -65,6 +65,8 @@ export class WfcCurrentWeather extends LitElement {
   @property({ attribute: false }) dailyForecast?: ForecastAttribute[];
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
 
+  @state() private _attributesExpanded = false;
+
   protected createRenderRoot() {
     return this;
   }
@@ -79,12 +81,33 @@ export class WfcCurrentWeather extends LitElement {
     const secondaryInfo = this.getSecondaryWeatherAttribute();
     const isNightTime = this.isNightTime();
     const attributes = this.getConfiguredAttributes();
+    const attributesCollapsible =
+      attributes.length > 0 &&
+      this.config.current?.attributes_collapsible === true;
     const name =
       this.config.name || this.weatherEntity.attributes.friendly_name;
 
     return html`
       <div class="wfc-current-weather">
-        <div class="wfc-current-conditions">
+        <div
+          class=${attributesCollapsible
+            ? "wfc-current-conditions wfc-current-attributes-toggle"
+            : "wfc-current-conditions"}
+          role=${attributesCollapsible ? "button" : nothing}
+          tabindex=${attributesCollapsible ? "0" : nothing}
+          aria-expanded=${attributesCollapsible
+            ? String(this._attributesExpanded)
+            : nothing}
+          aria-label=${attributesCollapsible
+            ? this._attributesExpanded
+              ? "Hide current weather attributes"
+              : "Show current weather attributes"
+            : nothing}
+          @click=${attributesCollapsible ? this._toggleAttributes : nothing}
+          @keydown=${attributesCollapsible
+            ? this._onAttributesToggleKeyDown
+            : nothing}
+        >
           <wfc-weather-condition-icon-provider
             .config=${this.config}
             .state=${state}
@@ -148,7 +171,8 @@ export class WfcCurrentWeather extends LitElement {
               : nothing}
           </div>
         </div>
-        ${attributes.length > 0
+        ${attributes.length > 0 &&
+        (!attributesCollapsible || this._attributesExpanded)
           ? html`<wfc-current-weather-attributes
               .hass=${this.hass}
               .weatherEntity=${this.weatherEntity}
@@ -159,6 +183,20 @@ export class WfcCurrentWeather extends LitElement {
       </div>
     `;
   }
+
+  private _toggleAttributes = (event: Event): void => {
+    event.stopPropagation();
+    this._attributesExpanded = !this._attributesExpanded;
+  };
+
+  private _onAttributesToggleKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    this._toggleAttributes(event);
+  };
 
   private isNightTime(): boolean {
     const suntimesInfo = getSuntimesInfo(this.hass, new Date());
@@ -263,7 +301,11 @@ export class WfcCurrentWeather extends LitElement {
           ? { name: rawSecondaryInfoAttribute as CurrentWeatherAttributes }
           : rawSecondaryInfoAttribute;
 
-      const { name, entity: customEntityId, icon: explicitIcon } = secondaryAttr;
+      const {
+        name,
+        entity: customEntityId,
+        icon: explicitIcon,
+      } = secondaryAttr;
 
       if (customEntityId) {
         // Custom entity path: skip the in-attributes check

@@ -601,7 +601,8 @@ export class WeatherAnimationProvider extends LitElement {
     const speedMS = forecast
       ? getNormalizedWindSpeed(this.hass, this.weatherEntity, forecast) || 0
       : 0;
-    const speedFactor = Math.min(speedMS, WIND_SPEED_MS_MAX) / WIND_SPEED_MS_MAX;
+    const speedFactor =
+      Math.min(speedMS, WIND_SPEED_MS_MAX) / WIND_SPEED_MS_MAX;
 
     // Signed horizontal component in [-1, 1]; positive points right (east).
     // getNormalizedWindBearing handles numeric and cardinal (e.g. "NW") bearings.

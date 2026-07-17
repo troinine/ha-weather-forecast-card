@@ -183,8 +183,9 @@ export class WeatherForecastCard extends LitElement {
   }
 
   /**
-   * Reports sizing to Home Assistant's Sections view so the card snaps to whole
-   * grid rows instead of taking an arbitrary fractional height.
+   * Reports sizing to Home Assistant's Sections view. Static layouts snap to
+   * whole grid rows; collapsible attributes use automatic rows so the card can
+   * follow the content height as the list opens and closes.
    *
    * Row counts are derived from the enabled blocks; the content is vertically
    * centered (see CSS) when the user sizes the card taller than it needs, so a
@@ -192,10 +193,14 @@ export class WeatherForecastCard extends LitElement {
    */
   public getGridOptions(): LovelaceGridOptions {
     const { rows, minRows, minColumns } = this.computeRowSizing();
+    const hasCollapsibleAttributes =
+      this.config?.show_current !== false &&
+      this.config?.current?.attributes_collapsible === true &&
+      this.hasConfiguredCurrentAttributes();
 
     return {
       columns: 12,
-      rows,
+      rows: hasCollapsibleAttributes ? "auto" : rows,
       min_rows: minRows,
       min_columns: minColumns,
     };
@@ -207,6 +212,34 @@ export class WeatherForecastCard extends LitElement {
    */
   public getCardSize(): number {
     return this.computeRowSizing().rows;
+  }
+
+  private hasConfiguredCurrentAttributes(): boolean {
+    const configured = this.config?.current?.show_attributes;
+
+    if (!configured) {
+      return false;
+    }
+
+    if (typeof configured === "string") {
+      return configured.length > 0;
+    }
+
+    if (Array.isArray(configured)) {
+      return configured.some((item) => {
+        if (typeof item === "string") {
+          return item.length > 0;
+        }
+
+        return Boolean(item?.name || item?.entity);
+      });
+    }
+
+    if (typeof configured === "object") {
+      return Boolean(configured.name || configured.entity);
+    }
+
+    return true;
   }
 
   /**
@@ -234,7 +267,10 @@ export class WeatherForecastCard extends LitElement {
 
       // The optional attribute list adds a variable amount of height; reserve a
       // little extra so the default size does not clip a typical attribute list.
-      if (this.config?.current?.show_attributes) {
+      if (
+        this.hasConfiguredCurrentAttributes() &&
+        this.config?.current?.attributes_collapsible !== true
+      ) {
         rows += 1;
       }
     }
