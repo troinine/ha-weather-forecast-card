@@ -1,5 +1,5 @@
-import { html, LitElement, nothing, TemplateResult } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { html, LitElement, nothing, PropertyValues, TemplateResult } from "lit";
+import { customElement, property, query } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { ActionHandlerEvent, fireEvent } from "custom-card-helpers";
 import { actionHandler } from "../hass";
@@ -31,8 +31,14 @@ export class WfcForecastSimple extends LitElement {
   @property({ attribute: false }) isTwiceDailyEntity = false;
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
   @property({ attribute: false }) isScrollable = false;
+  @property({ attribute: false }) itemWidth = 0;
+  @property({ attribute: false }) historyCount = 0;
+  @property({ attribute: false }) historyLoading = false;
+  @property({ attribute: false }) historyHasMore = false;
+  @query(".wfc-scroll-container") private _scrollContainer?: HTMLElement;
 
   private _selectedForecastIndex: number | null = null;
+  private _historyPositionInitialized = false;
   private _scrollController = new DragScrollController(this, {
     selector: ".wfc-scroll-container",
     childSelector: ".wfc-forecast-slot",
@@ -40,6 +46,47 @@ export class WfcForecastSimple extends LitElement {
 
   protected createRenderRoot() {
     return this;
+  }
+
+  protected updated(changedProps: PropertyValues): void {
+    super.updated(changedProps);
+
+    if (
+      this.forecastType !== "hourly" ||
+      this.historyCount <= 0 ||
+      !this._scrollContainer ||
+      !Number.isFinite(this.itemWidth) ||
+      this.itemWidth <= 0
+    ) {
+      if (this.forecastType !== "hourly" || this.historyCount <= 0) {
+        this._historyPositionInitialized = false;
+      }
+      return;
+    }
+
+    const oldHistoryCount =
+      (changedProps.get("historyCount") as number | undefined) ?? 0;
+    const forecastTypeChanged = changedProps.has("forecastType");
+    const historyCountChanged = changedProps.has("historyCount");
+    const itemWidthChanged = changedProps.has("itemWidth");
+
+    if (!forecastTypeChanged && !historyCountChanged && !itemWidthChanged) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      if (!this._scrollContainer) {
+        return;
+      }
+
+      if (!this._historyPositionInitialized || forecastTypeChanged) {
+        this._scrollContainer.scrollLeft = this.historyCount * this.itemWidth;
+        this._historyPositionInitialized = true;
+      } else if (historyCountChanged && this.historyCount > oldHistoryCount) {
+        this._scrollContainer.scrollLeft +=
+          (this.historyCount - oldHistoryCount) * this.itemWidth;
+      }
+    });
   }
 
   render(): TemplateResult | typeof nothing {
@@ -73,13 +120,23 @@ export class WfcForecastSimple extends LitElement {
       }
 
       forecastTemplates.push(html`
-        <div class="wfc-forecast-slot" data-index=${index}>
+        <div
+          class=${classMap({
+            "wfc-forecast-slot": true,
+            "wfc-history-slot": index < this.historyCount,
+            "wfc-now-slot":
+              this.historyCount > 0 && index === this.historyCount,
+          })}
+          data-index=${index}
+        >
           <wfc-forecast-header-items
             .hass=${this.hass}
             .forecast=${forecast}
             .forecastType=${this.forecastType}
             .isTwiceDailyEntity=${this.isTwiceDailyEntity}
             .config=${this.config}
+            .isNow=${this.historyCount > 0 && index === this.historyCount}
+            .nowLabel=${this._nowLabel()}
           ></wfc-forecast-header-items>
           <wfc-forecast-details
             .hass=${this.hass}
@@ -104,6 +161,13 @@ export class WfcForecastSimple extends LitElement {
           "is-scrollable": this.isScrollable,
         })}"
       >
+        ${this.historyLoading
+          ? html`<div
+              class="wfc-history-loading"
+              role="status"
+              aria-label="Loading historical weather"
+            ></div>`
+          : nothing}
         <div
           class="wfc-forecast wfc-scroll-container"
           .actionHandler=${actionHandler({
@@ -114,6 +178,7 @@ export class WfcForecastSimple extends LitElement {
           })}
           @action=${this._onForecastAction}
           @pointerdown=${this._onPointerDown}
+          @scroll=${this._onScroll}
         >
           ${forecastTemplates}
         </div>
@@ -151,6 +216,33 @@ export class WfcForecastSimple extends LitElement {
 
     fireEvent(this, "action", actionDetails);
   };
+
+  private _onScroll = (): void => {
+    if (
+      !this._scrollContainer ||
+      !this.historyHasMore ||
+      this.historyLoading ||
+      this.historyCount === 0
+    ) {
+      return;
+    }
+
+    const threshold = Math.max(this.itemWidth * 1.5, 80);
+    if (this._scrollContainer.scrollLeft <= threshold) {
+      this.dispatchEvent(
+        new CustomEvent("history-load-requested", {
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
+  };
+
+  private _nowLabel(): string {
+    const key = "ui.common.now";
+    const localized = this.hass.localize(key);
+    return localized && localized !== key ? localized : "Now";
+  }
 }
 
 declare global {
