@@ -260,6 +260,12 @@ export class WeatherForecastCardEditor
         },
       },
       {
+        name: "current.attributes_collapsible",
+        default: false,
+        optional: true,
+        selector: { boolean: {} },
+      },
+      {
         name: "current.secondary_info_attribute",
         default: "none",
         optional: true,
@@ -704,10 +710,7 @@ export class WeatherForecastCardEditor
     this._commitCustomAttributes(custom);
   };
 
-  private _customAttributeChanged = (
-    index: number,
-    ev: CustomEvent
-  ): void => {
+  private _customAttributeChanged = (index: number, ev: CustomEvent): void => {
     ev.stopPropagation();
     const custom = extractCustomAttributes(
       this._config.current?.show_attributes
@@ -821,6 +824,8 @@ export class WeatherForecastCardEditor
             "ui.panel.lovelace.editor.card.generic.attribute"
           ) || "attribute"
         );
+      case "current.attributes_collapsible":
+        return "Make current weather attributes collapsible";
       case "current.secondary_info_attribute":
         return (
           this.hass.localize(
@@ -894,6 +899,8 @@ export class WeatherForecastCardEditor
         return "Limit which forecast types the card subscribes to. Loading only the forecast you display reduces websocket load, which can prevent dashboard slowdowns on resource-constrained devices.";
       case "current.show_attributes":
         return "Select which weather attributes to display in the current weather section.";
+      case "current.attributes_collapsible":
+        return "Starts current weather attributes collapsed and lets users expand them from the current conditions row.";
       case "current.secondary_info_attribute":
         return "Select a weather attribute to display as secondary information in the current weather section.";
       case "forecast.extra_attribute":
@@ -1016,7 +1023,11 @@ export class WeatherForecastCardEditor
         );
         newConfig.current.show_attributes = buildShowAttributes(
           newConfig.current.show_attributes,
-          { entity: entityOverrides, label: labelOverrides, icon: iconOverrides },
+          {
+            entity: entityOverrides,
+            label: labelOverrides,
+            icon: iconOverrides,
+          },
           customItems
         );
       }
@@ -1228,11 +1239,13 @@ const moveDottedKeysToNested = (obj: Record<string, any>) => {
 
 export const denormalizeConfig = (obj: Record<string, any>) => {
   const result = flattenNestedKeys(obj);
+  const showCurrent = result.show_current !== false;
+  const showForecast = result.show_forecast !== false;
 
   result.forecast_mode =
-    result.show_current && result.show_forecast
+    showCurrent && showForecast
       ? "show_both"
-      : result.show_current
+      : showCurrent
         ? "show_current"
         : "show_forecast";
 

@@ -126,7 +126,11 @@ export class WfcCurrentWeatherAttributes extends LitElement {
               .hass=${this.hass}
               .stateObj=${stateObj}
               .attribute=${attribute}
-              .icon=${resolveAttributeIcon(attribute, explicitIcon, customEntity)}
+              .icon=${resolveAttributeIcon(
+                attribute,
+                explicitIcon,
+                customEntity
+              )}
             ></ha-attribute-icon>
           `;
 

@@ -550,49 +550,149 @@
    looking like one repeated sprite. */
 .cloud-shape-1 .cloud-puffs::before {
   background:
-    radial-gradient(28% 42% at 22% 58%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(34% 60% at 42% 46%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(30% 50% at 62% 52%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(24% 38% at 80% 60%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(90% 26% at 50% 74%, var(--cloud-color) 0 60%, transparent 64%);
+    radial-gradient(
+      28% 42% at 22% 58%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      34% 60% at 42% 46%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      30% 50% at 62% 52%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      24% 38% at 80% 60%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      90% 26% at 50% 74%,
+      var(--cloud-color) 0 60%,
+      transparent 64%
+    );
 }
 
 .cloud-shape-2 .cloud-puffs::before {
   background:
-    radial-gradient(30% 55% at 28% 50%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(26% 44% at 50% 58%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(34% 60% at 70% 47%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(20% 32% at 90% 62%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(92% 24% at 50% 76%, var(--cloud-color) 0 60%, transparent 64%);
+    radial-gradient(
+      30% 55% at 28% 50%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      26% 44% at 50% 58%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      34% 60% at 70% 47%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      20% 32% at 90% 62%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      92% 24% at 50% 76%,
+      var(--cloud-color) 0 60%,
+      transparent 64%
+    );
 }
 
 .cloud-shape-3 .cloud-puffs::before {
   background:
-    radial-gradient(20% 34% at 14% 62%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(32% 64% at 35% 40%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(26% 48% at 56% 54%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(22% 40% at 75% 56%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(94% 24% at 50% 75%, var(--cloud-color) 0 60%, transparent 64%);
+    radial-gradient(
+      20% 34% at 14% 62%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      32% 64% at 35% 40%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      26% 48% at 56% 54%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      22% 40% at 75% 56%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      94% 24% at 50% 75%,
+      var(--cloud-color) 0 60%,
+      transparent 64%
+    );
 }
 
 /* A compact, puffier two-lobe cloud. */
 .cloud-shape-4 .cloud-puffs::before {
   background:
-    radial-gradient(34% 66% at 34% 44%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(38% 70% at 62% 42%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(22% 40% at 84% 58%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(74% 26% at 48% 76%, var(--cloud-color) 0 60%, transparent 64%);
+    radial-gradient(
+      34% 66% at 34% 44%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      38% 70% at 62% 42%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      22% 40% at 84% 58%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      74% 26% at 48% 76%,
+      var(--cloud-color) 0 60%,
+      transparent 64%
+    );
 }
 
 /* A long, low bank with many small billows. */
 .cloud-shape-5 .cloud-puffs::before {
   background:
-    radial-gradient(18% 32% at 12% 60%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(22% 44% at 30% 52%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(24% 46% at 48% 50%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(22% 42% at 66% 52%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(18% 34% at 84% 58%, var(--cloud-color) 0 60%, transparent 62%),
-    radial-gradient(96% 22% at 50% 76%, var(--cloud-color) 0 60%, transparent 64%);
+    radial-gradient(
+      18% 32% at 12% 60%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      22% 44% at 30% 52%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      24% 46% at 48% 50%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      22% 42% at 66% 52%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      18% 34% at 84% 58%,
+      var(--cloud-color) 0 60%,
+      transparent 62%
+    ),
+    radial-gradient(
+      96% 22% at 50% 76%,
+      var(--cloud-color) 0 60%,
+      transparent 64%
+    );
 }
 
 .cloud.grey .cloud-puffs::before {

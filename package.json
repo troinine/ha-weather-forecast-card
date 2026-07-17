@@ -31,9 +31,11 @@
     "dev": "parcel serve test/app/index.html test/app/resources/img/*.svg --open",
     "build": "parcel build --no-source-maps --target module",
     "build:debug": "parcel build --target module --no-optimize",
-    "clean": "rm -rf ./dist/ ./.parcel-cache",
+    "clean": "node -e \"const { rmSync } = require('node:fs'); for (const path of ['dist', '.parcel-cache']) rmSync(path, { recursive: true, force: true })\"",
     "demo": "parcel serve demo/index.html demo/background.png",
-    "lint": "eslint 'src/**/*.ts'",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },

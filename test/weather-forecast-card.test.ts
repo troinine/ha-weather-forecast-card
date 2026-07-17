@@ -1106,7 +1106,8 @@ describe("weather-forecast-card", () => {
     };
 
     const currentTemperatureText = (el: WeatherForecastCard): string =>
-      el.shadowRoot!.querySelector(".wfc-current-temperature")
+      el
+        .shadowRoot!.querySelector(".wfc-current-temperature")
         ?.textContent?.trim() ?? "";
 
     // Same weather.demo reference, only the temperature sensor state object changes.
@@ -1318,7 +1319,9 @@ describe("weather-forecast-card", () => {
       await testCard.updateComplete;
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      expect(forecastHass.getSubscribeCallCount()).toBe(subscribeCountBeforeDrop);
+      expect(forecastHass.getSubscribeCallCount()).toBe(
+        subscribeCountBeforeDrop
+      );
 
       // Connection restored: the card must resubscribe so forecasts resume.
       forecastHass.setConnected(true);

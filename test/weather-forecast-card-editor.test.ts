@@ -73,7 +73,9 @@ describe("extractCustomAttributes", () => {
     });
     // known items must NOT appear
     expect(result.some((c) => c.name === "humidity")).toBe(false);
-    expect(result.some((c) => (c as { name?: string }).name === "wind_speed")).toBe(false);
+    expect(
+      result.some((c) => (c as { name?: string }).name === "wind_speed")
+    ).toBe(false);
   });
 
   it("wraps unknown string items as objects with name", () => {
@@ -106,6 +108,24 @@ describe("extractCustomAttributes", () => {
 });
 
 describe("denormalizeConfig", () => {
+  it("uses the card defaults when weather visibility is not configured", () => {
+    const form = denormalizeConfig({
+      type: "custom:weather-forecast-card",
+      entity: "weather.demo",
+    });
+
+    expect(form.forecast_mode).toBe("show_both");
+  });
+
+  it("preserves explicitly disabled current or forecast sections", () => {
+    expect(denormalizeConfig({ show_current: false }).forecast_mode).toBe(
+      "show_forecast"
+    );
+    expect(denormalizeConfig({ show_forecast: false }).forecast_mode).toBe(
+      "show_current"
+    );
+  });
+
   it("extracts only known attributes into current.show_attributes", () => {
     const form = denormalizeConfig(workedExampleConfig);
     expect(form["current.show_attributes"]).toEqual(["wind_speed", "humidity"]);
@@ -155,6 +175,19 @@ describe("denormalizeConfig", () => {
     });
     expect(form["current.attributes_layout"]).toBe("compact");
   });
+
+  it("preserves the collapsible attributes option", () => {
+    const form = denormalizeConfig({
+      type: "custom:weather-forecast-card",
+      entity: "weather.demo",
+      current: {
+        show_attributes: true,
+        attributes_collapsible: true,
+      },
+    });
+
+    expect(form["current.attributes_collapsible"]).toBe(true);
+  });
 });
 
 describe("buildShowAttributes", () => {
@@ -180,7 +213,10 @@ describe("buildShowAttributes", () => {
     );
 
     expect(Array.isArray(result)).toBe(true);
-    const arr = result as (string | { name?: string; entity?: string; label?: string; icon?: string })[];
+    const arr = result as (
+      | string
+      | { name?: string; entity?: string; label?: string; icon?: string }
+    )[];
 
     // wind_speed has no overrides → remains a string
     expect(arr).toContain("wind_speed");

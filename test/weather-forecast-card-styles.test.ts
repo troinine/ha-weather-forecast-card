@@ -4,6 +4,7 @@ import { join } from "path";
 
 describe("weather-forecast-card theme variables", () => {
   let cssContent: string;
+  let normalizedCssContent: string;
   let animationCssContent: string;
 
   beforeEach(() => {
@@ -12,6 +13,7 @@ describe("weather-forecast-card theme variables", () => {
       join(__dirname, "../src/weather-forecast-card.css"),
       "utf-8"
     );
+    normalizedCssContent = cssContent.replace(/\s+/g, " ");
     animationCssContent = readFileSync(
       join(__dirname, "../src/components/animation/wfc-animation.css"),
       "utf-8"
@@ -183,6 +185,14 @@ describe("weather-forecast-card theme variables", () => {
     });
   });
 
+  describe("current condition typography", () => {
+    it("leaves room for font descenders without changing header spacing", () => {
+      expect(normalizedCssContent).toContain(
+        ".wfc-current-state { padding-bottom: 0.12em; margin-bottom: -0.12em; }"
+      );
+    });
+  });
+
   describe("weather effects theme variables", () => {
     it("should support weather-forecast-card-effects-sun-color", () => {
       testEffectVariableInCSS(
@@ -307,10 +317,10 @@ describe("weather-forecast-card theme variables", () => {
   describe("cloud text-shadow theming", () => {
     it("should apply the primary text-shadow only in dark theme", () => {
       for (const target of [".wfc-current-state", ".wfc-current-temperature"]) {
-        expect(cssContent).toContain(
+        expect(normalizedCssContent).toContain(
           `wfc-animation-provider.dark[has-clouds] ~ .wfc-container ${target}`
         );
-        expect(cssContent).not.toContain(
+        expect(normalizedCssContent).not.toContain(
           `wfc-animation-provider[has-clouds] ~ .wfc-container ${target}`
         );
       }
@@ -318,20 +328,20 @@ describe("weather-forecast-card theme variables", () => {
 
     it("should apply the secondary text-shadow only in dark theme", () => {
       for (const target of [".wfc-name", ".wfc-current-secondary-value"]) {
-        expect(cssContent).toContain(
+        expect(normalizedCssContent).toContain(
           `wfc-animation-provider.dark[has-clouds] ~ .wfc-container ${target}`
         );
-        expect(cssContent).not.toContain(
+        expect(normalizedCssContent).not.toContain(
           `wfc-animation-provider[has-clouds] ~ .wfc-container ${target}`
         );
       }
     });
 
     it("should apply the secondary icon drop-shadow only in dark theme", () => {
-      expect(cssContent).toContain(
+      expect(normalizedCssContent).toContain(
         "wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-icon"
       );
-      expect(cssContent).not.toContain(
+      expect(normalizedCssContent).not.toContain(
         "wfc-animation-provider[has-clouds] ~ .wfc-container .wfc-current-secondary-icon"
       );
     });

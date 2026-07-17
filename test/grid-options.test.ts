@@ -44,6 +44,40 @@ describe("weather-forecast-card grid options", () => {
     }
   });
 
+  it("uses automatic rows when collapsible attributes can change the card height", () => {
+    const options = createCard({
+      current: {
+        show_attributes: true,
+        attributes_collapsible: true,
+      },
+    }).getGridOptions();
+
+    expect(options.rows).toBe("auto");
+  });
+
+  it("keeps numeric rows when collapsible attributes are not configured", () => {
+    const options = createCard({
+      current: {
+        show_attributes: false,
+        attributes_collapsible: true,
+      },
+    }).getGridOptions();
+
+    expect(Number.isInteger(options.rows)).toBe(true);
+  });
+
+  it("keeps numeric rows when the current weather block is hidden", () => {
+    const options = createCard({
+      show_current: false,
+      current: {
+        show_attributes: true,
+        attributes_collapsible: true,
+      },
+    }).getGridOptions();
+
+    expect(Number.isInteger(options.rows)).toBe(true);
+  });
+
   it("requires more rows for the taller chart forecast than the simple forecast", () => {
     const simple = createCard({
       forecast: { mode: ForecastMode.Simple },
@@ -52,7 +86,7 @@ describe("weather-forecast-card grid options", () => {
       forecast: { mode: ForecastMode.Chart },
     }).getGridOptions();
 
-    expect((chart.rows as number)).toBeGreaterThan(simple.rows as number);
+    expect(chart.rows as number).toBeGreaterThan(simple.rows as number);
   });
 
   it("reserves extra height when current attributes are shown", () => {
@@ -63,7 +97,7 @@ describe("weather-forecast-card grid options", () => {
       current: { show_attributes: true },
     }).getGridOptions();
 
-    expect((withAttrs.rows as number)).toBeGreaterThan(without.rows as number);
+    expect(withAttrs.rows as number).toBeGreaterThan(without.rows as number);
   });
 
   it("drops a block's rows when that block is hidden", () => {
@@ -71,8 +105,8 @@ describe("weather-forecast-card grid options", () => {
     const currentOnly = createCard({ show_forecast: false }).getGridOptions();
     const forecastOnly = createCard({ show_current: false }).getGridOptions();
 
-    expect((currentOnly.rows as number)).toBeLessThan(both.rows as number);
-    expect((forecastOnly.rows as number)).toBeLessThan(both.rows as number);
+    expect(currentOnly.rows as number).toBeLessThan(both.rows as number);
+    expect(forecastOnly.rows as number).toBeLessThan(both.rows as number);
   });
 
   it("widens the minimum columns only when both blocks are shown", () => {

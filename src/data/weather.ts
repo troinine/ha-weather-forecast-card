@@ -627,7 +627,9 @@ export const formatWeatherEntityAttributeValue = (
   attribute: CurrentWeatherAttributes | string
 ): string | undefined => {
   const value =
-    weatherEntity.attributes[attribute as keyof typeof weatherEntity.attributes];
+    weatherEntity.attributes[
+      attribute as keyof typeof weatherEntity.attributes
+    ];
 
   if (value === undefined) {
     return undefined;
