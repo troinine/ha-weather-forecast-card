@@ -38,6 +38,7 @@ export class WfcForecastSimple extends LitElement {
   @query(".wfc-scroll-container") private _scrollContainer?: HTMLElement;
 
   private _selectedForecastIndex: number | null = null;
+  private _historyPositionInitialized = false;
   private _scrollController = new DragScrollController(this, {
     selector: ".wfc-scroll-container",
     childSelector: ".wfc-forecast-slot",
@@ -54,23 +55,34 @@ export class WfcForecastSimple extends LitElement {
       this.forecastType !== "hourly" ||
       this.historyCount <= 0 ||
       !this._scrollContainer ||
+      !Number.isFinite(this.itemWidth) ||
       this.itemWidth <= 0
     ) {
+      if (this.forecastType !== "hourly" || this.historyCount <= 0) {
+        this._historyPositionInitialized = false;
+      }
       return;
     }
 
     const oldHistoryCount =
       (changedProps.get("historyCount") as number | undefined) ?? 0;
     const forecastTypeChanged = changedProps.has("forecastType");
+    const historyCountChanged = changedProps.has("historyCount");
+    const itemWidthChanged = changedProps.has("itemWidth");
+
+    if (!forecastTypeChanged && !historyCountChanged && !itemWidthChanged) {
+      return;
+    }
 
     requestAnimationFrame(() => {
       if (!this._scrollContainer) {
         return;
       }
 
-      if (forecastTypeChanged || oldHistoryCount === 0) {
+      if (!this._historyPositionInitialized || forecastTypeChanged) {
         this._scrollContainer.scrollLeft = this.historyCount * this.itemWidth;
-      } else if (this.historyCount > oldHistoryCount) {
+        this._historyPositionInitialized = true;
+      } else if (historyCountChanged && this.historyCount > oldHistoryCount) {
         this._scrollContainer.scrollLeft +=
           (this.historyCount - oldHistoryCount) * this.itemWidth;
       }
@@ -116,7 +128,6 @@ export class WfcForecastSimple extends LitElement {
               this.historyCount > 0 && index === this.historyCount,
           })}
           data-index=${index}
-          data-now-label=${this._nowLabel()}
         >
           <wfc-forecast-header-items
             .hass=${this.hass}
@@ -124,6 +135,8 @@ export class WfcForecastSimple extends LitElement {
             .forecastType=${this.forecastType}
             .isTwiceDailyEntity=${this.isTwiceDailyEntity}
             .config=${this.config}
+            .isNow=${this.historyCount > 0 && index === this.historyCount}
+            .nowLabel=${this._nowLabel()}
           ></wfc-forecast-header-items>
           <wfc-forecast-details
             .hass=${this.hass}
@@ -195,12 +208,6 @@ export class WfcForecastSimple extends LitElement {
     const selectedForecast = this.forecast[this._selectedForecastIndex];
 
     if (!selectedForecast) return;
-    if (
-      this.historyCount > 0 &&
-      this._selectedForecastIndex <= this.historyCount
-    ) {
-      return;
-    }
 
     const actionDetails: ForecastActionDetails = {
       selectedForecast,

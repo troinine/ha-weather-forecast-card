@@ -129,6 +129,7 @@ export class WfcForecastChart extends LitElement {
   private _chart: Chart | null = null;
   private _temperatureColors: Record<string, string> | null = null;
   private _visibleHistoryCount = 0;
+  private _historyPositionInitialized = false;
   private _nowMarkerPlugin: Plugin = {
     id: "wfc-now-marker",
     afterDraw: (chart) => {
@@ -944,7 +945,6 @@ export class WfcForecastChart extends LitElement {
             "wfc-now-slot": historyCount > 0 && index === historyCount,
           })}
           data-index=${index}
-          data-now-label=${this._nowLabel()}
         >
           <wfc-forecast-header-items
             .hass=${this.hass}
@@ -952,6 +952,8 @@ export class WfcForecastChart extends LitElement {
             .forecastType=${this.forecastType}
             .isTwiceDailyEntity=${this.isTwiceDailyEntity}
             .config=${this.config}
+            .isNow=${historyCount > 0 && index === historyCount}
+            .nowLabel=${this._nowLabel()}
           ></wfc-forecast-header-items>
         </div>
       `);
@@ -1071,9 +1073,6 @@ export class WfcForecastChart extends LitElement {
     const label = xScale.getLabelForValue(dataX);
     const index = this._chart.data.labels?.indexOf(label as string) ?? -1;
     if (index === -1) return;
-    if (this._visibleHistoryCount > 0 && index <= this._visibleHistoryCount) {
-      return;
-    }
 
     const selectedForecast = this.safeForecast[index];
     if (!selectedForecast) return;
@@ -1143,24 +1142,35 @@ export class WfcForecastChart extends LitElement {
       this.forecastType !== "hourly" ||
       this.historyCount <= 0 ||
       !this._scrollContainer ||
+      !Number.isFinite(this.itemWidth) ||
       this.itemWidth <= 0
     ) {
+      if (this.forecastType !== "hourly" || this.historyCount <= 0) {
+        this._historyPositionInitialized = false;
+      }
       return;
     }
 
     const oldHistoryCount =
       (changedProps.get("historyCount") as number | undefined) ?? 0;
     const forecastTypeChanged = changedProps.has("forecastType");
+    const historyCountChanged = changedProps.has("historyCount");
+    const itemWidthChanged = changedProps.has("itemWidth");
+
+    if (!forecastTypeChanged && !historyCountChanged && !itemWidthChanged) {
+      return;
+    }
 
     requestAnimationFrame(() => {
       if (!this._scrollContainer) {
         return;
       }
 
-      if (forecastTypeChanged || oldHistoryCount === 0) {
+      if (!this._historyPositionInitialized || forecastTypeChanged) {
         this._scrollContainer.scrollLeft =
           this._visibleHistoryCount * this.itemWidth;
-      } else if (this.historyCount > oldHistoryCount) {
+        this._historyPositionInitialized = true;
+      } else if (historyCountChanged && this.historyCount > oldHistoryCount) {
         const addedHistory = this.historyCount - oldHistoryCount;
         const oldVisibleHistoryCount = this._getVisibleHistoryCount(
           this.forecast.length - addedHistory,

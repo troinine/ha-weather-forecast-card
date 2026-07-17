@@ -103,6 +103,74 @@ describe("historical weather scrolling", () => {
     expect(scrollContainer.scrollLeft).toBe(100);
   });
 
+  it("does not return to now after an unrelated Home Assistant update", async () => {
+    const simple = card.shadowRoot!.querySelector(
+      "wfc-forecast-simple"
+    ) as HTMLElement & {
+      itemWidth: number;
+      updateComplete: Promise<boolean>;
+    };
+    const scrollContainer = simple.querySelector(
+      ".wfc-scroll-container"
+    ) as HTMLElement;
+
+    simple.itemWidth = 50;
+    await simple.updateComplete;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    scrollContainer.scrollLeft = 25;
+    card.hass = {
+      ...hass,
+      states: { ...hass.states },
+    };
+    await card.updateComplete;
+    await simple.updateComplete;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    expect(scrollContainer.scrollLeft).toBe(25);
+  });
+
+  it("uses now as the current slot's time label", () => {
+    const nowSlot = card.shadowRoot!.querySelector(".wfc-now-slot");
+
+    expect(
+      nowSlot
+        ?.querySelector(".wfc-forecast-slot-time-primary")
+        ?.textContent?.trim()
+    ).toBe("Now");
+    expect(nowSlot?.hasAttribute("data-now-label")).toBe(false);
+  });
+
+  it("allows a historical slot action to return to daily view", async () => {
+    const simple = card.shadowRoot!.querySelector(
+      "wfc-forecast-simple"
+    ) as HTMLElement & {
+      _onForecastAction: (event: CustomEvent<{ action: "tap" }>) => void;
+    };
+    const historySlot = simple.querySelector(
+      ".wfc-history-slot"
+    ) as HTMLElement;
+
+    historySlot.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        composed: true,
+      })
+    );
+    simple._onForecastAction(
+      new CustomEvent("action", {
+        cancelable: true,
+        detail: { action: "tap" },
+      })
+    );
+    await card.updateComplete;
+
+    expect(card.shadowRoot!.querySelectorAll(".wfc-history-slot")).toHaveLength(
+      0
+    );
+    expect(card.shadowRoot!.querySelector(".wfc-now-slot")).toBeNull();
+  });
+
   it("loads another page when the presentation requests older history", async () => {
     const simple = card.shadowRoot!.querySelector("wfc-forecast-simple");
     expect(simple).not.toBeNull();
@@ -165,13 +233,25 @@ describe("historical weather scrolling", () => {
       "wfc-forecast-chart"
     ) as HTMLElement & {
       itemWidth: number;
+      requestUpdate: () => void;
       updateComplete: Promise<boolean>;
     };
     chart.itemWidth = 55;
     await chart.updateComplete;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
 
     expect(chart.querySelector(".wfc-now-slot")).not.toBeNull();
     expect(chart.querySelectorAll(".wfc-history-slot")).toHaveLength(4);
+
+    const scrollContainer = chart.querySelector(
+      ".wfc-scroll-container"
+    ) as HTMLElement;
+    scrollContainer.scrollLeft = 30;
+    chart.requestUpdate();
+    await chart.updateComplete;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    expect(scrollContainer.scrollLeft).toBe(30);
   });
 
   it("rejects history limits outside the supported range", () => {

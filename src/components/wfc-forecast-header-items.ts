@@ -30,6 +30,8 @@ export class WfcForecastHeaderItems extends LitElement {
   @property({ attribute: false }) forecastType!: ForecastType;
   @property({ attribute: false }) isTwiceDailyEntity = false;
   @property({ attribute: false }) config!: WeatherForecastCardConfig;
+  @property({ attribute: false }) isNow = false;
+  @property({ attribute: false }) nowLabel = "Now";
 
   private suntimesInfo?: SuntimesInfo | null;
 
@@ -103,6 +105,13 @@ export class WfcForecastHeaderItems extends LitElement {
     const isTwiceDaily =
       this.forecastType === "twice_daily" &&
       this.forecast.is_daytime !== undefined;
+
+    if (this.forecastType === "hourly" && this.isNow) {
+      return {
+        label: this.nowLabel,
+        className: "wfc-now",
+      };
+    }
 
     // For twice_daily forecasts, show weekday + Day/Night indicator
     if (isTwiceDaily) {

@@ -412,20 +412,9 @@ wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-
   opacity: 0.72;
 }
 
-.wfc-now-slot::before {
-  content: attr(data-now-label);
-  position: absolute;
-  top: 0;
-  left: 4px;
-  z-index: 4;
+.wfc-now-slot .wfc-forecast-slot-time-primary {
   color: var(--wfc-now-marker-color);
-  background: var(--ha-card-background, var(--card-background-color, #fff));
-  font-size: var(--ha-font-size-s, 12px);
   font-weight: 600;
-  line-height: 20px;
-  padding: 0 3px;
-  border-radius: 4px;
-  pointer-events: none;
 }
 
 .wfc-now-slot::after {
