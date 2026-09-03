@@ -108,6 +108,8 @@ export interface WeatherForecastCardForecastConfig {
   temperature_precision?: number;
   show_attribute_selector?: boolean;
   default_chart_attribute?: ChartAttributes;
+  precipitation_chart_max_daily?: number;
+  precipitation_chart_max_hourly?: number;
 }
 
 export interface WeatherForecastCardCurrentConfig {

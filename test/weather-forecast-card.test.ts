@@ -350,6 +350,24 @@ describe("weather-forecast-card", () => {
       );
     });
 
+    it.each([
+      ["precipitation_chart_max_daily", 0],
+      ["precipitation_chart_max_hourly", -1],
+      ["precipitation_chart_max_daily", Number.NaN],
+    ] as const)("should reject invalid %s values", (setting, value) => {
+      const config = {
+        type: "custom:weather-forecast-card",
+        entity: "weather.demo",
+        forecast: {
+          [setting]: value,
+        },
+      } as WeatherForecastCardConfig;
+
+      expect(() => card.setConfig(config)).toThrow(
+        "precipitation chart max values must be greater than 0"
+      );
+    });
+
     it("should throw error if current.temperature_precision is negative", async () => {
       const config = {
         type: "custom:weather-forecast-card",
