@@ -118,6 +118,100 @@ describe("weather-forecast-card chart", () => {
     expect(canvas).not.toBeNull();
   });
 
+  it("should use the existing daily precipitation chart maximum by default", () => {
+    const yPrecip = chart.options.scales?.yPrecip as {
+      suggestedMax?: number;
+    };
+
+    expect(yPrecip.suggestedMax).toBe(20);
+  });
+
+  it("should use a configured daily precipitation chart maximum", async () => {
+    const { chart: configuredChart } = await createCardFixture({
+      forecast: {
+        mode: ForecastMode.Chart,
+        precipitation_chart_max_daily: 35,
+      },
+    });
+    const yPrecip = configuredChart.options.scales?.yPrecip as {
+      suggestedMax?: number;
+    };
+
+    expect(yPrecip.suggestedMax).toBe(35);
+  });
+
+  it("should update the precipitation chart maximum when config changes", async () => {
+    card.setConfig({
+      type: "custom:weather-forecast-card",
+      entity: "weather.demo",
+      forecast: {
+        mode: ForecastMode.Chart,
+        show_sun_times: false,
+        precipitation_chart_max_daily: 28,
+      },
+    });
+    await card.updateComplete;
+    const chartElement = card.shadowRoot!.querySelector(
+      "wfc-forecast-chart"
+    ) as WfcForecastChart;
+    await chartElement.updateComplete;
+
+    const yPrecip = chart.options.scales?.yPrecip as {
+      suggestedMax?: number;
+    };
+    expect(yPrecip.suggestedMax).toBe(28);
+  });
+
+  it("should use the existing hourly precipitation chart maximum by default", async () => {
+    const { chart: hourlyChart } = await createCardFixture({
+      default_forecast: "hourly",
+    });
+    const yPrecip = hourlyChart.options.scales?.yPrecip as {
+      suggestedMax?: number;
+    };
+
+    expect(yPrecip.suggestedMax).toBe(8);
+  });
+
+  it("should use a configured hourly precipitation chart maximum", async () => {
+    const { chart: configuredChart } = await createCardFixture({
+      default_forecast: "hourly",
+      forecast: {
+        mode: ForecastMode.Chart,
+        precipitation_chart_max_hourly: 12,
+      },
+    });
+    const yPrecip = configuredChart.options.scales?.yPrecip as {
+      suggestedMax?: number;
+    };
+
+    expect(yPrecip.suggestedMax).toBe(12);
+  });
+
+  it("should retain the converted imperial precipitation defaults", async () => {
+    const originalUnit = hass.states["weather.demo"].attributes
+      .precipitation_unit as string;
+    hass.states["weather.demo"].attributes.precipitation_unit = "in";
+
+    try {
+      const { chart: dailyChart } = await createCardFixture();
+      const { chart: hourlyChart } = await createCardFixture({
+        default_forecast: "hourly",
+      });
+
+      expect(
+        (dailyChart.options.scales?.yPrecip as { suggestedMax?: number })
+          .suggestedMax
+      ).toBe(0.8);
+      expect(
+        (hourlyChart.options.scales?.yPrecip as { suggestedMax?: number })
+          .suggestedMax
+      ).toBe(0.3);
+    } finally {
+      hass.states["weather.demo"].attributes.precipitation_unit = originalUnit;
+    }
+  });
+
   it("should render daily forecast header items", async () => {
     const header = card.shadowRoot!.querySelector(".wfc-forecast-chart-header");
     expect(header).not.toBeNull();

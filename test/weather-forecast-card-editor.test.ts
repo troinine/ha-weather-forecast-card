@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { fixture } from "@open-wc/testing";
+import { html } from "lit";
 import { CURRENT_WEATHER_ATTRIBUTES } from "../src/types";
 import {
+  WeatherForecastCardEditor,
   isKnownAttribute,
   extractCustomAttributes,
   extractKnownItems,
@@ -8,6 +11,8 @@ import {
   rebuildShowAttributesWithCustom,
   denormalizeConfig,
 } from "../src/editor/weather-forecast-card-editor";
+import { MockHass } from "./mocks/hass";
+import type { ExtendedHomeAssistant } from "../src/types";
 
 // Worked example config used across multiple tests
 const workedExampleShowAttributes = [
@@ -155,6 +160,86 @@ describe("denormalizeConfig", () => {
     });
     expect(form["current.attributes_layout"]).toBe("compact");
   });
+
+  it("flattens precipitation chart maximum values onto the form", () => {
+    const form = denormalizeConfig({
+      type: "custom:weather-forecast-card",
+      entity: "weather.demo",
+      forecast: {
+        precipitation_chart_max_daily: 30,
+        precipitation_chart_max_hourly: 10,
+      },
+    });
+
+    expect(form["forecast.precipitation_chart_max_daily"]).toBe(30);
+    expect(form["forecast.precipitation_chart_max_hourly"]).toBe(10);
+  });
+});
+
+describe("precipitation chart maximum editor", () => {
+  const createEditor = async (precipitationUnit: "mm" | "in") => {
+    const hass = new MockHass().getHass() as ExtendedHomeAssistant;
+    hass.states["weather.demo"].attributes.precipitation_unit =
+      precipitationUnit;
+    const editor = await fixture<WeatherForecastCardEditor>(html`
+      <weather-forecast-card-editor .hass=${hass}>
+      </weather-forecast-card-editor>
+    `);
+    editor.setConfig({
+      type: "custom:weather-forecast-card",
+      entity: "weather.demo",
+    });
+    await editor.updateComplete;
+
+    return editor;
+  };
+
+  it("renders the requested heading and description", async () => {
+    const editor = await createEditor("mm");
+    const section = editor.shadowRoot!.querySelector(
+      ".precipitation-chart-max"
+    );
+
+    expect(section?.querySelector("h3")?.textContent).toBe(
+      "Precipitation Chart Max Value"
+    );
+    expect(section?.querySelector("p")?.textContent).toBe(
+      "The upper bound used when displaying precipitation forecast data"
+    );
+  });
+
+  it.each([
+    ["mm", 20, 8],
+    ["in", 0.8, 0.3],
+  ] as const)(
+    "shows the existing %s defaults for daily and hourly fields",
+    async (unit, dailyDefault, hourlyDefault) => {
+      const editor = await createEditor(unit);
+      const form = editor.shadowRoot!.querySelector(
+        ".precipitation-chart-max ha-form"
+      ) as HTMLElement & {
+        schema: Array<{
+          schema: Array<{
+            name: string;
+            default?: number;
+            selector: {
+              number: { unit_of_measurement?: string };
+            };
+          }>;
+        }>;
+      };
+      const fields = form.schema[0].schema;
+
+      expect(fields.map((field) => field.name)).toEqual([
+        "forecast.precipitation_chart_max_daily",
+        "forecast.precipitation_chart_max_hourly",
+      ]);
+      expect(fields[0].default).toBe(dailyDefault);
+      expect(fields[1].default).toBe(hourlyDefault);
+      expect(fields[0].selector.number.unit_of_measurement).toBe(unit);
+      expect(fields[1].selector.number.unit_of_measurement).toBe(unit);
+    }
+  );
 });
 
 describe("buildShowAttributes", () => {
