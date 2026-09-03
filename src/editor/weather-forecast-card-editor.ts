@@ -697,7 +697,7 @@ export class WeatherForecastCardEditor
       </ha-form>
       <section class="precipitation-chart-max">
         <h3>Precipitation Chart Max Value</h3>
-        <p>The upper bound used when displaying precipitation forecast data</p>
+        <p>The chart upper bound used for displaying precipitation forecast data when Forecast Display Mode is set to Chart</p>
         <ha-form
           .hass=${this.hass}
           .data=${data}
