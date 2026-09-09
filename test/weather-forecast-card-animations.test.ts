@@ -338,16 +338,22 @@ describe("weather-forecast-card-animations", () => {
     });
   });
 
-  describe("cloud text-shadow theming", () => {
-    const cloudProvider = async (darkMode: boolean) => {
-      const mockHass = new MockHass({ currentCondition: "cloudy", darkMode });
+  describe("effect layer legibility hooks", () => {
+    const cloudProvider = async (
+      darkMode: boolean,
+      overrides: Partial<WeatherForecastCardConfig> = {},
+      currentCondition = "cloudy"
+    ) => {
+      const mockHass = new MockHass({ currentCondition, darkMode });
       const hass = mockHass.getHass() as ExtendedHomeAssistant;
       const entity = hass.states["weather.demo"] as WeatherEntity;
       const config: WeatherForecastCardConfig = {
         type: "custom:weather-forecast-card",
         entity: "weather.demo",
         show_condition_effects: true,
+        effects_above_text: true,
         forecast: { show_sun_times: false },
+        ...overrides,
       };
 
       const provider = await fixture<WeatherAnimationProvider>(
@@ -362,20 +368,90 @@ describe("weather-forecast-card-animations", () => {
       return provider;
     };
 
-    it("marks the cloud deck as dark so the legibility shadow applies", async () => {
+    it("reserves the band when effects_above_text is opted into", async () => {
       const provider = await cloudProvider(true);
 
-      expect(provider.hasAttribute("has-clouds")).toBe(true);
+      expect(provider.hasAttribute("has-effects")).toBe(true);
+      expect(provider.hasAttribute("reserve-top-band")).toBe(true);
       expect(provider.classList.contains("dark")).toBe(true);
       expect(provider.classList.contains("light")).toBe(false);
     });
 
-    it("marks the cloud deck as light so no legibility shadow applies", async () => {
+    it("does not reserve the band by default", async () => {
+      const provider = await cloudProvider(true, {
+        effects_above_text: undefined,
+      });
+
+      expect(provider.hasAttribute("has-effects")).toBe(true);
+      expect(provider.hasAttribute("reserve-top-band")).toBe(false);
+    });
+
+    it("keeps the theme class in sync for the effect colors", async () => {
       const provider = await cloudProvider(false);
 
-      expect(provider.hasAttribute("has-clouds")).toBe(true);
+      expect(provider.hasAttribute("has-effects")).toBe(true);
       expect(provider.classList.contains("light")).toBe(true);
       expect(provider.classList.contains("dark")).toBe(false);
+    });
+
+    it("does not reserve the band when the current weather row is hidden", async () => {
+      const provider = await cloudProvider(true, { show_current: false });
+
+      expect(provider.hasAttribute("has-effects")).toBe(true);
+      expect(provider.hasAttribute("reserve-top-band")).toBe(false);
+    });
+
+    it("drops has-effects when the condition has no effects", async () => {
+      const provider = await cloudProvider(true, {
+        show_condition_effects: false,
+      });
+
+      expect(provider.hasAttribute("has-effects")).toBe(false);
+      expect(provider.hasAttribute("reserve-top-band")).toBe(false);
+    });
+
+    it("does not reserve the band for effects that fall across the whole card", async () => {
+      const provider = await cloudProvider(
+        true,
+        { show_condition_effects: ["rain"] },
+        "rainy"
+      );
+
+      expect(provider.hasAttribute("has-effects")).toBe(true);
+      expect(provider.hasAttribute("reserve-top-band")).toBe(false);
+    });
+
+    it("keeps the cloud deck inside the reserved band", async () => {
+      const provider = await cloudProvider(true);
+
+      const deck = Array.from(
+        provider.shadowRoot?.querySelectorAll(".cloud") ?? []
+      ).map((el) => {
+        const style = el.getAttribute("style") ?? "";
+
+        return {
+          top: Number(/top:\s*(-?[\d.]+)px/.exec(style)?.[1] ?? NaN),
+          height: Number(/height:\s*([\d.]+)px/.exec(style)?.[1] ?? NaN),
+        };
+      });
+
+      expect(deck.length).toBeGreaterThan(0);
+
+      for (const cloud of deck) {
+        expect(cloud.top + cloud.height).toBeLessThanOrEqual(140);
+      }
+    });
+
+    it("regenerates the deck when the band is toggled", async () => {
+      const provider = await cloudProvider(true);
+      const before = cloudFingerprints(provider);
+
+      provider.config = { ...provider.config, effects_above_text: false };
+      await provider.updateComplete;
+
+      // The memo signature includes the band, so the deck is rebuilt rather
+      // than leaving the previously sized sprites in place.
+      expect(cloudFingerprints(provider)).not.toEqual(before);
     });
   });
 });

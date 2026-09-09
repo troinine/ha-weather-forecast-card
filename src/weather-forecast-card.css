@@ -113,15 +113,13 @@
     64px
   );
   --indicator-width: 20px;
-  --wfc-effects-text-shadow: var(
-    --weather-forecast-card-effects-text-shadow,
-    0 1px 2px rgba(0, 0, 0, 0.5),
-    0 0 4px rgba(0, 0, 0, 0.35)
-  );
-  --wfc-effects-text-shadow-secondary: var(
-    --weather-forecast-card-effects-text-shadow-secondary,
-    0 1px 2px rgba(0, 0, 0, 0.55)
-  );
+  /* Clear space reserved below the card's top edge when the top-anchored
+     effects (cloud deck, sun, moon) are active, so they drift above the current
+     weather text instead of behind it. Measured from the card edge, the same
+     origin the cloud sprites are positioned in -- keep in sync with
+     EFFECT_TOP_BAND_PX in wfc-animation-provider.ts, which clamps the cloud
+     deck to the same band. */
+  --wfc-effects-top-band: var(--weather-forecast-card-effects-top-band, 140px);
 }
 
 /* Modern browsers with color-mix support */
@@ -247,18 +245,29 @@ ha-card {
   white-space: nowrap;
 }
 
-wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-state,
-wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-temperature {
-  text-shadow: var(--wfc-effects-text-shadow);
+/*
+ * Legibility over the effect layer: rather than treat the text, keep the
+ * effects off it. The cloud deck, sun and moon all hug the top edge, so with
+ * `effects_above_text` the card reserves a band of clear space there and starts
+ * its content below it. The band is measured from the card edge; the container
+ * already starts one card padding down, so only the difference is added.
+ */
+wfc-animation-provider[reserve-top-band] ~ .wfc-container {
+  padding-top: max(
+    0px,
+    calc(var(--wfc-effects-top-band) - var(--card-padding, 16px))
+  );
 }
 
-wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-name,
-wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-value {
-  text-shadow: var(--wfc-effects-text-shadow-secondary);
-}
-
-wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-icon {
-  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.5));
+/* The sky gradient still washes behind the text even with the band, and mid-grey
+   secondary text over a mid-tone sky is unreadable at any size. Bring it up to
+   the primary text color, held slightly back so it stays a secondary line. */
+wfc-animation-provider[has-effects]
+  ~ .wfc-container
+  .wfc-current-weather
+  .wfc-secondary {
+  color: var(--primary-text-color, #212121);
+  opacity: 0.85;
 }
 
 .wfc-current-attributes {

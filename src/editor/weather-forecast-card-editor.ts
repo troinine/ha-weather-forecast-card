@@ -227,6 +227,12 @@ export class WeatherForecastCardEditor
         },
       },
       {
+        name: "effects_above_text",
+        selector: { boolean: {} },
+        default: false,
+        optional: true,
+      },
+      {
         name: "show_moon_phase",
         selector: { boolean: {} },
         default: true,
@@ -869,6 +875,8 @@ export class WeatherForecastCardEditor
         );
       case "show_condition_effects":
         return "Show condition effects";
+      case "effects_above_text":
+        return "Keep effects above the text";
       case "show_moon_phase":
         return "Show moon phase";
       case "attribute_entities":
@@ -928,6 +936,8 @@ export class WeatherForecastCardEditor
         return "Overrides the friendly name of the entity.";
       case "show_condition_effects":
         return "Select which weather conditions initiate visual effects and animations on the card.";
+      case "effects_above_text":
+        return "Adds space at the top of the card so clouds, the sun and the moon drift above the current weather instead of behind it. Makes the card taller.";
       case "show_moon_phase":
         return "Shades the night-time moon to match the current lunar phase based on your Home Assistant location. Disable to always show a full moon.";
       case "attribute_entities":

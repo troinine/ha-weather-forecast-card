@@ -304,36 +304,51 @@ describe("weather-forecast-card theme variables", () => {
     });
   });
 
-  describe("cloud text-shadow theming", () => {
-    it("should apply the primary text-shadow only in dark theme", () => {
-      for (const target of [".wfc-current-state", ".wfc-current-temperature"]) {
-        expect(cssContent).toContain(
-          `wfc-animation-provider.dark[has-clouds] ~ .wfc-container ${target}`
-        );
-        expect(cssContent).not.toContain(
-          `wfc-animation-provider[has-clouds] ~ .wfc-container ${target}`
-        );
-      }
-    });
-
-    it("should apply the secondary text-shadow only in dark theme", () => {
-      for (const target of [".wfc-name", ".wfc-current-secondary-value"]) {
-        expect(cssContent).toContain(
-          `wfc-animation-provider.dark[has-clouds] ~ .wfc-container ${target}`
-        );
-        expect(cssContent).not.toContain(
-          `wfc-animation-provider[has-clouds] ~ .wfc-container ${target}`
-        );
-      }
-    });
-
-    it("should apply the secondary icon drop-shadow only in dark theme", () => {
+  describe("effect layer legibility", () => {
+    it("should reserve a band of clear space when top-anchored effects are active", () => {
+      expect(cssContent).toContain("--wfc-effects-top-band:");
+      expect(cssContent).toContain("--weather-forecast-card-effects-top-band");
       expect(cssContent).toContain(
-        "wfc-animation-provider.dark[has-clouds] ~ .wfc-container .wfc-current-secondary-icon"
+        "wfc-animation-provider[reserve-top-band] ~ .wfc-container"
       );
-      expect(cssContent).not.toContain(
-        "wfc-animation-provider[has-clouds] ~ .wfc-container .wfc-current-secondary-icon"
+      // Measured from the card edge, so the container only adds the difference.
+      expect(cssContent).toContain("var(--card-padding, 16px)");
+    });
+
+    it("should keep the reserved band in sync with the cloud clamp in TS", () => {
+      const providerSource = readFileSync(
+        join(__dirname, "../src/components/animation/wfc-animation-provider.ts"),
+        "utf-8"
       );
+      const bandInTs = providerSource.match(
+        /const EFFECT_TOP_BAND_PX = (\d+);/
+      )?.[1];
+      const bandInCss = cssContent.match(
+        /--weather-forecast-card-effects-top-band,\s*(\d+)px/
+      )?.[1];
+
+      expect(bandInTs).toBeDefined();
+      expect(bandInCss).toBe(bandInTs);
+    });
+
+    it("should bring the secondary header text up to the primary text color", () => {
+      const rule = cssContent.slice(
+        cssContent.indexOf("wfc-animation-provider[has-effects]")
+      );
+
+      expect(rule).toContain("color: var(--primary-text-color");
+    });
+
+    it("should not treat the glyphs themselves", () => {
+      expect(cssContent).not.toContain("-webkit-text-stroke");
+      expect(cssContent).not.toContain("paint-order: stroke fill");
+      expect(cssContent).not.toContain("backdrop-filter");
+      expect(cssContent).not.toContain("--wfc-effects-text-shadow");
+      expect(animationCssContent).not.toContain("mask-image");
+    });
+
+    it("should apply the treatment in both themes", () => {
+      expect(cssContent).not.toContain("wfc-animation-provider.dark[");
     });
   });
 
