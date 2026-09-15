@@ -14,6 +14,8 @@ import {
   resolveAttributeIcon,
   WeatherEntity,
 } from "../data/weather";
+import type { HassEntity } from "home-assistant-js-websocket";
+import { computeEntityName } from "../entity-name";
 import type { NormalizedAttributeConfig } from "./wfc-current-weather";
 
 @customElement("wfc-current-weather-attributes")
@@ -151,7 +153,7 @@ export class WfcCurrentWeatherAttributes extends LitElement {
   private resolveLabel(
     attribute: string | undefined,
     explicitLabel: string | undefined,
-    customEntity: { attributes?: { friendly_name?: string } } | undefined
+    customEntity: HassEntity | undefined
   ): string {
     if (explicitLabel) {
       return explicitLabel;
@@ -163,7 +165,7 @@ export class WfcCurrentWeatherAttributes extends LitElement {
       return this.localize(attribute);
     }
     return (
-      customEntity?.attributes?.friendly_name ??
+      computeEntityName(this.hass, customEntity) ??
       (attribute ? capitalize(attribute).replace(/_/g, " ") : "")
     );
   }

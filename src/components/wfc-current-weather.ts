@@ -1,6 +1,7 @@
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { actionHandler } from "../hass";
+import { computeEntityName } from "../entity-name";
 import { getSuntimesInfo, normalizeDate } from "../helpers";
 import {
   ActionConfig,
@@ -79,8 +80,11 @@ export class WfcCurrentWeather extends LitElement {
     const secondaryInfo = this.getSecondaryWeatherAttribute();
     const isNightTime = this.isNightTime();
     const attributes = this.getConfiguredAttributes();
-    const name =
-      this.config.name || this.weatherEntity.attributes.friendly_name;
+    const name = computeEntityName(
+      this.hass,
+      this.weatherEntity,
+      this.config.name
+    );
 
     return html`
       <div class="wfc-current-weather">

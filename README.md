@@ -73,7 +73,7 @@ resources:
 | :----------------------- | :---------------- | :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `type`                   | `string`          | **Required** | `custom:weather-forecast-card`                                                                                                                                                    |
 | `entity`                 | `string`          | **Required** | The weather entity id (e.g., `weather.home`).                                                                                                                                     |
-| `name`                   | `string`          | optional     | Custom name to display. Defaults to the entity's friendly name.                                                                                                                   |
+| `name`                   | `string`/`array`  | optional     | Name to display. Defaults to the entity's own name. Can also be a list of name parts to compose it from, see [Name](#name).                                                       |
 | `show_current`           | `boolean`         | `true`       | Show current weather conditions.                                                                                                                                                  |
 | `show_forecast`          | `boolean`         | `true`       | Show forecast section.                                                                                                                                                            |
 | `default_forecast`       | `string`          | `daily`      | Default forecast to view (`daily` or `hourly`).                                                                                                                                   |
@@ -87,6 +87,30 @@ resources:
 | `tap_action`             | `object`          | optional     | Defines the type of action to perform on tap for the main card. Action defaults to `more-info`. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).  |
 | `hold_action`            | `object`          | optional     | Defines the type of action to perform on hold for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                                 |
 | `double_tap_action`      | `object`          | optional     | Defines the type of action to perform on double click for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                         |
+
+### Name
+
+By default the card shows the weather entity's own name. Set `name` to a string to override it:
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+name: Outside
+```
+
+On Home Assistant 2026.4 and later, `name` can also be a list of parts, which the card resolves against the entity's device, area and floor. This is the same naming Home Assistant's built-in cards use, so a renamed device or area is picked up automatically:
+
+```yaml
+type: custom:weather-forecast-card
+entity: weather.home
+name:
+  - type: area
+  - type: text
+    text: "-"
+  - type: entity
+```
+
+Each part is one of `entity`, `device`, `parent_device`, `area`, `floor`, or `text` with a literal `text` value. The visual editor offers a picker for this. Earlier Home Assistant versions cannot resolve a list and fall back to the entity's friendly name.
 
 ### Current Object
 

@@ -24,6 +24,7 @@ import {
   WeatherForecastCardForecastActionConfig,
   WeatherForecastCardForecastConfig,
 } from "../types";
+import { supportsEntityNames } from "../entity-name";
 
 // Device class mapping for attribute entity selectors
 const ATTRIBUTE_DEVICE_CLASS_MAP: Record<
@@ -136,10 +137,11 @@ export class WeatherForecastCardEditor
     (
       localize: LocalizeFunc,
       selectedAttributes: CurrentWeatherAttributes[],
+      structuredName: boolean,
       mode?: string
     ): HaFormSchema[] =>
       [
-        ...this._genericSchema(localize),
+        ...this._genericSchema(localize, structuredName),
         ...this._currentWeatherSchema(localize),
         ...this._forecastSchema(localize),
         ...this._interactionsSchema(mode),
@@ -148,7 +150,10 @@ export class WeatherForecastCardEditor
       ] as const
   );
 
-  private _genericSchema = (localize: LocalizeFunc): HaFormSchema[] =>
+  private _genericSchema = (
+    localize: LocalizeFunc,
+    structuredName: boolean
+  ): HaFormSchema[] =>
     [
       {
         name: "entity",
@@ -158,7 +163,11 @@ export class WeatherForecastCardEditor
       },
       {
         name: "name",
-        selector: { text: {} },
+        // The entity name picker resolves the name against the entity, device,
+        // area and floor names, so it only works on versions that can resolve
+        // one. Older versions keep the plain text field.
+        selector: structuredName ? { entity_name: {} } : { text: {} },
+        context: structuredName ? { entity: "entity" } : undefined,
         optional: true,
       },
       {
@@ -594,6 +603,7 @@ export class WeatherForecastCardEditor
     const schema = this._schema(
       this.localize.bind(this),
       selectedAttributes,
+      supportsEntityNames(this.hass),
       data["forecast.mode"]
     );
 

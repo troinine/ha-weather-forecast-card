@@ -132,7 +132,7 @@ export interface WeatherForecastCardForecastActionConfig {
 export interface WeatherForecastCardConfig {
   type: "custom:weather-forecast-card";
   entity: string;
-  name?: string;
+  name?: EntityName;
   /** @deprecated Use `current.temperature_entity` instead */
   temperature_entity?: string;
   show_current?: boolean;
@@ -155,6 +155,17 @@ export type ForecastActionConfig =
   | ForecastSelectAttributeActionConfig
   | ActionConfig;
 
+/**
+ * One part of a structured name, mirroring the `EntityNameItem` type in the
+ * Home Assistant frontend. A name is resolved against the entity's registry
+ * context, so users can compose it from the device, area or floor name.
+ */
+export type EntityNameItem =
+  | { type: "entity" | "device" | "parent_device" | "area" | "floor" }
+  | { type: "text"; text: string };
+
+export type EntityName = string | EntityNameItem | EntityNameItem[];
+
 export type ExtendedHomeAssistant = HomeAssistant & {
   formatEntityState: (stateObj: HassEntity) => string | undefined;
   formatEntityAttributeValue: (
@@ -166,6 +177,11 @@ export type ExtendedHomeAssistant = HomeAssistant & {
     stateObj: HassEntity,
     attribute: string,
     value?: number | string
+  ) => string | undefined;
+  /** Added in Home Assistant 2026.4 with this signature. */
+  formatEntityName?: (
+    stateObj: HassEntity,
+    name?: EntityName
   ) => string | undefined;
   themes?: {
     darkMode: boolean;
