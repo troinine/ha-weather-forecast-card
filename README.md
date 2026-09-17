@@ -110,7 +110,7 @@ name:
   - type: entity
 ```
 
-Each part is one of `entity`, `device`, `parent_device`, `area`, `floor`, or `text` with a literal `text` value. The visual editor offers a picker for this. Earlier Home Assistant versions cannot resolve a list and fall back to the entity's friendly name.
+Each part is one of `entity`, `device`, `area`, `floor`, or `text` with a literal `text` value. The visual editor offers a picker for this. Earlier Home Assistant versions cannot resolve a list and fall back to the entity's friendly name.
 
 ### Current Object
 

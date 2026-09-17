@@ -161,7 +161,7 @@ export type ForecastActionConfig =
  * context, so users can compose it from the device, area or floor name.
  */
 export type EntityNameItem =
-  | { type: "entity" | "device" | "parent_device" | "area" | "floor" }
+  | { type: "entity" | "device" | "area" | "floor" }
   | { type: "text"; text: string };
 
 export type EntityName = string | EntityNameItem | EntityNameItem[];
