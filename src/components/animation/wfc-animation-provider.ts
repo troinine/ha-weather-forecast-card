@@ -42,6 +42,19 @@ const CLOUD_DRIFT_DURATION_CALM_S = 90;
 const CLOUD_DRIFT_DURATION_WINDY_S = 50;
 // Minimum horizontal drift so clouds keep moving gently in calm or N-S winds.
 const CLOUD_DRIFT_BASELINE_FACTOR = 0.15;
+// Height of the band below the card's top edge that the top-anchored effects
+// (cloud deck, sun, moon) are allowed to occupy. The card reserves the same
+// band as clear space above its text, so nothing drifts behind it -- keep this
+// in sync with `--wfc-effects-top-band` in weather-forecast-card.css, which the
+// styles test asserts. The binding constraint is the sun: its longest ray
+// reaches 200px from a centre at -0.45x the sun size, and its outer glow about
+// as far. The cloud deck's own deepest sprite lands at ~140px, so the clamp
+// below is a guarantee for future geometry rather than an active reshaping.
+const EFFECT_TOP_BAND_PX = 140;
+// Effects that hug the top edge and would otherwise sit behind the current
+// weather text. Rain, snow and lightning fall across the whole card, so
+// reserving a band would not move them out from behind it.
+const TOP_ANCHORED_EFFECTS: WeatherEffect[] = ["cloud", "sun", "moon"];
 
 type BaseParticle = {
   x: string;
@@ -166,13 +179,12 @@ export class WeatherAnimationProvider extends LitElement {
       this.onThemeChanged();
     }
 
-    // Reflect whether the cloud deck is active so the card can lift the current
-    // weather text off the clouds only when they are actually present (not for
-    // clear/sunny effects).
-    this.toggleAttribute(
-      "has-clouds",
-      this.getActiveEffects().includes("cloud")
-    );
+    // Reflect what this layer is painting so the card can lay itself out around
+    // it: `has-effects` whenever anything is drawn at all, and
+    // `reserve-top-band` when the card should keep its text clear of the band
+    // (see reservesTopBand).
+    this.toggleAttribute("has-effects", this.getActiveEffects().length > 0);
+    this.toggleAttribute("reserve-top-band", this.reservesTopBand());
   }
 
   protected render() {
@@ -454,6 +466,22 @@ export class WeatherAnimationProvider extends LitElement {
     return false;
   }
 
+  /**
+   * Whether the card should keep its text clear of the top band. Opt-in via
+   * `effects_above_text`, and only meaningful when the current weather row is
+   * rendered on top of an effect that actually occupies the band -- rain, snow
+   * and lightning fall across the whole card, so no amount of space at the top
+   * would move them out from behind the text.
+   */
+  private reservesTopBand(): boolean {
+    if (!this.config?.effects_above_text) return false;
+    if (this.config.show_current === false) return false;
+
+    const active = this.getActiveEffects();
+
+    return TOP_ANCHORED_EFFECTS.some((effect) => active.includes(effect));
+  }
+
   private renderSky() {
     const base = this.isNightTime() ? "night-sky" : "sky";
     const isOvercast = this.weatherEntity?.state === "cloudy";
@@ -502,7 +530,7 @@ export class WeatherAnimationProvider extends LitElement {
    */
   private getStableCloudParticles(): Cloud[] {
     const isOvercast = this.weatherEntity?.state === "cloudy";
-    const signature = `${isOvercast ? "overcast" : "partly"}:${this.isNightTime()}`;
+    const signature = `${isOvercast ? "overcast" : "partly"}:${this.isNightTime()}:${this.reservesTopBand()}`;
 
     if (signature !== this._cloudSignature || !this._cloudParticles.length) {
       this._cloudParticles = this.computeCloudParticles();
@@ -523,6 +551,7 @@ export class WeatherAnimationProvider extends LitElement {
   private computeCloudParticles(): Cloud[] {
     const isOvercast = this.weatherEntity?.state === "cloudy";
     const isNight = this.isNightTime();
+    const reservesBand = this.reservesTopBand();
     const count = isOvercast ? CLOUD_COUNT_OVERCAST : CLOUD_COUNT_PARTLY;
     const slot = 100 / count;
     const clouds: Cloud[] = [];
@@ -555,6 +584,13 @@ export class WeatherAnimationProvider extends LitElement {
           ? random(-10, 4)
           : random(-4, 12);
 
+      // When the card reserves the band, keep the whole sprite inside it.
+      // Scaling it down rather than clipping it means the silhouette keeps its
+      // proportions instead of ending in a straight edge.
+      const overshoot = y + height - EFFECT_TOP_BAND_PX;
+      const scale =
+        reservesBand && overshoot > 0 ? (EFFECT_TOP_BAND_PX - y) / height : 1;
+
       // Overcast clouds stay translucent so the card surface shows through and
       // text keeps its contrast; partly cloudy clouds are more solid. Far clouds
       // are fainter than near ones, and night dims both into a subtle silhouette.
@@ -578,8 +614,8 @@ export class WeatherAnimationProvider extends LitElement {
         flip: random(0, 1) === 1,
         x: x.toFixed(1),
         y: y.toFixed(0),
-        width: width.toFixed(0),
-        height: height.toFixed(0),
+        width: (width * scale).toFixed(0),
+        height: (height * scale).toFixed(0),
         opacity: opacity.toFixed(2),
       });
     }

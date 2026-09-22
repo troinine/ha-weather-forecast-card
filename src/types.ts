@@ -141,6 +141,12 @@ export interface WeatherForecastCardConfig {
   forecast_types?: ForecastTypesOption;
   icons_path?: string;
   show_condition_effects?: boolean | WeatherEffect[];
+  /**
+   * Reserves clear space at the top of the card so the top-anchored effects
+   * (cloud deck, sun, moon) drift above the current weather text rather than
+   * behind it. Off by default: it makes the card taller.
+   */
+  effects_above_text?: boolean;
   show_moon_phase?: boolean;
   current?: WeatherForecastCardCurrentConfig;
   forecast?: WeatherForecastCardForecastConfig;
