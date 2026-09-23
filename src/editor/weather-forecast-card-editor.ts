@@ -403,6 +403,18 @@ export class WeatherForecastCardEditor
         optional: true,
       },
       {
+        name: "forecast.show_history",
+        selector: { boolean: {} },
+        default: false,
+        optional: true,
+      },
+      {
+        name: "forecast.history_hours",
+        optional: true,
+        selector: { number: { min: 24, max: 168 } },
+        default: 72,
+      },
+      {
         name: "forecast.hourly_group_size",
         optional: true,
         selector: { number: { min: 1, max: 4 } },
@@ -859,6 +871,10 @@ export class WeatherForecastCardEditor
         return "Use color thresholds";
       case "forecast.show_attribute_selector":
         return "Show forecast attribute selector";
+      case "forecast.show_history":
+        return "Show hourly weather history";
+      case "forecast.history_hours":
+        return "Maximum hourly history";
       case "forecast.default_chart_attribute":
         return "Default chart forecast attribute";
       case "forecast.hourly_group_size":
@@ -922,6 +938,10 @@ export class WeatherForecastCardEditor
         return "Replaces solid temperature lines with a gradient based on actual values when using forecast chart mode.";
       case "forecast.show_attribute_selector":
         return "When enabled and using chart mode, shows a selector above the forecast to choose which weather attribute to display.";
+      case "forecast.show_history":
+        return "Loads observed weather from Recorder before the hourly forecast. Daily forecasts remain future-only.";
+      case "forecast.history_hours":
+        return "Maximum number of recorded hours to make available while scrolling backwards. Actual availability depends on Recorder retention.";
       case "forecast.default_chart_attribute":
         return "The forecast attribute to visualize by default in chart mode.";
       case "forecast.hourly_group_size":

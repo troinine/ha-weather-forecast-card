@@ -46,6 +46,8 @@ import {
   ForecastAttribute,
   aggregateHourlyForecastData,
 } from "./data/weather";
+import { createCurrentWeatherTimelineEntry } from "./data/weather-history";
+import { WeatherHistoryController } from "./controllers/weather-history-controller";
 import {
   ExtendedHomeAssistant,
   ForecastSubscription,
@@ -78,6 +80,9 @@ const DEFAULT_CONFIG: Partial<WeatherForecastCardConfig> = {
 };
 
 const DISCONNECT_UNSUBSCRIBE_DELAY_MS = 1000;
+const DEFAULT_HISTORY_HOURS = 72;
+const MIN_HISTORY_HOURS = 24;
+const MAX_HISTORY_HOURS = 168;
 
 export class WeatherForecastCard extends LitElement {
   @property({ attribute: false }) public hass?: ExtendedHomeAssistant;
@@ -87,6 +92,9 @@ export class WeatherForecastCard extends LitElement {
   @state() private _currentItemWidth!: number;
   @state() private _currentForecastType: ForecastType = "daily";
   @state() private _isScrollable = false;
+  @state() private _historicalForecastData: ForecastAttribute[] = [];
+  @state() private _historyLoading = false;
+  @state() private _historyHasMore = false;
   @query("ha-card") private _haCard?: HTMLElement;
   @query(".wfc-forecast-container") private _forecastContainer?: HTMLElement;
 
@@ -102,6 +110,7 @@ export class WeatherForecastCard extends LitElement {
 
   private _minForecastItemWidth?: number;
   private _resizeObserver?: ResizeObserver | null = null;
+  private _historyController = new WeatherHistoryController();
 
   static styles = styles as CSSResultGroup;
 
@@ -153,6 +162,17 @@ export class WeatherForecastCard extends LitElement {
     }
 
     if (
+      config.forecast?.history_hours != null &&
+      (!Number.isInteger(config.forecast.history_hours) ||
+        config.forecast.history_hours < MIN_HISTORY_HOURS ||
+        config.forecast.history_hours > MAX_HISTORY_HOURS)
+    ) {
+      throw new Error(
+        `history_hours must be a whole number from ${MIN_HISTORY_HOURS} to ${MAX_HISTORY_HOURS}`
+      );
+    }
+
+    if (
       (config.current?.temperature_precision != null &&
         (config.current.temperature_precision < 0 ||
           config.current.temperature_precision > MAX_TEMPERATURE_PRECISION)) ||
@@ -180,6 +200,7 @@ export class WeatherForecastCard extends LitElement {
 
     this.config = merge({}, DEFAULT_CONFIG, migratedConfig);
     this._currentForecastType = this.config.default_forecast || "daily";
+    this.resetWeatherHistory();
   }
 
   /**
@@ -304,7 +325,10 @@ export class WeatherForecastCard extends LitElement {
       changedProperties.has("_hourlyForecastEvent") ||
       changedProperties.has("_currentForecastType") ||
       changedProperties.has("_currentItemWidth") ||
-      changedProperties.has("_isScrollable")
+      changedProperties.has("_isScrollable") ||
+      changedProperties.has("_historicalForecastData") ||
+      changedProperties.has("_historyLoading") ||
+      changedProperties.has("_historyHasMore")
     );
   }
 
@@ -402,6 +426,10 @@ export class WeatherForecastCard extends LitElement {
                       .isTwiceDailyEntity=${isTwiceDailyEntity}
                       .itemWidth=${this._currentItemWidth}
                       .isScrollable=${this._isScrollable}
+                      .historyCount=${this.getHistoryCount()}
+                      .historyLoading=${this._historyLoading}
+                      .historyHasMore=${this._historyHasMore}
+                      @history-load-requested=${this.loadPreviousHistoryPage}
                     ></wfc-forecast-chart>`
                   : html`<wfc-forecast-simple
                       @action=${this.onForecastAction}
@@ -412,6 +440,11 @@ export class WeatherForecastCard extends LitElement {
                       .forecastType=${this._currentForecastType}
                       .isTwiceDailyEntity=${isTwiceDailyEntity}
                       .isScrollable=${this._isScrollable}
+                      .itemWidth=${this._currentItemWidth}
+                      .historyCount=${this.getHistoryCount()}
+                      .historyLoading=${this._historyLoading}
+                      .historyHasMore=${this._historyHasMore}
+                      @history-load-requested=${this.loadPreviousHistoryPage}
                     ></wfc-forecast-simple>`}
               </div>`}
         </div>
@@ -524,6 +557,8 @@ export class WeatherForecastCard extends LitElement {
         this.config.forecast.hourly_slots
       );
     }
+
+    this.ensureWeatherHistory();
 
     // Auto-switch to available forecast type if current type has no data
     // BUT only if we've received both forecast events (to avoid switching
@@ -870,11 +905,134 @@ export class WeatherForecastCard extends LitElement {
   }
 
   private getCurrentForecast(): ForecastAttribute[] {
-    return (
-      (this._currentForecastType === "hourly"
-        ? this._hourlyForecastData
-        : this._dailyForecastData) || []
+    if (this._currentForecastType !== "hourly") {
+      return this._dailyForecastData || [];
+    }
+
+    const hourlyForecast = this._hourlyForecastData || [];
+    if (
+      !this.config?.forecast?.show_history ||
+      this._historicalForecastData.length === 0 ||
+      hourlyForecast.length === 0 ||
+      !this.hass ||
+      !this.config
+    ) {
+      return hourlyForecast;
+    }
+
+    const boundaryTimestamp = Date.parse(hourlyForecast[0]!.datetime);
+    if (!Number.isFinite(boundaryTimestamp)) {
+      return hourlyForecast;
+    }
+
+    const weatherEntity = this.hass.states[this.config.entity] as WeatherEntity;
+    if (!weatherEntity) {
+      return hourlyForecast;
+    }
+
+    const current = createCurrentWeatherTimelineEntry(
+      weatherEntity,
+      new Date(boundaryTimestamp).toISOString(),
+      hourlyForecast[0]?.temperature
     );
+    const future = hourlyForecast.filter(
+      (forecast) => Date.parse(forecast.datetime) > boundaryTimestamp
+    );
+
+    return current
+      ? [...this._historicalForecastData, current, ...future]
+      : [...this._historicalForecastData, ...hourlyForecast];
+  }
+
+  private getHistoryCount(): number {
+    return this._currentForecastType === "hourly"
+      ? this._historicalForecastData.length
+      : 0;
+  }
+
+  private shouldLoadWeatherHistory(): boolean {
+    return (
+      this.config?.forecast?.show_history === true &&
+      this.config.show_forecast !== false &&
+      this.config.forecast_types !== "daily" &&
+      Boolean(this._hourlyForecastData?.length) &&
+      Boolean(this.hass)
+    );
+  }
+
+  private ensureWeatherHistory(): void {
+    if (!this.shouldLoadWeatherHistory() || !this.config || !this.hass) {
+      this.resetWeatherHistory();
+      return;
+    }
+
+    const boundaryTimestamp = Date.parse(
+      this._hourlyForecastData![0]!.datetime
+    );
+    if (!Number.isFinite(boundaryTimestamp)) {
+      this.resetWeatherHistory();
+      return;
+    }
+
+    const maximumHours =
+      this.config.forecast?.history_hours ?? DEFAULT_HISTORY_HOURS;
+    const intervalHours = Math.max(
+      1,
+      this.config.forecast?.hourly_group_size ?? 1
+    );
+    const changed = this._historyController.configure(
+      this.config.entity,
+      boundaryTimestamp,
+      maximumHours,
+      intervalHours
+    );
+
+    if (!changed) {
+      return;
+    }
+
+    this._historicalForecastData = [];
+    this._historyHasMore = this._historyController.hasMore;
+    void this.loadWeatherHistoryPage();
+  }
+
+  private resetWeatherHistory(): void {
+    this._historyController.reset();
+    this._historicalForecastData = [];
+    this._historyLoading = false;
+    this._historyHasMore = false;
+  }
+
+  private loadPreviousHistoryPage = (): void => {
+    void this.loadWeatherHistoryPage();
+  };
+
+  private async loadWeatherHistoryPage(): Promise<void> {
+    if (!this.hass || this._historyController.loading) {
+      return;
+    }
+
+    this._historyLoading = true;
+    try {
+      const snapshot = await this._historyController.loadPreviousPage(
+        this.hass
+      );
+      if (!snapshot) {
+        return;
+      }
+
+      this._historicalForecastData = snapshot.forecast;
+      this._historyHasMore = snapshot.hasMore;
+
+      if (this._forecastContainer) {
+        this.layoutForecastItems(this._forecastContainer.clientWidth);
+      }
+    } catch (error) {
+      logger.warn("Error loading historical weather:", error);
+      this._historyHasMore = this._historyController.hasMore;
+    } finally {
+      this._historyLoading = this._historyController.loading;
+    }
   }
 
   private layoutForecastItems(containerWidth: number) {

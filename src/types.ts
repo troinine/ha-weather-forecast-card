@@ -100,6 +100,8 @@ export interface WeatherForecastCardForecastConfig {
   extra_attribute?: string;
   mode?: ForecastMode;
   show_sun_times?: boolean;
+  show_history?: boolean;
+  history_hours?: number;
   hourly_group_size?: number;
   hourly_slots?: number;
   daily_slots?: number;
