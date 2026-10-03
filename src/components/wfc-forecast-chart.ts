@@ -152,6 +152,7 @@ export class WfcForecastChart extends LitElement {
       changedProps.has("forecast") ||
       changedProps.has("weatherEntity") ||
       changedProps.has("hass") ||
+      changedProps.has("config") ||
       changedProps.has("forecastType") ||
       changedProps.has("itemWidth");
 
@@ -447,10 +448,16 @@ export class WfcForecastChart extends LitElement {
     );
     const precipColor = style.getPropertyValue("--wfc-precipitation-bar-color");
 
-    const maxPrecip = getMaxPrecipitationForUnit(
-      getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
-      this.forecastType
-    );
+    const configuredMaxPrecip =
+      this.forecastType === "hourly"
+        ? this.config.forecast?.precipitation_chart_max_hourly
+        : this.config.forecast?.precipitation_chart_max_daily;
+    const maxPrecip =
+      configuredMaxPrecip ??
+      getMaxPrecipitationForUnit(
+        getWeatherUnit(this.hass, this.weatherEntity, "precipitation"),
+        this.forecastType
+      );
 
     const tempLineStyle = this.getTemperatureLineStyle(style, "temperature");
     const templowLineStyle = this.getTemperatureLineStyle(style, "templow");

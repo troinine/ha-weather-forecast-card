@@ -24,6 +24,11 @@ import {
   WeatherForecastCardForecastActionConfig,
   WeatherForecastCardForecastConfig,
 } from "../types";
+import {
+  getMaxPrecipitationForUnit,
+  getWeatherUnit,
+  WeatherEntity,
+} from "../data/weather";
 import { supportsEntityNames } from "../entity-name";
 
 // Device class mapping for attribute entity selectors
@@ -49,7 +54,15 @@ type HaFormSelector =
   | { text: {} }
   | { icon: {} }
   | { entity_name: {} }
-  | { number: { min?: number; max?: number } }
+  | {
+      number: {
+        min?: number;
+        max?: number;
+        step?: number | "any";
+        mode?: "box" | "slider";
+        unit_of_measurement?: string;
+      };
+    }
   | { ui_action: { default_action: string } }
   | {
       select: {
@@ -75,6 +88,7 @@ type HaFormSchema = {
   iconPath?: TemplateResult;
   schema?: HaFormSchema[];
   flatten?: boolean;
+  column_min_width?: string;
   default?: string | boolean | number;
   required?: boolean;
   selector?: HaFormSelector;
@@ -127,23 +141,43 @@ export class WeatherForecastCardEditor
       color: var(--secondary-text-color);
       margin-top: 4px;
     }
+    .precipitation-chart-max {
+      margin: 24px 0;
+    }
+    .precipitation-chart-max h3 {
+      color: var(--primary-text-color);
+      font-size: 14px;
+      font-weight: var(--ha-font-weight-medium, 500);
+      line-height: 20px;
+      margin: 0;
+    }
+    .precipitation-chart-max p {
+      color: var(--secondary-text-color);
+      font-size: 12px;
+      line-height: 16px;
+      margin: 4px 0 16px;
+    }
   `;
 
   public setConfig(config: WeatherForecastCardEditorConfig): void {
     this._config = config;
   }
 
-  private _schema = memoizeOne(
-    (
-      localize: LocalizeFunc,
-      selectedAttributes: CurrentWeatherAttributes[],
-      structuredName: boolean,
-      mode?: string
-    ): HaFormSchema[] =>
+  private _primarySchema = memoizeOne(
+    (localize: LocalizeFunc, structuredName: boolean): HaFormSchema[] =>
       [
         ...this._genericSchema(localize, structuredName),
         ...this._currentWeatherSchema(localize),
         ...this._forecastSchema(localize),
+      ] as const
+  );
+
+  private _secondarySchema = memoizeOne(
+    (
+      selectedAttributes: CurrentWeatherAttributes[],
+      mode?: string
+    ): HaFormSchema[] =>
+      [
         ...this._interactionsSchema(mode),
         ...this._attributeEntitiesSchema(selectedAttributes),
         ...this._advancedSchema(),
@@ -420,6 +454,49 @@ export class WeatherForecastCardEditor
       },
     ] as const;
 
+  private _precipitationChartMaxSchema = (
+    precipitationUnit: string
+  ): HaFormSchema[] => {
+    const min = precipitationUnit === "in" ? 0.01 : 0.1;
+
+    return [
+      {
+        name: "",
+        type: "grid",
+        flatten: true,
+        column_min_width: "120px",
+        schema: [
+          {
+            name: "forecast.precipitation_chart_max_daily",
+            default: getMaxPrecipitationForUnit(precipitationUnit, "daily"),
+            optional: true,
+            selector: {
+              number: {
+                min,
+                step: "any",
+                mode: "box",
+                unit_of_measurement: precipitationUnit,
+              },
+            },
+          },
+          {
+            name: "forecast.precipitation_chart_max_hourly",
+            default: getMaxPrecipitationForUnit(precipitationUnit, "hourly"),
+            optional: true,
+            selector: {
+              number: {
+                min,
+                step: "any",
+                mode: "box",
+                unit_of_measurement: precipitationUnit,
+              },
+            },
+          },
+        ],
+      },
+    ];
+  };
+
   private _interactionsSchema = (mode?: string): HaFormSchema[] => {
     const optionalActions: (keyof WeatherForecastCardForecastActionConfig)[] =
       [];
@@ -600,10 +677,22 @@ export class WeatherForecastCardEditor
 
     const data = denormalizeConfig(this._config);
     const selectedAttributes = this._getSelectedAttributes(data);
-    const schema = this._schema(
+    const weatherEntity = this.hass.states[this._config.entity] as
+      | WeatherEntity
+      | undefined;
+    const precipitationUnit = weatherEntity
+      ? getWeatherUnit(this.hass, weatherEntity, "precipitation")
+      : this.hass.config.unit_system.length === "km"
+        ? "mm"
+        : "in";
+    const primarySchema = this._primarySchema(
       this.localize.bind(this),
+      supportsEntityNames(this.hass)
+    );
+    const precipitationChartMaxSchema =
+      this._precipitationChartMaxSchema(precipitationUnit);
+    const secondarySchema = this._secondarySchema(
       selectedAttributes,
-      supportsEntityNames(this.hass),
       data["forecast.mode"]
     );
 
@@ -611,7 +700,32 @@ export class WeatherForecastCardEditor
       <ha-form
         .hass=${this.hass}
         .data=${data}
-        .schema=${schema}
+        .schema=${primarySchema}
+        .computeLabel=${this._computeLabel}
+        .computeHelper=${this._computeHelper}
+        @value-changed=${this._valueChanged}
+      >
+      </ha-form>
+      <section class="precipitation-chart-max">
+        <h3>Precipitation Chart Max Value</h3>
+        <p>
+          The chart upper bound used for displaying precipitation forecast data
+          when Forecast Display Mode is set to Chart
+        </p>
+        <ha-form
+          .hass=${this.hass}
+          .data=${data}
+          .schema=${precipitationChartMaxSchema}
+          .computeLabel=${this._computeLabel}
+          .computeHelper=${this._computeHelper}
+          @value-changed=${this._valueChanged}
+        >
+        </ha-form>
+      </section>
+      <ha-form
+        .hass=${this.hass}
+        .data=${data}
+        .schema=${secondarySchema}
         .computeLabel=${this._computeLabel}
         .computeHelper=${this._computeHelper}
         @value-changed=${this._valueChanged}
@@ -714,10 +828,7 @@ export class WeatherForecastCardEditor
     this._commitCustomAttributes(custom);
   };
 
-  private _customAttributeChanged = (
-    index: number,
-    ev: CustomEvent
-  ): void => {
+  private _customAttributeChanged = (index: number, ev: CustomEvent): void => {
     ev.stopPropagation();
     const custom = extractCustomAttributes(
       this._config.current?.show_attributes
@@ -861,6 +972,10 @@ export class WeatherForecastCardEditor
         return "Show forecast attribute selector";
       case "forecast.default_chart_attribute":
         return "Default chart forecast attribute";
+      case "forecast.precipitation_chart_max_daily":
+        return "Daily";
+      case "forecast.precipitation_chart_max_hourly":
+        return "Hourly";
       case "forecast.hourly_group_size":
         return "Hourly forecast group size";
       case "forecast.hourly_slots":
@@ -1026,7 +1141,11 @@ export class WeatherForecastCardEditor
         );
         newConfig.current.show_attributes = buildShowAttributes(
           newConfig.current.show_attributes,
-          { entity: entityOverrides, label: labelOverrides, icon: iconOverrides },
+          {
+            entity: entityOverrides,
+            label: labelOverrides,
+            icon: iconOverrides,
+          },
           customItems
         );
       }

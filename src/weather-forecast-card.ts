@@ -153,6 +153,17 @@ export class WeatherForecastCard extends LitElement {
     }
 
     if (
+      (config.forecast?.precipitation_chart_max_daily != null &&
+        (!Number.isFinite(config.forecast.precipitation_chart_max_daily) ||
+          config.forecast.precipitation_chart_max_daily <= 0)) ||
+      (config.forecast?.precipitation_chart_max_hourly != null &&
+        (!Number.isFinite(config.forecast.precipitation_chart_max_hourly) ||
+          config.forecast.precipitation_chart_max_hourly <= 0))
+    ) {
+      throw new Error("precipitation chart max values must be greater than 0");
+    }
+
+    if (
       (config.current?.temperature_precision != null &&
         (config.current.temperature_precision < 0 ||
           config.current.temperature_precision > MAX_TEMPERATURE_PRECISION)) ||
