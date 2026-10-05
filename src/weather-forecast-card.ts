@@ -300,6 +300,7 @@ export class WeatherForecastCard extends LitElement {
     return (
       hasConfigOrEntityChanged(this, changedProperties, false) ||
       this.hasReferencedCurrentEntityChanged(changedProperties) ||
+      this.hasEntityNameChanged(changedProperties) ||
       changedProperties.has("_dailyForecastEvent") ||
       changedProperties.has("_hourlyForecastEvent") ||
       changedProperties.has("_currentForecastType") ||
@@ -1020,6 +1021,24 @@ export class WeatherForecastCard extends LitElement {
     const newEntityState = newHass.states[this.config.entity];
 
     return !!oldEntityState !== !!newEntityState;
+  }
+
+  // A name composed from the registry follows the device, area and floor names,
+  // and none of those show up as an entity state change - so hasConfigOrEntityChanged
+  // never sees a rename. Home Assistant swaps the formatters as a set whenever a
+  // registry changes, which makes their identity the signal to watch.
+  private hasEntityNameChanged(changedProps: PropertyValues): boolean {
+    if (!changedProps.has("hass")) {
+      return false;
+    }
+
+    const oldHass = changedProps.get("hass") as
+      | ExtendedHomeAssistant
+      | undefined;
+
+    return (
+      !!oldHass && oldHass.formatEntityName !== this.hass?.formatEntityName
+    );
   }
 
   private hasReferencedCurrentEntityChanged(
