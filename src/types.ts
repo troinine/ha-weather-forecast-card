@@ -139,6 +139,7 @@ export interface WeatherForecastCardConfig {
   show_forecast?: boolean;
   default_forecast?: "hourly" | "daily";
   forecast_types?: ForecastTypesOption;
+  forecast_cache?: boolean;
   icons_path?: string;
   show_condition_effects?: boolean | WeatherEffect[];
   show_moon_phase?: boolean;
