@@ -46,6 +46,7 @@ import {
   ForecastAttribute,
   aggregateHourlyForecastData,
 } from "./data/weather";
+import { readCachedForecast, writeCachedForecast } from "./data/forecast-cache";
 import {
   ExtendedHomeAssistant,
   ForecastSubscription,
@@ -834,6 +835,13 @@ export class WeatherForecastCard extends LitElement {
       this._currentForecastType = effectiveDailyType || "daily";
     }
 
+    // Paint the last forecast we saw while the subscription is in flight; the
+    // live event replaces it as soon as Home Assistant answers.
+    this.seedForecastFromCache(
+      subscribeDaily ? effectiveDailyType : undefined,
+      subscribeHourly && supportsForecastType(weatherEntity, "hourly")
+    );
+
     if (effectiveDailyType && subscribeDaily) {
       this._dailySubscription = this.createForecastSubscription(
         effectiveDailyType,
@@ -843,6 +851,7 @@ export class WeatherForecastCard extends LitElement {
           }
 
           this._dailyForecastEvent = event;
+          this.cacheForecastEvent(event);
           this.processForecastData();
         },
         () => {
@@ -860,6 +869,7 @@ export class WeatherForecastCard extends LitElement {
           }
 
           this._hourlyForecastEvent = event;
+          this.cacheForecastEvent(event);
           this.processForecastData();
         },
         () => {
@@ -867,6 +877,46 @@ export class WeatherForecastCard extends LitElement {
         }
       );
     }
+  }
+
+  private seedForecastFromCache(
+    dailyType: ForecastEvent["type"] | undefined,
+    hourly: boolean
+  ): void {
+    if (this.config?.forecast_cache === false) {
+      return;
+    }
+
+    const entityId = this.config!.entity;
+    let seeded = false;
+
+    if (dailyType && !this._dailyForecastEvent) {
+      const cached = readCachedForecast(entityId, dailyType);
+      if (cached) {
+        this._dailyForecastEvent = cached;
+        seeded = true;
+      }
+    }
+
+    if (hourly && !this._hourlyForecastEvent) {
+      const cached = readCachedForecast(entityId, "hourly");
+      if (cached) {
+        this._hourlyForecastEvent = cached;
+        seeded = true;
+      }
+    }
+
+    if (seeded) {
+      this.processForecastData();
+    }
+  }
+
+  private cacheForecastEvent(event: ForecastEvent): void {
+    if (this.config?.forecast_cache === false) {
+      return;
+    }
+
+    writeCachedForecast(this.config!.entity, event);
   }
 
   private getCurrentForecast(): ForecastAttribute[] {

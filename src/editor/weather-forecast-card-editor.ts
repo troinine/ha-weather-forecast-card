@@ -575,6 +575,12 @@ export class WeatherForecastCardEditor
             },
           },
           {
+            name: "forecast_cache",
+            default: true,
+            optional: true,
+            selector: { boolean: {} },
+          },
+          {
             name: "icons_path",
             selector: { text: {} },
             optional: true,
@@ -823,6 +829,8 @@ export class WeatherForecastCardEditor
         );
       case "forecast_types":
         return "Forecast types to load";
+      case "forecast_cache":
+        return "Show cached forecast while loading";
       case "icons_path":
         return "Path to custom icons";
       case "current.show_attributes":
@@ -902,6 +910,8 @@ export class WeatherForecastCardEditor
         return "Select the default forecast type to show when forecasts are enabled. Users can still toggle between hourly and daily forecasts if both are available.";
       case "forecast_types":
         return "Limit which forecast types the card subscribes to. Loading only the forecast you display reduces websocket load, which can prevent dashboard slowdowns on resource-constrained devices.";
+      case "forecast_cache":
+        return "Remember the last forecast in this browser and show it immediately while the live forecast loads.";
       case "current.show_attributes":
         return "Select which weather attributes to display in the current weather section.";
       case "current.secondary_info_attribute":
