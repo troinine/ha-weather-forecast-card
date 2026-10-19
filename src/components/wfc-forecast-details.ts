@@ -22,7 +22,8 @@ export class WfcForecastDetails extends LitElement {
 
     const precipitation = this.forecast.precipitation || 0;
     const barHeightPct = this.computePrecipitationBarHeight(precipitation);
-    const precipitationAvailable = hasPrecipitation(this.forecast);
+    const precipitationAvailable =
+      this.forecast.precipitation != null && hasPrecipitation(this.forecast);
 
     return html`
       <div class="wfc-forecast-slot-temperature">

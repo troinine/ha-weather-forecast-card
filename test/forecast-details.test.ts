@@ -229,6 +229,59 @@ describe("wfc-forecast-details", () => {
       expect(container?.classList.contains("wfc-not-available")).toBe(false);
     });
 
+    it("should add wfc-not-available class when only precipitation probability is provided", async () => {
+      const forecast: ForecastAttribute = {
+        datetime: "2024-01-01T12:00:00",
+        temperature: 20,
+        condition: "rainy",
+        precipitation_probability: 95,
+      };
+
+      const element = await fixture<WfcForecastDetails>(
+        html`<wfc-forecast-details
+          .hass=${hass}
+          .forecast=${forecast}
+          .config=${testConfig}
+          .maxPrecipitation=${10}
+        ></wfc-forecast-details>`
+      );
+
+      const container = element.querySelector(
+        ".wfc-forecast-precip-amount-container"
+      );
+      expect(container).not.toBeNull();
+      expect(container?.classList.contains("wfc-not-available")).toBe(true);
+    });
+
+    it("should show zero amount when precipitation is 0 and probability is provided", async () => {
+      const forecast: ForecastAttribute = {
+        datetime: "2024-01-01T12:00:00",
+        temperature: 20,
+        condition: "cloudy",
+        precipitation: 0,
+        precipitation_probability: 30,
+      };
+
+      const element = await fixture<WfcForecastDetails>(
+        html`<wfc-forecast-details
+          .hass=${hass}
+          .forecast=${forecast}
+          .config=${testConfig}
+          .maxPrecipitation=${10}
+        ></wfc-forecast-details>`
+      );
+
+      const container = element.querySelector(
+        ".wfc-forecast-precip-amount-container"
+      );
+      expect(container?.classList.contains("wfc-not-available")).toBe(false);
+      expect(
+        element
+          .querySelector(".wfc-forecast-precip-amount")
+          ?.textContent?.trim()
+      ).toBe("0.0");
+    });
+
     it("should use classMap directive for conditional classes", async () => {
       const forecast: ForecastAttribute = {
         datetime: "2024-01-01T12:00:00",
