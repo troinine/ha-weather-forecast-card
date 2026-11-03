@@ -301,6 +301,11 @@ export class WeatherForecastCardEditor
   private _forecastSchema = (localize: LocalizeFunc): HaFormSchema[] =>
     [
       {
+        name: "forecast.title",
+        optional: true,
+        selector: { text: {} },
+      },
+      {
         name: "forecast.mode",
         default: "simple",
         selector: {
@@ -845,6 +850,8 @@ export class WeatherForecastCardEditor
             "ui.panel.lovelace.editor.card.generic.attribute"
           ) || "attribute"
         ).toLocaleLowerCase()}`;
+      case "forecast.title":
+        return "Forecast title";
       case "forecast.mode":
         return "Forecast display mode";
       case "current.temperature_precision":

@@ -97,6 +97,7 @@ export interface ForecastSelectAttributeActionConfig extends BaseActionConfig {
 }
 
 export interface WeatherForecastCardForecastConfig {
+  title?: string;
   extra_attribute?: string;
   mode?: ForecastMode;
   show_sun_times?: boolean;

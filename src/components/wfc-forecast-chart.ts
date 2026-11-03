@@ -982,7 +982,7 @@ export class WfcForecastChart extends LitElement {
 
   private _localizeSelectedAttribute(): string {
     if (this._selectedAttribute === "temperature_and_precipitation") {
-      return this.hass.localize("ui.card.weather.forecast");
+      return this.config.forecast?.title ?? this.hass.localize("ui.card.weather.forecast");
     }
 
     return (
