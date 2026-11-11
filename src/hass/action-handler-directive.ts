@@ -133,10 +133,7 @@ class ActionHandler extends HTMLElement implements IActionHandler {
         // Stop propagation to avoid parent handlers being invoked
         ev.stopPropagation();
       }
-      if (
-        ["touchend", "touchcancel"].includes(ev.type) &&
-        this.timer === undefined
-      ) {
+      if (ev.type === "touchend" && this.timer === undefined) {
         return;
       }
       clearTimeout(this.timer);
@@ -192,7 +189,13 @@ class ActionHandler extends HTMLElement implements IActionHandler {
 
     element.addEventListener("touchstart", start, { passive: true });
     element.addEventListener("touchend", end);
-    element.addEventListener("touchcancel", end);
+    element.addEventListener("touchcancel", () => {
+      // Cancel locally before bubbling; a system gesture is not an action.
+      clearTimeout(this.timer);
+      this.timer = undefined;
+      this.held = false;
+      this.stopAnimation();
+    });
 
     element.addEventListener("mousedown", start, { passive: true });
     element.addEventListener("click", end);
