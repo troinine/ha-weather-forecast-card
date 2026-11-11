@@ -88,6 +88,9 @@ resources:
 | `hold_action`            | `object`          | optional     | Defines the type of action to perform on hold for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                                 |
 | `double_tap_action`      | `object`          | optional     | Defines the type of action to perform on double click for the main card. See [Home Assistant Actions](https://www.home-assistant.io/dashboards/actions/).                         |
 
+Cancelled touches, including Android system navigation gestures, do not trigger
+tap or hold actions. No special action configuration is needed.
+
 ### Name
 
 By default the card shows the weather entity's own name. Set `name` to a string to override it:
